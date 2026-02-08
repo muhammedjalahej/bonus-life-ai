@@ -67,6 +67,12 @@ class AIDiabetesSpecialist:
         try:
             if not self.client:
                 logger.error("LLM client not available")
+                if language == "turkish":
+                    return {
+                        "success": False,
+                        "response": "Üzgünüz, yapay zeka uzmanımız şu an kullanılamıyor. Lütfen daha sonra tekrar deneyin veya acil tıbbi konularda bir sağlık kuruluşuna başvurun.",
+                        "model": "unavailable",
+                    }
                 return {
                     "success": False,
                     "response": "I apologize, but our AI specialist is currently unavailable. Please try again later or consult with a healthcare provider for immediate medical advice.",
@@ -99,6 +105,12 @@ class AIDiabetesSpecialist:
             return {"success": True, "response": llm_response, "model": os.getenv("LLM_MODEL_NAME", "openai/gpt-oss-20b")}
         except Exception as e:
             logger.error(f"LLM generation error: {e}")
+            if language == "turkish":
+                return {
+                    "success": False,
+                    "response": "Teknik bir sorun yaşanıyor. Lütfen kısa süre sonra tekrar deneyin veya acil tıbbi sorularınız için bir sağlık kuruluşuna başvurun.",
+                    "model": "error",
+                }
             return {
                 "success": False,
                 "response": "I apologize, but I'm experiencing technical difficulties. Please try again shortly or consult with a healthcare provider for urgent medical questions.",
@@ -186,10 +198,10 @@ class GPTOSSDiabetesSpecialist:
     def create_diabetes_prompt(self, message: str, language: str, context: Dict = None) -> List[Dict]:
         if language == "turkish":
             system_content = (
-                "Sen More Life AI sisteminin bir parçası olan diyabet uzmanısın. "
-                "TÜRKÇE OLARAK TIBBİ DOĞRULUKLA CEVAP VER. "
-                "Diyabet hakkında ayrıntılı tıbbi bilgi ver. "
-                "ÖNEMLİ: Bir yapay zeka asistanı olduğunu belirt."
+                "Sen More Life AI'ın diyabet konusunda uzman yapay zeka asistanısın. "
+                "Tüm yanıtlarını Türkçe, tıbben doğru ve anlaşılır biçimde ver. "
+                "Diyabet önleme, belirtiler, tedavi ve yaşam tarzı hakkında ayrıntılı bilgi sun. "
+                "Önemli: Yanıtlarında bir yapay zeka asistanı olduğunu belirt."
             )
         else:
             system_content = (
@@ -231,12 +243,12 @@ class GPTOSSDiabetesSpecialist:
     def _get_enhanced_fallback(self, message: str, language: str) -> str:
         if language == "turkish":
             return (
-                "**Yapay Zeka Diyabet Uzmanı**\n\n"
-                "Diyabet hakkında temel bilgiler:\n"
+                "**Yapay Zeka Diyabet Asistanı**\n\n"
+                "Tip 2 diyabetin yaygın belirtileri:\n"
                 "- Aşırı susama ve sık idrara çıkma\n"
-                "- Aşırı açlık ve kilo kaybı\n"
+                "- Aşırı açlık ve nedensiz kilo kaybı\n"
                 "- Yorgunluk ve bulanık görme\n\n"
-                "Lütfen muayene için bir sağlık kuruluşuna başvurun."
+                "Kesin tanı ve tedavi için lütfen bir sağlık kuruluşuna başvurun."
             )
         return (
             "**AI Diabetes Specialist**\n\n"

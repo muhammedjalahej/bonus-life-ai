@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
+import { useAuth } from '../context/AuthContext';
 import {
   HeartPulse, Menu, X, ChevronDown,
-  Home, Activity, MessageSquare, Mic, Salad, AlertTriangle, Globe,
+  Home, Activity, MessageSquare, Mic, Salad, AlertTriangle, Globe, LayoutDashboard, Shield, LogIn, UserPlus, LogOut,
 } from 'lucide-react';
 
 const Header = ({ language, setLanguage }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, loading: authLoading, isAdmin, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -19,14 +22,19 @@ const Header = ({ language, setLanguage }) => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const links = [
-    { path: ROUTES.HOME, label: 'Home', icon: Home },
-    { path: ROUTES.TEST, label: 'Assessment', icon: Activity },
-    { path: ROUTES.CHAT, label: 'AI Chat', icon: MessageSquare },
-    { path: ROUTES.VOICE_CHAT, label: 'Voice', icon: Mic },
-    { path: ROUTES.DIET_PLAN, label: 'Diet', icon: Salad },
-    { path: ROUTES.EMERGENCY, label: 'Emergency', icon: AlertTriangle },
+  const mainLinks = [
+    { path: ROUTES.HOME, label: language === 'turkish' ? 'Ana Sayfa' : 'Home', icon: Home },
+    { path: ROUTES.TEST, label: language === 'turkish' ? 'Değerlendirme' : 'Assessment', icon: Activity },
+    { path: ROUTES.CHAT, label: language === 'turkish' ? 'Yapay Zeka Sohbet' : 'AI Chat', icon: MessageSquare },
+    { path: ROUTES.VOICE_CHAT, label: language === 'turkish' ? 'Ses' : 'Voice', icon: Mic },
+    { path: ROUTES.DIET_PLAN, label: language === 'turkish' ? 'Diyet' : 'Diet', icon: Salad },
+    { path: ROUTES.EMERGENCY, label: language === 'turkish' ? 'Acil' : 'Emergency', icon: AlertTriangle },
   ];
+  const links = [...mainLinks];
+  if (user) {
+    links.push({ path: ROUTES.DASHBOARD, label: language === 'turkish' ? 'Panel' : 'Dashboard', icon: LayoutDashboard });
+    if (isAdmin) links.push({ path: ROUTES.ADMIN, label: 'Admin', icon: Shield });
+  }
 
   const languages = [
     { value: 'english', label: 'EN' },
@@ -79,6 +87,51 @@ const Header = ({ language, setLanguage }) => {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
+            {/* Auth: Login/Register or User menu */}
+            {!authLoading && (
+              <>
+                {!user ? (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleNav(ROUTES.LOGIN)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/[0.05] transition">
+                      <LogIn className="w-4 h-4" /> {language === 'turkish' ? 'Giriş' : 'Login'}
+                    </button>
+                    <button onClick={() => handleNav(ROUTES.REGISTER)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition">
+                      <UserPlus className="w-4 h-4" /> {language === 'turkish' ? 'Kayıt' : 'Register'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/[0.05] border border-white/[0.06] transition">
+                      <span className="max-w-[120px] truncate">{user.email}</span>
+                      <ChevronDown className={`w-4 h-4 transition ${userMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {userMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                        <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#12121f] border border-white/[0.08] shadow-2xl shadow-black/40 py-1 z-50 overflow-hidden">
+                          <div className="px-4 py-2 border-b border-white/[0.06]">
+                            <p className="text-sm font-medium text-white truncate">{user.full_name || user.email}</p>
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                          </div>
+                          <button onClick={() => { handleNav(ROUTES.DASHBOARD); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
+                            <LayoutDashboard className="w-4 h-4" /> {language === 'turkish' ? 'Panel' : 'Dashboard'}
+                          </button>
+                          {isAdmin && (
+                            <button onClick={() => { handleNav(ROUTES.ADMIN); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
+                              <Shield className="w-4 h-4" /> Admin
+                            </button>
+                          )}
+                          <button onClick={() => { logout(); setUserMenuOpen(false); handleNav(ROUTES.HOME); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10">
+                            <LogOut className="w-4 h-4" /> {language === 'turkish' ? 'Çıkış' : 'Logout'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Language */}
             <div className="relative">
               <button onClick={() => setLangOpen(!langOpen)}
@@ -130,6 +183,21 @@ const Header = ({ language, setLanguage }) => {
                 </button>
               );
             })}
+            {!authLoading && !user && (
+              <>
+                <button onClick={() => handleNav(ROUTES.LOGIN)} className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/[0.04]">
+                  <LogIn className="w-5 h-5" /> {language === 'turkish' ? 'Giriş' : 'Login'}
+                </button>
+                <button onClick={() => handleNav(ROUTES.REGISTER)} className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-500/10">
+                  <UserPlus className="w-5 h-5" /> {language === 'turkish' ? 'Kayıt' : 'Register'}
+                </button>
+              </>
+            )}
+            {!authLoading && user && (
+              <button onClick={() => { logout(); handleNav(ROUTES.HOME); setMobileOpen(false); }} className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10">
+                <LogOut className="w-5 h-5" /> {language === 'turkish' ? 'Çıkış' : 'Logout'}
+              </button>
+            )}
           </nav>
         </div>
       )}

@@ -151,7 +151,7 @@ Now provide a detailed response in {language}:"""
         """Return contextual error message"""
         error_messages = {
             "english": f"🚨 **AI Service Error**\n\nI encountered an error while processing your question about '{original_message}'. This might be due to:\n\n• Temporary service interruption\n• Network connectivity issues\n• API configuration problems\n\nPlease try again in a moment or contact support if this persists.",
-            "turkish": f"🚨 **Yapay Zeka Hizmet Hatası**\n\n'{original_message}' hakkındaki sorunuzu işlerken bir hatayla karşılaştım. Bu şunlardan kaynaklanabilir:\n\n• Geçici hizmet kesintisi\n• Ağ bağlantı sorunları\n• API yapılandırma sorunları\n\nLütfen birazdan tekrar deneyin veya sorun devam ederse destek ile iletişime geçin."
+            "turkish": f"🚨 **Yapay Zeka Hizmet Hatası**\n\n\"{original_message}\" ile ilgili sorunuz işlenirken bir hata oluştu. Olası nedenler:\n\n• Geçici hizmet kesintisi\n• Ağ bağlantı sorunu\n• API yapılandırma hatası\n\nLütfen kısa süre sonra tekrar deneyin. Sorun sürerse destek ile iletişime geçin."
         }
         return error_messages.get(language, error_messages["english"])
 

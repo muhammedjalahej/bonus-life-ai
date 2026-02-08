@@ -1,15 +1,28 @@
 import { API_BASE_URL } from '../config/constants';
 
+const AUTH_TOKEN_KEY = 'morelife_token';
+
+export function getStoredToken() {
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function setStoredToken(token) {
+  if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+  else localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
 async function apiRequest(endpoint, options = {}) {
+  const token = getStoredToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   try {
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log(`API Request: ${url}`, options);
-    
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
     });
 
@@ -89,6 +102,61 @@ export async function healthCheck() {
   return apiRequest('/health');
 }
 
+// Auth
+export async function login(email, password) {
+  return apiRequest('/api/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function register(email, password, full_name = '') {
+  return apiRequest('/api/v1/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, full_name }),
+  });
+}
+
+export async function fetchMe() {
+  return apiRequest('/api/v1/auth/me');
+}
+
+// User-scoped
+export async function getMyAssessments(limit = 50) {
+  return apiRequest(`/api/v1/users/me/assessments?limit=${limit}`);
+}
+
+export async function getMyDietPlans(limit = 50) {
+  return apiRequest(`/api/v1/users/me/diet-plans?limit=${limit}`);
+}
+
+export async function updateProfile(data) {
+  return apiRequest('/api/v1/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function changePassword(current_password, new_password) {
+  return apiRequest('/api/v1/users/me/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password, new_password }),
+  });
+}
+
+// Admin
+export async function adminGetUsers(skip = 0, limit = 100) {
+  return apiRequest(`/api/v1/admin/users?skip=${skip}&limit=${limit}`);
+}
+
+export async function adminGetStats() {
+  return apiRequest('/api/v1/admin/stats');
+}
+
+export async function adminGetAssessments(skip = 0, limit = 100) {
+  return apiRequest(`/api/v1/admin/assessments?skip=${skip}&limit=${limit}`);
+}
+
 const apiService = {
   predictDiabetesRisk,
   chatWithAI,
@@ -98,6 +166,16 @@ const apiService = {
   getChatTopics,
   clearChatHistory,
   healthCheck,
+  login,
+  register,
+  fetchMe,
+  getMyAssessments,
+  getMyDietPlans,
+  updateProfile,
+  changePassword,
+  adminGetUsers,
+  adminGetStats,
+  adminGetAssessments,
 };
 
 export default apiService;

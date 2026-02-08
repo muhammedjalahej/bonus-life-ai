@@ -8,15 +8,15 @@ const Footer = ({ language }) => {
 
   const t = {
     english: { tagline: 'Empowering Health Through AI', disclaimer: 'Not a substitute for professional medical advice. Always consult healthcare professionals.' },
-    turkish: { tagline: 'Yapay Zeka ile Sağlığı Güçlendiriyoruz', disclaimer: 'Profesyonel tıbbi tavsiyenin yerine geçmez. Her zaman sağlık uzmanlarına danışın.' },
+    turkish: { tagline: 'Yapay Zeka ile Sağlığınızı Güçlendiriyoruz', disclaimer: 'Bu uygulama profesyonel tıbbi tavsiye yerine geçmez. Sağlık durumunuz için mutlaka bir sağlık uzmanına danışın.' },
   }[language] || { tagline: 'Empowering Health Through AI', disclaimer: 'Not a substitute for professional medical advice. Always consult healthcare professionals.' };
 
   const navLinks = [
-    { label: 'Assessment', path: ROUTES.TEST },
-    { label: 'AI Chat', path: ROUTES.CHAT },
-    { label: 'Voice Chat', path: ROUTES.VOICE_CHAT },
-    { label: 'Diet Plan', path: ROUTES.DIET_PLAN },
-    { label: 'Emergency', path: ROUTES.EMERGENCY },
+    { label: language === 'turkish' ? 'Değerlendirme' : 'Assessment', path: ROUTES.TEST },
+    { label: language === 'turkish' ? 'Yapay Zeka Sohbet' : 'AI Chat', path: ROUTES.CHAT },
+    { label: language === 'turkish' ? 'Sesli Sohbet' : 'Voice Chat', path: ROUTES.VOICE_CHAT },
+    { label: language === 'turkish' ? 'Diyet Planı' : 'Diet Plan', path: ROUTES.DIET_PLAN },
+    { label: language === 'turkish' ? 'Acil' : 'Emergency', path: ROUTES.EMERGENCY },
   ];
 
   return (
@@ -36,13 +36,13 @@ const Footer = ({ language }) => {
             </div>
             <p className="text-sm text-gray-500 leading-relaxed">{t.tagline}</p>
             <p className="flex items-center gap-1.5 text-xs text-gray-600">
-              Made with <Heart className="w-3 h-3 text-red-500 fill-red-500" /> for better health
+              {language === 'turkish' ? 'Daha iyi sağlık için' : 'Made with'} <Heart className="w-3 h-3 text-red-500 fill-red-500" /> {language === 'turkish' ? 'ile yapıldı' : 'for better health'}
             </p>
           </div>
 
           {/* Navigation */}
           <div>
-            <h4 className="text-[11px] font-extrabold text-gray-400 mb-5 uppercase tracking-[0.2em]">Platform</h4>
+            <h4 className="text-[11px] font-extrabold text-gray-400 mb-5 uppercase tracking-[0.2em]">{language === 'turkish' ? 'Platform' : 'Platform'}</h4>
             <ul className="space-y-3">
               {navLinks.map((link) => (
                 <li key={link.path}>
@@ -58,7 +58,7 @@ const Footer = ({ language }) => {
 
           {/* Authors */}
           <div>
-            <h4 className="text-[11px] font-extrabold text-gray-400 mb-5 uppercase tracking-[0.2em]">Team</h4>
+            <h4 className="text-[11px] font-extrabold text-gray-400 mb-5 uppercase tracking-[0.2em]">{language === 'turkish' ? 'Ekip' : 'Team'}</h4>
             <div className="space-y-3">
               <p className="text-sm text-gray-400">Muhammed Jalahej</p>
               <p className="text-sm text-gray-400">Yazen Emino</p>

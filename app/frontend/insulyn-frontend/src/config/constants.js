@@ -16,4 +16,8 @@ export const ROUTES = {
   VOICE_CHAT: '/voice-chat',
   DIET_PLAN: '/diet-plan',
   EMERGENCY: '/emergency',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  DASHBOARD: '/dashboard',
+  ADMIN: '/admin',
 };

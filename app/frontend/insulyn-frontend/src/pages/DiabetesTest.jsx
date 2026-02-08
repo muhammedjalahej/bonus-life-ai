@@ -16,12 +16,59 @@ const DiabetesTest = ({ language = 'english' }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const t = language === 'turkish' ? {
-    title: 'Risk Değerlendirmesi', steps: ['Kişisel', 'Sağlık Verileri', 'Sonuçlar'],
-    next: 'Devam', back: 'Geri', submit: 'Analiz Et', newTest: 'Yeni Değerlendirme', loading: 'Analiz ediliyor...',
+  const isTr = language === 'turkish';
+  const t = isTr ? {
+    title: 'Diyabet Risk Değerlendirmesi', steps: ['Kişisel Bilgiler', 'Sağlık Ölçümleri', 'Sonuçlar'],
+    next: 'Devam', back: 'Geri', submit: 'Analiz Yap', newTest: 'Yeni Değerlendirme', loading: 'Analiz ediliyor...',
+    badge: 'Yapay Zeka Destekli Analiz',
+    subtitle: 'Yapay zeka destekli diyabet risk analizi için sağlık verilerinizi girin.',
+    step0Title: 'Kişisel Bilgiler', step0Sub: 'Değerlendirmeniz için temel bilgiler',
+    step1Title: 'Sağlık Ölçümleri', step1Sub: 'Klinik ölçümler ve yaşamsal bulgular',
+    pregnancies: 'Hamilelik Sayısı', pregnanciesHint: 'Uygulanamıyorsa 0 girin', pregnanciesPlaceholder: 'Sayı girin',
+    age: 'Yaş', ageHint: 'Zorunlu', agePlaceholder: 'Yaş girin',
+    glucose: 'Glukoz (mg/dL)', glucoseHint: 'Açlık kan şekeri', glucosePlaceholder: 'Değer girin',
+    bloodPressure: 'Tansiyon (mmHg)', bloodPressureHint: 'Büyük tansiyon', bloodPressurePlaceholder: 'Değer girin',
+    skinThickness: 'Cilt Kalınlığı (mm)', skinThicknessHint: 'Triceps kıvrım', skinThicknessPlaceholder: 'Değer girin',
+    insulin: 'İnsülin (mu U/ml)', insulinHint: '2 saatlik serum', insulinPlaceholder: 'Değer girin',
+    weight: 'Kilo (kg)', weightPlaceholder: 'Kilo girin',
+    height: 'Boy (cm)', heightPlaceholder: 'Boy girin',
+    pedigree: 'Diyabet Aile Öyküsü', pedigreeHint: 'Aile öykü puanı (0,0 - 2,5)', pedigreePlaceholder: 'Değer girin',
+    requiredError: 'Lütfen zorunlu alanları doldurun.',
+    execSummary: 'Özet', probLabel: 'Tip 2 diyabet geliştirme olasılığı',
+    keyRiskFactors: 'Önemli Risk Faktörleri', noRiskFactors: 'Önemli risk faktörü yok.',
+    bmi: 'VKİ', metabolicAge: 'Metabolik Yaş', years: 'yıl', healthScore: 'Sağlık Puanı',
+    nutrition: 'Beslenme', nutritionDesc: 'Düşük glisemik besinler, porsiyon kontrolü, tam tahıllar. İlave şeker ve işlenmiş gıdayı sınırlayın.',
+    fitness: 'Fitness', fitnessDesc: 'Haftada 150 dk orta tempolu aerobik. Haftada 2-3 gün kuvvet antrenmanı.',
+    lifestyleChanges: 'Yaşam Tarzı Değişiklikleri',
+    immediate: 'Acil', immediateItems: ['Doktora danışın', 'Kan şekerini takip edin', 'Yürüyüşe başlayın'],
+    days30: '30 Gün', days30Items: ['Diyet değişiklikleri', 'Egzersiz rutini', 'Haftalık takip'],
+    days90: '90 Gün', days90Items: ['Metrikleri yeniden değerlendirin', 'Planı güncelleyin', 'Kontrol randevusu'],
   } : {
     title: 'Risk Assessment', steps: ['Personal', 'Health Metrics', 'Results'],
     next: 'Continue', back: 'Back', submit: 'Analyze', newTest: 'New Assessment', loading: 'Analyzing...',
+    badge: 'AI-Powered Analysis',
+    subtitle: 'Enter your health metrics for an AI-driven diabetes risk analysis.',
+    step0Title: 'Personal Information', step0Sub: 'Basic details for your assessment',
+    step1Title: 'Health Metrics', step1Sub: 'Clinical measurements and vitals',
+    pregnancies: 'Number of Pregnancies', pregnanciesHint: 'Enter 0 if not applicable', pregnanciesPlaceholder: 'Enter number of pregnancies',
+    age: 'Age', ageHint: 'Required', agePlaceholder: 'Enter age',
+    glucose: 'Glucose (mg/dL)', glucoseHint: 'Fasting blood sugar', glucosePlaceholder: 'Enter value',
+    bloodPressure: 'Blood Pressure (mmHg)', bloodPressureHint: 'Systolic', bloodPressurePlaceholder: 'Enter value',
+    skinThickness: 'Skin Thickness (mm)', skinThicknessHint: 'Triceps skinfold', skinThicknessPlaceholder: 'Enter value',
+    insulin: 'Insulin (mu U/ml)', insulinHint: '2-Hour serum', insulinPlaceholder: 'Enter value',
+    weight: 'Weight (kg)', weightPlaceholder: 'Enter weight',
+    height: 'Height (cm)', heightPlaceholder: 'Enter height',
+    pedigree: 'Diabetes Pedigree Function', pedigreeHint: 'Family history score (0.0 - 2.5)', pedigreePlaceholder: 'Enter value',
+    requiredError: 'Please fill all required fields',
+    execSummary: 'Executive Summary', probLabel: 'Probability of developing type 2 diabetes',
+    keyRiskFactors: 'Key Risk Factors', noRiskFactors: 'No significant risk factors.',
+    bmi: 'BMI', metabolicAge: 'Metabolic Age', years: 'years', healthScore: 'Health Score',
+    nutrition: 'Nutrition', nutritionDesc: 'Low-glycemic foods, portion control, whole grains. Limit added sugars and processed food.',
+    fitness: 'Fitness', fitnessDesc: '150 min/week moderate aerobic activity. Strength training 2-3x/week.',
+    lifestyleChanges: 'Lifestyle Changes',
+    immediate: 'Immediate', immediateItems: ['Consult doctor', 'Monitor glucose', 'Start walking'],
+    days30: '30 Days', days30Items: ['Diet changes', 'Exercise routine', 'Weekly tracking'],
+    days90: '90 Days', days90Items: ['Reassess metrics', 'Adjust plan', 'Follow-up visit'],
   };
 
   const onChange = (f) => (e) => setFormData({ ...formData, [f]: e.target.value });
@@ -30,7 +77,7 @@ const DiabetesTest = ({ language = 'english' }) => {
     setLoading(true); setError('');
     try {
       if (!formData.glucose || !formData.blood_pressure || !formData.weight || !formData.height || !formData.age)
-        throw new Error('Please fill all required fields');
+        throw new Error(t.requiredError);
 
       const response = await fetch(`${API_BASE_URL}/api/v1/diabetes-assessment`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -61,7 +108,7 @@ const DiabetesTest = ({ language = 'english' }) => {
   const isHigh = risk.toLowerCase().includes('high');
   const isMod = risk.toLowerCase().includes('moderate');
 
-  const Field = ({ label, field, required, hint, icon: Icon }) => (
+  const Field = ({ label, field, required, hint, placeholder, icon: Icon }) => (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-gray-300">
         {label} {required && <span className="text-emerald-400">*</span>}
@@ -70,7 +117,7 @@ const DiabetesTest = ({ language = 'english' }) => {
         {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />}
         <input type="number" value={formData[field]} onChange={onChange(field)}
           className={`input-field ${Icon ? 'pl-11' : ''} ${required && !formData[field] ? 'border-red-500/20' : ''}`}
-          placeholder={`Enter ${label.toLowerCase()}`} />
+          placeholder={placeholder || `Enter ${label.toLowerCase()}`} />
       </div>
       {hint && <p className="text-[11px] text-gray-600">{hint}</p>}
     </div>
@@ -85,10 +132,10 @@ const DiabetesTest = ({ language = 'english' }) => {
       <div className="text-center mb-14 animate-fade-in-up">
         <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-5 py-2 mb-5">
           <Sparkles className="w-4 h-4 text-blue-400" />
-          <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-[0.15em]">AI-Powered Analysis</span>
+          <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-[0.15em]">{t.badge}</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
-        <p className="text-gray-500 max-w-md mx-auto">Enter your health metrics for an AI-driven diabetes risk analysis.</p>
+        <p className="text-gray-500 max-w-md mx-auto">{t.subtitle}</p>
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-4 mt-10">
@@ -127,13 +174,13 @@ const DiabetesTest = ({ language = 'english' }) => {
                   <Heart className="w-6 h-6 text-pink-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Personal Information</h2>
-                  <p className="text-sm text-gray-500">Basic details for your assessment</p>
+                  <h2 className="text-xl font-bold text-white">{t.step0Title}</h2>
+                  <p className="text-sm text-gray-500">{t.step0Sub}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label="Number of Pregnancies" field="pregnancies" hint="Enter 0 if not applicable" icon={Users} />
-                <Field label="Age" field="age" required hint="Required" icon={Calendar} />
+                <Field label={t.pregnancies} field="pregnancies" hint={t.pregnanciesHint} placeholder={t.pregnanciesPlaceholder} icon={Users} />
+                <Field label={t.age} field="age" required hint={t.ageHint} placeholder={t.agePlaceholder} icon={Calendar} />
               </div>
             </div>
           )}
@@ -145,19 +192,19 @@ const DiabetesTest = ({ language = 'english' }) => {
                   <Activity className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Health Metrics</h2>
-                  <p className="text-sm text-gray-500">Clinical measurements and vitals</p>
+                  <h2 className="text-xl font-bold text-white">{t.step1Title}</h2>
+                  <p className="text-sm text-gray-500">{t.step1Sub}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label="Glucose (mg/dL)" field="glucose" required hint="Fasting blood sugar" icon={Droplets} />
-                <Field label="Blood Pressure (mmHg)" field="blood_pressure" required hint="Systolic" icon={Activity} />
-                <Field label="Skin Thickness (mm)" field="skin_thickness" hint="Triceps skinfold" />
-                <Field label="Insulin (mu U/ml)" field="insulin" hint="2-Hour serum" />
-                <Field label="Weight (kg)" field="weight" required />
-                <Field label="Height (cm)" field="height" required />
+                <Field label={t.glucose} field="glucose" required hint={t.glucoseHint} placeholder={t.glucosePlaceholder} icon={Droplets} />
+                <Field label={t.bloodPressure} field="blood_pressure" required hint={t.bloodPressureHint} placeholder={t.bloodPressurePlaceholder} icon={Activity} />
+                <Field label={t.skinThickness} field="skin_thickness" hint={t.skinThicknessHint} placeholder={t.skinThicknessPlaceholder} />
+                <Field label={t.insulin} field="insulin" hint={t.insulinHint} placeholder={t.insulinPlaceholder} />
+                <Field label={t.weight} field="weight" required placeholder={t.weightPlaceholder} />
+                <Field label={t.height} field="height" required placeholder={t.heightPlaceholder} />
                 <div className="sm:col-span-2">
-                  <Field label="Diabetes Pedigree Function" field="diabetes_pedigree_function" hint="Family history score (0.0 - 2.5)" />
+                  <Field label={t.pedigree} field="diabetes_pedigree_function" hint={t.pedigreeHint} placeholder={t.pedigreePlaceholder} />
                 </div>
               </div>
             </div>
@@ -185,7 +232,7 @@ const DiabetesTest = ({ language = 'english' }) => {
                             <Stethoscope className="w-5 h-5 text-emerald-400" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-white mb-2 text-lg">Executive Summary</h3>
+                            <h3 className="font-bold text-white mb-2 text-lg">{t.execSummary}</h3>
                             <p className="text-sm text-gray-400 leading-relaxed">{result.executive_summary}</p>
                           </div>
                         </div>
@@ -199,12 +246,12 @@ const DiabetesTest = ({ language = 'english' }) => {
                       <Target className={`w-6 h-6 mb-4 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`} />
                       <div className={`text-5xl font-black mb-2 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`}>{prob}%</div>
                       <div className={`text-sm font-bold mb-3 ${isHigh ? 'text-red-300' : isMod ? 'text-amber-300' : 'text-emerald-300'}`}>{risk}</div>
-                      <p className="text-xs text-gray-500">Probability of developing type 2 diabetes</p>
+                      <p className="text-xs text-gray-500">{t.probLabel}</p>
                     </div>
 
                     <div className="card p-7 animate-fade-in-up">
                       <AlertTriangle className="w-6 h-6 text-amber-400 mb-4" />
-                      <h3 className="font-bold text-white mb-4 text-lg">Key Risk Factors</h3>
+                      <h3 className="font-bold text-white mb-4 text-lg">{t.keyRiskFactors}</h3>
                       {factors.length > 0 ? (
                         <ul className="space-y-3">
                           {factors.map((f, i) => {
@@ -212,23 +259,23 @@ const DiabetesTest = ({ language = 'english' }) => {
                             return (
                               <li key={i} className="flex items-start gap-3">
                                 <span className={`badge mt-0.5 ${sev.includes('high') ? 'bg-red-500/20 text-red-400' : sev.includes('moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                                  {f.severity || 'Info'}
+                                  {f.severity || (isTr ? 'Bilgi' : 'Info')}
                                 </span>
                                 <span className="text-sm text-gray-300">{f.factor}</span>
                               </li>
                             );
                           })}
                         </ul>
-                      ) : <p className="text-sm text-gray-500">No significant risk factors.</p>}
+                      ) : <p className="text-sm text-gray-500">{t.noRiskFactors}</p>}
                     </div>
                   </div>
 
                   {/* Metrics */}
                   <div className="grid grid-cols-3 gap-5 animate-fade-in-up">
                     {[
-                      { label: 'BMI', value: metrics.bmi || 'N/A', sub: metrics.bmi_category || '---' },
-                      { label: 'Metabolic Age', value: metrics.metabolic_age || 'N/A', sub: 'years' },
-                      { label: 'Health Score', value: `${metrics.health_score || 0}/100`, sub: `${metrics.health_score || 0}%`, bar: metrics.health_score },
+                      { label: t.bmi, value: metrics.bmi || 'N/A', sub: metrics.bmi_category || '---' },
+                      { label: t.metabolicAge, value: metrics.metabolic_age || 'N/A', sub: t.years },
+                      { label: t.healthScore, value: `${metrics.health_score || 0}/100`, sub: `${metrics.health_score || 0}%`, bar: metrics.health_score },
                     ].map((m, i) => (
                       <div key={i} className="card p-6 text-center">
                         <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] mb-3 font-bold">{m.label}</p>
@@ -249,15 +296,15 @@ const DiabetesTest = ({ language = 'english' }) => {
                       <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
                         <Apple className="w-5 h-5 text-emerald-400" />
                       </div>
-                      <h4 className="font-bold text-white mb-2">Nutrition</h4>
-                      <p className="text-sm text-gray-400 leading-relaxed">Low-glycemic foods, portion control, whole grains. Limit added sugars and processed food.</p>
+                      <h4 className="font-bold text-white mb-2">{t.nutrition}</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed">{t.nutritionDesc}</p>
                     </div>
                     <div className="card p-6">
                       <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
                         <Dumbbell className="w-5 h-5 text-blue-400" />
                       </div>
-                      <h4 className="font-bold text-white mb-2">Fitness</h4>
-                      <p className="text-sm text-gray-400 leading-relaxed">150 min/week moderate aerobic activity. Strength training 2-3x/week.</p>
+                      <h4 className="font-bold text-white mb-2">{t.fitness}</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed">{t.fitnessDesc}</p>
                     </div>
                   </div>
 
@@ -266,7 +313,7 @@ const DiabetesTest = ({ language = 'english' }) => {
                       <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
                         <Leaf className="w-5 h-5 text-violet-400" />
                       </div>
-                      <h4 className="font-bold text-white mb-4">Lifestyle Changes</h4>
+                      <h4 className="font-bold text-white mb-4">{t.lifestyleChanges}</h4>
                       <ul className="space-y-2.5">
                         {recs.lifestyle_changes.map((c, i) => (
                           <li key={i} className="flex items-start gap-3 text-sm text-gray-400">
@@ -280,9 +327,9 @@ const DiabetesTest = ({ language = 'english' }) => {
                   {/* Timeline */}
                   <div className="grid grid-cols-3 gap-5 animate-fade-in-up">
                     {[
-                      { label: 'Immediate', icon: Clock, items: ['Consult doctor', 'Monitor glucose', 'Start walking'], color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/10' },
-                      { label: '30 Days', icon: Calendar, items: ['Diet changes', 'Exercise routine', 'Weekly tracking'], color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/10' },
-                      { label: '90 Days', icon: TrendingUp, items: ['Reassess metrics', 'Adjust plan', 'Follow-up visit'], color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/10' },
+                      { label: t.immediate, icon: Clock, items: t.immediateItems, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/10' },
+                      { label: t.days30, icon: Calendar, items: t.days30Items, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/10' },
+                      { label: t.days90, icon: TrendingUp, items: t.days90Items, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/10' },
                     ].map((p, i) => (
                       <div key={i} className={`card p-5 border ${p.border}`}>
                         <div className={`w-9 h-9 rounded-lg ${p.bg} flex items-center justify-center mb-3`}>

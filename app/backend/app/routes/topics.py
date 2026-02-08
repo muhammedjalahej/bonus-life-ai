@@ -22,13 +22,13 @@ async def get_health_topics(language: str = "english"):
         ],
         "turkish": [
             {"id": "prevention", "name": "Diyabet Önleme", "description": "Tip 2 diyabeti nasıl önleyebilirsiniz"},
-            {"id": "symptoms", "name": "Belirtiler ve İşaretler", "description": "Diyabetin erken uyarı işaretleri"},
-            {"id": "diet", "name": "Diyabet Diyeti", "description": "Yenmesi ve kaçınılması gereken yiyecekler"},
+            {"id": "symptoms", "name": "Belirtiler ve İşaretler", "description": "Diyabetin erken uyarı belirtileri"},
+            {"id": "diet", "name": "Diyabet Diyeti", "description": "Tüketilmesi ve kaçınılması gereken besinler"},
             {"id": "exercise", "name": "Egzersiz ve Aktivite", "description": "Fiziksel aktivite önerileri"},
-            {"id": "monitoring", "name": "Kan Şekeri Takibi", "description": "Glikoz seviyelerini kontrol etme"},
+            {"id": "monitoring", "name": "Kan Şekeri Takibi", "description": "Kan şekeri seviyesini ölçme"},
             {"id": "treatment", "name": "Tedavi Seçenekleri", "description": "İlaçlar ve tedavi yöntemleri"},
             {"id": "complications", "name": "Komplikasyonlar", "description": "Uzun vadeli sağlık riskleri"},
-            {"id": "management", "name": "Günlük Yönetim", "description": "Diyabetle yaşamak"},
+            {"id": "management", "name": "Günlük Yönetim", "description": "Diyabetle birlikte yaşamak"},
         ],
     }
     return {

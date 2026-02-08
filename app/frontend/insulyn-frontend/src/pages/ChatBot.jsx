@@ -15,6 +15,25 @@ const ChatBot = ({ language = 'english' }) => {
   const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef(null);
 
+  const isTr = language === 'turkish';
+  const t = isTr ? {
+    badge: 'Canlı Yapay Zeka Sohbeti', title: 'Yapay Zeka Diyabet Uzmanı', subtitle: 'Diyabet önleme, yönetim ve tedavi hakkında uzman yanıtlar alın.',
+    online: 'Çevrimiçi -- Groq LLM', connecting: 'Bağlanıyor...', offline: 'Çevrimdışı',
+    placeholder: 'Diyabet hakkında soru sorun...', placeholderWaiting: 'Bağlantı bekleniyor...',
+    thinking: 'Düşünüyor...', you: 'Siz', ai: 'Yapay Zeka', error: 'Hata', live: 'Canlı',
+    close: 'Kapat', connectionError: 'Bağlantı hatası. Lütfen sunucunun çalıştığından emin olun.',
+    requestTimeout: 'İstek zaman aşımı',
+    unavailable: 'Yapay zeka uzmanı şu an kullanılamıyor. Lütfen daha sonra tekrar deneyin veya acil tıbbi konularda bir sağlık kuruluşuna başvurun.',
+  } : {
+    badge: 'Live AI Chat', title: 'AI Diabetes Specialist', subtitle: 'Get expert answers about diabetes prevention, management, and treatment.',
+    online: 'Online -- Groq LLM', connecting: 'Connecting...', offline: 'Offline',
+    placeholder: 'Ask about diabetes...', placeholderWaiting: 'Waiting for connection...',
+    thinking: 'Thinking...', you: 'You', ai: 'AI', error: 'Error', live: 'Live',
+    close: 'Close', connectionError: 'Connection failed. Please check if the backend is running.',
+    requestTimeout: 'Request timeout',
+    unavailable: 'Our AI specialist is currently unavailable. Please try again later or consult a healthcare provider.',
+  };
+
   useEffect(() => { initializeConversation(); checkBackendConnection(); }, [language]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -23,14 +42,14 @@ const ChatBot = ({ language = 'english' }) => {
       const r = await fetch(`${API_BASE_URL}/health`);
       if (r.ok) { setBackendStatus('connected'); setError(''); }
       else throw new Error(`HTTP ${r.status}`);
-    } catch (err) { setBackendStatus('disconnected'); setError(`Connection failed: ${err.message}`); }
+    } catch (err) { setBackendStatus('disconnected'); setError(isTr ? 'Bağlantı başarısız.' : `Connection failed: ${err.message}`); }
   };
 
   const initializeConversation = () => {
     setConversationId(`conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
     setMessages([{
-      text: language === 'turkish'
-        ? "Merhaba! Ben yapay zeka diyabet uzmanınızım. Diyabet önleme, risk faktörleri, tedavi veya yaşam tarzı yönetimi hakkında bana her şeyi sorabilirsiniz."
+      text: isTr
+        ? "Merhaba! Diyabet konusunda yapay zeka asistanınızım. Diyabet önleme, risk faktörleri, tedavi ve yaşam tarzı hakkındaki sorularınızı yanıtlayabilirim."
         : "Hello! I'm your AI diabetes specialist. Ask me anything about diabetes prevention, risk factors, treatment, or lifestyle management.",
       sender: 'bot', timestamp: new Date(), id: Date.now(), isSystem: true,
     }]);
@@ -70,21 +89,28 @@ const ChatBot = ({ language = 'english' }) => {
 
       setMessages(prev => [...prev, {
         text: llmResponse, sender: 'bot', timestamp: new Date(), id: Date.now() + 1,
-        isLLMResponse: true, suggestions: data.suggestions || generateSuggestions(llmResponse),
+        isLLMResponse: true, suggestions: data.suggestions || generateSuggestions(language, llmResponse),
       }]);
       setBackendStatus('connected');
       setRetryCount(0);
     } catch (err) {
-      const msg = err.name === 'AbortError' ? 'Request timeout' : err.message;
+      const msg = err.name === 'AbortError' ? t.requestTimeout : err.message;
       setError(msg);
       setBackendStatus('disconnected');
       setRetryCount(r => r + 1);
-      setMessages(prev => [...prev, { text: `Connection error: ${msg}\nPlease check if the backend is running.`, sender: 'bot', timestamp: new Date(), id: Date.now() + 1, isError: true }]);
+      const displayMsg = (msg && msg.toLowerCase().includes('unavailable')) ? t.unavailable : (isTr ? `${t.connectionError}\n${msg}` : `Connection error: ${msg}\nPlease check if the backend is running.`);
+      setMessages(prev => [...prev, { text: displayMsg, sender: 'bot', timestamp: new Date(), id: Date.now() + 1, isError: true }]);
     } finally { setLoading(false); }
   };
 
-  const generateSuggestions = (r) => {
-    const l = r.toLowerCase();
+  const generateSuggestions = (lang, r) => {
+    const l = (r || '').toLowerCase();
+    if (lang === 'turkish') {
+      if (l.includes('kan şekeri') || l.includes('glukoz') || l.includes('blood sugar') || l.includes('glucose')) return ['Normal kan şekeri aralıkları?', 'Kan şekerini kontrol eden besinler'];
+      if (l.includes('risk') || l.includes('önle') || l.includes('prevent')) return ['Yaşam tarzı değişiklikleri?', 'Erken uyarı belirtileri'];
+      if (l.includes('diyet') || l.includes('beslenme') || l.includes('diet') || l.includes('nutrition')) return ['Örnek öğün planları', 'Glisemik indeks açıklaması'];
+      return ['Daha fazla açıkla', 'Güncel araştırmalar?', 'Tedavi seçenekleri?'];
+    }
     if (l.includes('blood sugar') || l.includes('glucose')) return ['Normal blood sugar ranges?', 'Foods for blood sugar control'];
     if (l.includes('risk') || l.includes('prevent')) return ['Lifestyle changes?', 'Early warning signs'];
     if (l.includes('diet') || l.includes('nutrition')) return ['Sample meal plans', 'Glycemic index explained'];
@@ -94,10 +120,9 @@ const ChatBot = ({ language = 'english' }) => {
   const handleQuick = (q) => { setInput(q); setTimeout(() => { if (backendStatus === 'connected') handleSend(); }, 100); };
   const connected = backendStatus === 'connected';
 
-  const quickQuestions = [
-    'Diabetes pathophysiology', 'Treatment advancements', 'Diet recommendations',
-    'Exercise benefits', 'Complications', 'Mental health impact',
-  ];
+  const quickQuestions = isTr
+    ? ['Diyabet patofizyolojisi', 'Tedavi gelişmeleri', 'Diyet önerileri', 'Egzersiz faydaları', 'Komplikasyonlar', 'Ruh sağlığı etkisi']
+    : ['Diabetes pathophysiology', 'Treatment advancements', 'Diet recommendations', 'Exercise benefits', 'Complications', 'Mental health impact'];
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
@@ -105,10 +130,10 @@ const ChatBot = ({ language = 'english' }) => {
       <div className="text-center mb-10 animate-fade-in-up">
         <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-5 py-2 mb-5">
           <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-[0.15em]">Live AI Chat</span>
+          <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-[0.15em]">{t.badge}</span>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">AI Diabetes Specialist</h1>
-        <p className="text-gray-500 max-w-md mx-auto">Get expert answers about diabetes prevention, management, and treatment.</p>
+        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
+        <p className="text-gray-500 max-w-md mx-auto">{t.subtitle}</p>
       </div>
 
       <div className="gradient-border animate-fade-in-up">
@@ -127,7 +152,7 @@ const ChatBot = ({ language = 'english' }) => {
                 <div>
                   <h2 className="text-lg font-bold text-white">More Life AI</h2>
                   <p className={`text-xs font-medium ${connected ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {connected ? 'Online -- Groq LLM' : `Connecting... ${retryCount > 0 ? `(${retryCount})` : ''}`}
+                    {connected ? t.online : `${t.connecting} ${retryCount > 0 ? `(${retryCount})` : ''}`}
                   </p>
                 </div>
               </div>
@@ -183,8 +208,8 @@ const ChatBot = ({ language = 'english' }) => {
 
                   <div className="flex items-center justify-between mt-2.5">
                     <span className="text-[10px] text-gray-600 font-medium">
-                      {msg.sender === 'user' ? 'You' : msg.isError ? 'Error' : 'AI'}
-                      {msg.isLLMResponse && <span className="text-emerald-500 ml-1.5">Live</span>}
+                      {msg.sender === 'user' ? t.you : msg.isError ? t.error : t.ai}
+                      {msg.isLLMResponse && <span className="text-emerald-500 ml-1.5">{t.live}</span>}
                     </span>
                     <span className="text-[10px] text-gray-600">{msg.timestamp.toLocaleTimeString()}</span>
                   </div>
@@ -203,7 +228,7 @@ const ChatBot = ({ language = 'english' }) => {
                       <div key={i} className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />
                     ))}
                   </div>
-                  <span className="text-sm text-gray-500">Thinking...</span>
+                  <span className="text-sm text-gray-500">{t.thinking}</span>
                 </div>
               </div>
             )}
@@ -216,7 +241,7 @@ const ChatBot = ({ language = 'english' }) => {
               <textarea value={input} onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && connected) { e.preventDefault(); handleSend(); } }}
                 disabled={loading || !connected}
-                placeholder={connected ? 'Ask about diabetes...' : 'Waiting for connection...'}
+                placeholder={connected ? t.placeholder : t.placeholderWaiting}
                 rows={1} className="input-field resize-none flex-1" />
               <button onClick={handleSend} disabled={loading || !input.trim() || !connected} className="btn-primary px-5 rounded-xl">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -224,7 +249,7 @@ const ChatBot = ({ language = 'english' }) => {
             </div>
             <div className={`mt-3 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.15em] ${connected ? 'text-emerald-500' : 'text-amber-500'}`}>
               {connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              {connected ? 'Live -- Groq LLM Connected' : 'Offline'}
+              {connected ? t.online : t.offline}
             </div>
           </div>
         </div>
@@ -235,7 +260,7 @@ const ChatBot = ({ language = 'english' }) => {
           <div className="card flex items-center gap-3 p-4 border-red-500/20">
             <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
             <p className="text-sm text-red-300 flex-1">{error}</p>
-            <button onClick={() => setError('')} className="text-red-400 text-xs font-bold hover:text-red-300 transition-colors">Close</button>
+            <button onClick={() => setError('')} className="text-red-400 text-xs font-bold hover:text-red-300 transition-colors">{t.close}</button>
           </div>
         </div>
       )}

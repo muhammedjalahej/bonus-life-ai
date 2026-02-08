@@ -39,7 +39,7 @@ class VoiceChatService:
         }
         mock_responses = {
             "en-US": "I'm concerned about diabetes in my family",
-            "tr-TR": "Ailemdeki diyabet konusunda endişeliyim",
+            "tr-TR": "Ailemde diyabet risk faktörleri konusunda endişeliyim.",
         }
         recognition_language = lang_map.get(language.lower(), "en-US")
         transcribed_text = mock_responses.get(recognition_language, "I have questions about diabetes")

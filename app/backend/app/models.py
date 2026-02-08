@@ -196,3 +196,43 @@ class HealthMetrics(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
+
+
+# ---------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    full_name: str = ""
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: Dict[str, Any]
+
+
+class UserMeResponse(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    role: str
+    preferred_language: str
+    is_active: bool
+    created_at: Optional[datetime] = None
+
+
+class ProfileUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    preferred_language: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

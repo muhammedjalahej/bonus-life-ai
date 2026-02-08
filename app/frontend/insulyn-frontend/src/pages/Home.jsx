@@ -8,28 +8,53 @@ import {
 const Home = ({ language }) => {
   const navigate = useNavigate();
 
+  const lang = language === 'turkish' ? 'turkish' : 'english';
   const t = {
     english: {
       hero1: 'Your health,',
       hero2: 'redefined by AI.',
       sub: 'Advanced diabetes prevention and management powered by machine learning and real-time AI conversations.',
       cta1: 'Get Risk Assessment', cta2: 'Talk to AI',
+      platformLabel: 'Platform',
+      platformTitle: 'Everything you need,',
+      platformTitle2: 'in one platform.',
+      platformSub: 'Comprehensive AI tools for diabetes prevention, detection, and management.',
+      getStarted: 'Get Started',
+      explore: 'Explore',
+      poweredBy: 'Powered By',
+      badgeHero: 'AI-Powered Health Platform',
     },
     turkish: {
       hero1: 'Sağlığınız,',
-      hero2: 'yapay zeka ile yeniden.',
-      sub: 'Makine öğrenimi ve gerçek zamanlı yapay zeka görüşmeleriyle desteklenen gelişmiş diyabet önleme ve yönetimi.',
-      cta1: 'Risk Değerlendirmesi', cta2: 'AI ile Konuş',
+      hero2: 'yapay zeka ile yeniden tanımlanıyor.',
+      sub: 'Makine öğrenimi ve anlık yapay zeka sohbetleriyle desteklenen, gelişmiş diyabet önleme ve yönetim platformu.',
+      cta1: 'Risk Değerlendirmesi Al', cta2: 'Yapay Zeka ile Konuş',
+      platformLabel: 'Platform',
+      platformTitle: 'İhtiyacınız olan her şey,',
+      platformTitle2: 'tek platformda.',
+      platformSub: 'Diyabet önleme, tespit ve yönetimi için kapsamlı yapay zeka araçları.',
+      getStarted: 'Başlayın',
+      explore: 'Keşfet',
+      poweredBy: 'Teknolojiler',
+      badgeHero: 'Yapay Zeka Destekli Sağlık Platformu',
     },
-  }[language] || { hero1: 'Your health,', hero2: 'redefined by AI.', sub: '', cta1: 'Get Started', cta2: 'Talk to AI' };
+  }[lang] || { hero1: 'Your health,', hero2: 'redefined by AI.', sub: '', cta1: 'Get Started', cta2: 'Talk to AI', platformLabel: 'Platform', platformTitle: 'Everything you need,', platformTitle2: 'in one platform.', platformSub: '', getStarted: 'Get Started', explore: 'Explore', poweredBy: 'Powered By', badgeHero: 'AI-Powered Health Platform' };
 
-  const features = [
+  const featuresEn = [
     { icon: Activity, title: 'Risk Assessment', desc: 'ML-powered diabetes prediction with SHAP explainability and comprehensive health metrics analysis.', path: '/test', gradient: 'from-blue-500 to-indigo-600', glowClass: 'glow-blue', iconBg: 'bg-blue-500/10', iconColor: 'text-blue-400', accentColor: 'text-blue-400', featured: true },
     { icon: MessageSquare, title: 'AI Chat', desc: 'Real-time medical conversations powered by Groq LLM for personalized diabetes guidance.', path: '/chat', gradient: 'from-emerald-500 to-teal-600', glowClass: 'glow-emerald', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400', accentColor: 'text-emerald-400', featured: true },
     { icon: Mic, title: 'Voice Assistant', desc: 'Natural speech interaction in multiple languages.', path: '/voice-chat', gradient: 'from-violet-500 to-purple-600', glowClass: 'glow-violet', iconBg: 'bg-violet-500/10', iconColor: 'text-violet-400', accentColor: 'text-violet-400' },
     { icon: Salad, title: 'Diet Planner', desc: 'Personalized meal plans tailored for glucose management.', path: '/diet-plan', gradient: 'from-amber-500 to-orange-600', glowClass: 'glow-amber', iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400', accentColor: 'text-amber-400' },
     { icon: AlertTriangle, title: 'Symptom Checker', desc: 'Emergency symptom assessment with urgency scoring.', path: '/emergency', gradient: 'from-red-500 to-rose-600', glowClass: 'glow-red', iconBg: 'bg-red-500/10', iconColor: 'text-red-400', accentColor: 'text-red-400' },
   ];
+  const featuresTr = [
+    { icon: Activity, title: 'Risk Değerlendirmesi', desc: 'SHAP açıklanabilirliği ve kapsamlı sağlık metrikleriyle makine öğrenimi destekli diyabet tahmini.', path: '/test', gradient: 'from-blue-500 to-indigo-600', glowClass: 'glow-blue', iconBg: 'bg-blue-500/10', iconColor: 'text-blue-400', accentColor: 'text-blue-400', featured: true },
+    { icon: MessageSquare, title: 'Yapay Zeka Sohbet', desc: 'Kişiselleştirilmiş diyabet rehberliği için Groq LLM ile gerçek zamanlı tıbbi görüşmeler.', path: '/chat', gradient: 'from-emerald-500 to-teal-600', glowClass: 'glow-emerald', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400', accentColor: 'text-emerald-400', featured: true },
+    { icon: Mic, title: 'Sesli Asistan', desc: 'Birden fazla dilde doğal konuşma etkileşimi.', path: '/voice-chat', gradient: 'from-violet-500 to-purple-600', glowClass: 'glow-violet', iconBg: 'bg-violet-500/10', iconColor: 'text-violet-400', accentColor: 'text-violet-400' },
+    { icon: Salad, title: 'Diyet Planı', desc: 'Kan şekeri yönetimi için kişiselleştirilmiş öğün planları.', path: '/diet-plan', gradient: 'from-amber-500 to-orange-600', glowClass: 'glow-amber', iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400', accentColor: 'text-amber-400' },
+    { icon: AlertTriangle, title: 'Belirti Kontrolü', desc: 'Aciliyet skorlamalı acil belirti değerlendirmesi.', path: '/emergency', gradient: 'from-red-500 to-rose-600', glowClass: 'glow-red', iconBg: 'bg-red-500/10', iconColor: 'text-red-400', accentColor: 'text-red-400' },
+  ];
+  const features = lang === 'turkish' ? featuresTr : featuresEn;
 
   return (
     <div>
@@ -46,7 +71,7 @@ const Home = ({ language }) => {
             <div>
               <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-5 py-2 mb-10 animate-fade-in-up">
                 <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-[0.15em]">AI-Powered Health Platform</span>
+                <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-[0.15em]">{t.badgeHero}</span>
               </div>
 
               <h1 className="text-[3.5rem] sm:text-[4.5rem] lg:text-[5.5rem] font-black leading-[0.95] tracking-[-0.03em] mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
@@ -108,11 +133,11 @@ const Home = ({ language }) => {
       {/* ════════════════ FEATURES ════════════════ */}
       <section className="max-w-7xl mx-auto px-6 sm:px-10 py-28">
         <div className="text-center mb-20">
-          <p className="text-sm font-extrabold text-emerald-400 uppercase tracking-[0.2em] mb-4">Platform</p>
+          <p className="text-sm font-extrabold text-emerald-400 uppercase tracking-[0.2em] mb-4">{t.platformLabel}</p>
           <h2 className="text-4xl sm:text-5xl font-black text-white mb-5 tracking-tight">
-            Everything you need,<br /><span className="gradient-text">in one platform.</span>
+            {t.platformTitle}<br /><span className="gradient-text">{t.platformTitle2}</span>
           </h2>
-          <p className="text-gray-500 max-w-lg mx-auto text-lg">Comprehensive AI tools for diabetes prevention, detection, and management.</p>
+          <p className="text-gray-500 max-w-lg mx-auto text-lg">{t.platformSub}</p>
         </div>
 
         {/* Featured cards (large) */}
@@ -128,7 +153,7 @@ const Home = ({ language }) => {
                 <h3 className="text-2xl font-black text-white mb-3">{f.title}</h3>
                 <p className="text-[15px] text-gray-400 mb-6 leading-relaxed">{f.desc}</p>
                 <span className={`inline-flex items-center gap-2 text-sm font-bold ${f.accentColor} group-hover:gap-4 transition-all duration-300`}>
-                  Get Started <ArrowRight className="w-4 h-4" />
+                  {t.getStarted} <ArrowRight className="w-4 h-4" />
                 </span>
               </div>
             </button>
@@ -148,7 +173,7 @@ const Home = ({ language }) => {
                 <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-500 mb-4 leading-relaxed">{f.desc}</p>
                 <span className={`inline-flex items-center gap-2 text-sm font-bold ${f.accentColor} group-hover:gap-3 transition-all duration-300`}>
-                  Explore <ArrowRight className="w-4 h-4" />
+                  {t.explore} <ArrowRight className="w-4 h-4" />
                 </span>
               </div>
             </button>
@@ -159,12 +184,12 @@ const Home = ({ language }) => {
       {/* ════════════════ TECH STACK ════════════════ */}
       <section className="border-t border-white/[0.04]">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 py-24">
-          <p className="text-sm font-extrabold text-gray-500 uppercase tracking-[0.2em] mb-12 text-center">Powered By</p>
+          <p className="text-sm font-extrabold text-gray-500 uppercase tracking-[0.2em] mb-12 text-center">{t.poweredBy}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {[
-              { icon: Brain, title: 'Groq LLM', desc: 'State-of-the-art language model for intelligent, real-time medical conversations.', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { icon: BarChart3, title: 'XGBoost + SHAP', desc: 'Accurate diabetes prediction with full model explainability and feature importance.', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-              { icon: Globe, title: 'Multi-language', desc: 'Accessible in English and Turkish for inclusive healthcare.', color: 'text-violet-400', bg: 'bg-violet-500/10' },
+              { icon: Brain, title: 'Groq LLM', desc: lang === 'turkish' ? 'Akıllı, gerçek zamanlı tıbbi sohbetler için son teknoloji dil modeli.' : 'State-of-the-art language model for intelligent, real-time medical conversations.', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+              { icon: BarChart3, title: 'XGBoost + SHAP', desc: lang === 'turkish' ? 'Tam model açıklanabilirliği ve özellik önemi ile doğru diyabet tahmini.' : 'Accurate diabetes prediction with full model explainability and feature importance.', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+              { icon: Globe, title: lang === 'turkish' ? 'Çok Dilli' : 'Multi-language', desc: lang === 'turkish' ? 'Kapsayıcı sağlık hizmeti için İngilizce ve Türkçe erişim.' : 'Accessible in English and Turkish for inclusive healthcare.', color: 'text-violet-400', bg: 'bg-violet-500/10' },
             ].map((item, i) => (
               <div key={i} className="flex gap-5 group">
                 <div className={`w-14 h-14 rounded-2xl ${item.bg} border border-white/5 flex items-center justify-center shrink-0

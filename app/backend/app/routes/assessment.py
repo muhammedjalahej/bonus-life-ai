@@ -1,12 +1,17 @@
 """Diabetes risk assessment endpoint."""
 
+import json
 import uuid
 import logging
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
 
+from app.database import get_db
+from app.db_models import Assessment
+from app.auth import get_current_user_optional
 from app.models import DiabetesAssessmentRequest, AssessmentResponse
 
 logger = logging.getLogger(__name__)
@@ -23,7 +28,11 @@ def init(ai_specialist, diabetes_model):
 
 
 @router.post("/diabetes-assessment", response_model=AssessmentResponse)
-async def diabetes_assessment(request: DiabetesAssessmentRequest):
+async def diabetes_assessment(
+    request: DiabetesAssessmentRequest,
+    db: Session = Depends(get_db),
+    current_user: Optional[object] = Depends(get_current_user_optional),
+):
     """Diabetes risk assessment with LLM-powered insights."""
     try:
         logger.info(f"[DATA] Diabetes assessment for age {request.age}")
@@ -79,28 +88,51 @@ async def diabetes_assessment(request: DiabetesAssessmentRequest):
             else "Assessment completed. Please consult with healthcare provider for detailed analysis."
         )
 
+        assessment_id = str(uuid.uuid4())
+        risk_analysis = {
+            "risk_level": risk_label,
+            "probability": round(probability, 3),
+            "key_factors": _identify_risk_factors(features, bmi),
+            "feature_importances": feature_importances,
+            **({"shap_explanation": shap_explanation} if shap_explanation else {}),
+        }
+        health_metrics = {
+            "bmi": round(bmi, 1),
+            "bmi_category": bmi_category,
+            "metabolic_age": _calculate_metabolic_age(features),
+            "health_score": _calculate_health_score(features),
+        }
+        recommendations = {
+            "lifestyle_changes": _generate_lifestyle_recommendations(risk_label, features),
+            "medical_followup": "Consult healthcare provider for comprehensive evaluation",
+            "monitoring_schedule": "Regular check-ups recommended",
+        }
+
+        if current_user:
+            payload = {
+                "request": request.dict(),
+                "risk_analysis": risk_analysis,
+                "health_metrics": health_metrics,
+                "recommendations": recommendations,
+            }
+            rec = Assessment(
+                user_id=current_user.id,
+                assessment_id=assessment_id,
+                risk_level=risk_label,
+                probability=float(probability),
+                executive_summary=llm_insights,
+                payload=json.dumps(payload),
+            )
+            db.add(rec)
+            db.commit()
+
         return AssessmentResponse(
-            assessment_id=str(uuid.uuid4()),
+            assessment_id=assessment_id,
             timestamp=datetime.utcnow().isoformat(),
             executive_summary=llm_insights,
-            risk_analysis={
-                "risk_level": risk_label,
-                "probability": round(probability, 3),
-                "key_factors": _identify_risk_factors(features, bmi),
-                "feature_importances": feature_importances,
-                **({"shap_explanation": shap_explanation} if shap_explanation else {}),
-            },
-            health_metrics={
-                "bmi": round(bmi, 1),
-                "bmi_category": bmi_category,
-                "metabolic_age": _calculate_metabolic_age(features),
-                "health_score": _calculate_health_score(features),
-            },
-            recommendations={
-                "lifestyle_changes": _generate_lifestyle_recommendations(risk_label, features),
-                "medical_followup": "Consult healthcare provider for comprehensive evaluation",
-                "monitoring_schedule": "Regular check-ups recommended",
-            },
+            risk_analysis=risk_analysis,
+            health_metrics=health_metrics,
+            recommendations=recommendations,
         )
     except Exception as e:
         logger.error(f"Assessment error: {e}")

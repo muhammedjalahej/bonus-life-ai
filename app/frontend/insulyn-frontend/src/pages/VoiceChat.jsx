@@ -16,9 +16,9 @@ const VoiceChat = ({ language = 'english' }) => {
   const audioChunks = useRef([]);
 
   const t = language === 'turkish' ? {
-    title: 'Sesli Asistan', sub: 'Diyabet hakkında doğal bir şekilde konuşun', start: 'Kayda Başla', stop: 'Durdur',
-    processing: 'İşleniyor...', question: 'Sorunuz', response: 'AI Yanıtı', retry: 'Tekrar Dene',
-    type: 'Yazarak Sor', enter: 'Sorunuzu yazın', submit: 'Gönder', cancel: 'İptal',
+    title: 'Sesli Asistan', sub: 'Diyabet hakkında kendi dilinizde doğal bir şekilde konuşun', start: 'Kayıt Başlat', stop: 'Durdur',
+    processing: 'İşleniyor...', question: 'Sorunuz', response: 'Yapay Zeka Yanıtı', retry: 'Tekrar Dene',
+    type: 'Yazıyla Sor', enter: 'Sorunuzu buraya yazın', submit: 'Gönder', cancel: 'İptal',
   } : {
     title: 'Voice Assistant', sub: 'Speak naturally about diabetes in your preferred language', start: 'Start Recording', stop: 'Stop',
     processing: 'Processing...', question: 'Your Question', response: 'AI Response', retry: 'Try Again',
@@ -50,7 +50,7 @@ const VoiceChat = ({ language = 'english' }) => {
     setIsProcessing(true);
     try {
       const testText = language === 'turkish'
-        ? 'Ailemdeki diyabet risk faktörleri konusunda endişeliyim'
+        ? 'Ailemde diyabet risk faktörleri konusunda endişeliyim.'
         : "I'm concerned about diabetes risk factors in my family";
       const r = await fetch(`${API_BASE_URL}/api/v1/voice-chat/test`, {
         method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

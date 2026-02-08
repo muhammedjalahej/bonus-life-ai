@@ -200,6 +200,14 @@ voice_service = VoiceChatService()
 # ---------------------------------------------------------------------------
 # Lifespan
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Database (create tables on startup)
+# ---------------------------------------------------------------------------
+from app.database import engine, Base
+from app import db_models as _  # noqa: F401 - ensure models are registered
+Base.metadata.create_all(bind=engine)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("[START] Starting More Life AI Platform")
@@ -235,7 +243,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Wire up routes
 # ---------------------------------------------------------------------------
-from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, language
+from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, language, auth, me_routes, admin_routes
 
 # Inject service instances into route modules
 chat.init(ai_specialist)
@@ -255,6 +263,9 @@ app.include_router(topics.router, prefix="/api/v1")        # /api/v1/health-topi
 app.include_router(user.router, prefix="/api/v1")          # /api/v1/user/*
 app.include_router(voice_chat.router, prefix="/api/v1")    # /api/v1/voice-chat
 app.include_router(language.router, prefix="/api/v1")      # /api/v1/detect-language
+app.include_router(auth.router, prefix="/api/v1")          # /api/v1/auth/*
+app.include_router(me_routes.router, prefix="/api/v1")     # /api/v1/users/me/*
+app.include_router(admin_routes.router, prefix="/api/v1")  # /api/v1/admin/*
 
 
 # ---------------------------------------------------------------------------
