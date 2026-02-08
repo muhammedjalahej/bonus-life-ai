@@ -20,15 +20,15 @@ async def get_health_topics(language: str = "english"):
             {"id": "complications", "name": "Complications", "description": "Long-term health risks"},
             {"id": "management", "name": "Daily Management", "description": "Living with diabetes"},
         ],
-        "swahili": [
-            {"id": "prevention", "name": "Kuzuia Kisukari", "description": "Jinsi ya kuzuia kisukari aina ya 2"},
-            {"id": "symptoms", "name": "Dalili na Ishara", "description": "Ishara za mapema za kisukari"},
-            {"id": "diet", "name": "Lishe ya Kisukari", "description": "Vyakula vya kula na kuepuka"},
-            {"id": "exercise", "name": "Mazoezi na Shughuli", "description": "Mapendekezo ya shughuli za mwili"},
-            {"id": "monitoring", "name": "Kufuatilia Sukari ya Damu", "description": "Jinsi ya kukagua viwango vya glukosi"},
-            {"id": "treatment", "name": "Chaguo za Matibabu", "description": "Dawa na tiba mbalimbali"},
-            {"id": "complications", "name": "Matatizo", "description": "Hatari za kiafya za muda mrefu"},
-            {"id": "management", "name": "Usimamizi wa Kila Siku", "description": "Kuishi na kisukari"},
+        "turkish": [
+            {"id": "prevention", "name": "Diyabet Önleme", "description": "Tip 2 diyabeti nasıl önleyebilirsiniz"},
+            {"id": "symptoms", "name": "Belirtiler ve İşaretler", "description": "Diyabetin erken uyarı işaretleri"},
+            {"id": "diet", "name": "Diyabet Diyeti", "description": "Yenmesi ve kaçınılması gereken yiyecekler"},
+            {"id": "exercise", "name": "Egzersiz ve Aktivite", "description": "Fiziksel aktivite önerileri"},
+            {"id": "monitoring", "name": "Kan Şekeri Takibi", "description": "Glikoz seviyelerini kontrol etme"},
+            {"id": "treatment", "name": "Tedavi Seçenekleri", "description": "İlaçlar ve tedavi yöntemleri"},
+            {"id": "complications", "name": "Komplikasyonlar", "description": "Uzun vadeli sağlık riskleri"},
+            {"id": "management", "name": "Günlük Yönetim", "description": "Diyabetle yaşamak"},
         ],
     }
     return {

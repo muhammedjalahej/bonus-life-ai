@@ -12,13 +12,9 @@ class LanguageProcessor:
     """Detect language from input text using keyword analysis."""
 
     LANGUAGE_KEYWORDS = {
-        "swahili": [
-            "mimi", "wewe", "yeye", "sisi", "nyinyi", "hii", "ile", "hapa", "pale",
-            "chakula", "mazoezi", "afya", "sukari", "damu", "gonjwa la kisukari",
-        ],
-        "sheng": [
-            "msee", "nare", "vibe", "poa", "safi", "fiti", "noma", "kale", "bazenga",
-            "dawa", "kadunda", "mzinga", "ngoma", "kanyaga",
+        "turkish": [
+            "merhaba", "nasıl", "diyabet", "şeker", "sağlık", "tedavi", "doktor",
+            "hastalık", "belirti", "ilaç", "kan", "tansiyon", "beslenme", "egzersiz",
         ],
         "english": ["the", "and", "for", "with", "about", "health", "diabetes", "sugar"],
     }
@@ -40,8 +36,7 @@ def calculate_detection_confidence(text: str, detected_language: str) -> float:
     if len(text) < 5:
         return 0.5
     extra_keywords = {
-        "swahili": ["na", "ya", "kwa", "katika", "lakini", "pia"],
-        "sheng": ["msee", "vibe", "sherehe", "dame", "kumi", "doo"],
+        "turkish": ["ve", "bir", "için", "ile", "ama", "da", "de", "bu", "ne"],
     }
     text_lower = text.lower()
     matches = 0

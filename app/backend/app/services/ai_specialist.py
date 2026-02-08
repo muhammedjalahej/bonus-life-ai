@@ -184,12 +184,12 @@ class GPTOSSDiabetesSpecialist:
             self.client = None
 
     def create_diabetes_prompt(self, message: str, language: str, context: Dict = None) -> List[Dict]:
-        if language == "swahili":
+        if language == "turkish":
             system_content = (
-                "Uko kwenye mfumo wa More Life AI, mtaalamu wa kisukari. "
-                "JIBU KWA KISWAHILI KWA USAHIHI WA KITAALAMU. "
-                "Toa maelezo ya kina ya kitabibu kuhusu kisukari. "
-                "MUHIMU: Onyesha kuwa wewe ni msaidizi wa AI."
+                "Sen More Life AI sisteminin bir parçası olan diyabet uzmanısın. "
+                "TÜRKÇE OLARAK TIBBİ DOĞRULUKLA CEVAP VER. "
+                "Diyabet hakkında ayrıntılı tıbbi bilgi ver. "
+                "ÖNEMLİ: Bir yapay zeka asistanı olduğunu belirt."
             )
         else:
             system_content = (
@@ -229,14 +229,14 @@ class GPTOSSDiabetesSpecialist:
             return {"success": False, "response": fb, "model": "error_fallback", "status": "error"}
 
     def _get_enhanced_fallback(self, message: str, language: str) -> str:
-        if language == "swahili":
+        if language == "turkish":
             return (
-                "**Msaidizi wa Kisukari wa AI**\n\n"
-                "Nina ushauri wa msingi kuhusu kisukari:\n"
-                "- Kiu na mkojo mara kwa mara\n"
-                "- Njaa kubwa na kupoteza uzito\n"
-                "- Uchovu na macho yabivu\n\n"
-                "Tafadhali zuru kituo cha afya kwa uchunguzi."
+                "**Yapay Zeka Diyabet Uzmanı**\n\n"
+                "Diyabet hakkında temel bilgiler:\n"
+                "- Aşırı susama ve sık idrara çıkma\n"
+                "- Aşırı açlık ve kilo kaybı\n"
+                "- Yorgunluk ve bulanık görme\n\n"
+                "Lütfen muayene için bir sağlık kuruluşuna başvurun."
             )
         return (
             "**AI Diabetes Specialist**\n\n"

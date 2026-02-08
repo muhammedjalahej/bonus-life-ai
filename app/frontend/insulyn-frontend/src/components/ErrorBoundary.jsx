@@ -1,5 +1,5 @@
-// src/components/ErrorBoundary.jsx
 import React from 'react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -7,76 +7,30 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
+  static getDerivedStateFromError(error) { return { hasError: true }; }
 
   componentDidCatch(error, errorInfo) {
-    this.setState({
-      error: error,
-      errorInfo: errorInfo
-    });
-    
-    // Log to error reporting service
+    this.setState({ error, errorInfo });
     console.error('Error caught by boundary:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          padding: '40px 20px', 
-          textAlign: 'center',
-          maxWidth: '500px',
-          margin: '50px auto',
-          border: '1px solid #ffcdd2',
-          borderRadius: '8px',
-          backgroundColor: '#ffebee'
-        }}>
-          <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>
-            Oops! Something went wrong
-          </h2>
-          <p style={{ marginBottom: '20px', color: '#666' }}>
-            We're sorry for the inconvenience. Please try refreshing the page.
-          </p>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#d32f2f',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            Reload Application
-          </button>
-          
-          {process.env.NODE_ENV === 'development' && (
-            <details style={{ marginTop: '30px', textAlign: 'left' }}>
-              <summary style={{ cursor: 'pointer', marginBottom: '10px' }}>
-                Error Details (Development)
-              </summary>
-              <pre style={{ 
-                background: '#f5f5f5', 
-                padding: '15px', 
-                borderRadius: '4px',
-                overflow: 'auto',
-                fontSize: '12px',
-                textAlign: 'left'
-              }}>
-                {this.state.error && this.state.error.toString()}
-                <br />
-                {this.state.errorInfo.componentStack}
-              </pre>
-            </details>
-          )}
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="card p-10 max-w-md text-center space-y-6">
+            <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-8 h-8 text-red-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Something went wrong</h2>
+            <p className="text-gray-500 text-sm">We're sorry for the inconvenience. Please try refreshing.</p>
+            <button onClick={() => window.location.reload()} className="btn-primary mx-auto">
+              <RotateCcw className="w-4 h-4" /> Reload
+            </button>
+          </div>
         </div>
       );
     }
-
     return this.props.children;
   }
 }

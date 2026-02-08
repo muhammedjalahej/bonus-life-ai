@@ -1,45 +1,17 @@
-// src/components/LoadingFallback.jsx
 import React from 'react';
+import { HeartPulse } from 'lucide-react';
 
-const LoadingFallback = () => {
-  return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh',
-      flexDirection: 'column',
-      gap: '20px',
-      backgroundColor: '#fafafa'
-    }}>
-      <div className="loading-spinner"></div>
-      <p style={{ 
-        color: '#666', 
-        fontSize: '18px',
-        fontWeight: '500'
-      }}>
-        Loading More Life AI...
-      </p>
-      
-      <style>
-        {`
-          .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #e3f2fd;
-            border-top: 4px solid #1976d2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+const LoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+    <div className="relative w-20 h-20">
+      <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+      <div className="absolute inset-2 rounded-full border-2 border-cyan-500/20 border-b-cyan-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <HeartPulse className="w-7 h-7 text-emerald-400 animate-pulse" />
+      </div>
     </div>
-  );
-};
+    <p className="text-gray-500 font-medium text-sm tracking-widest uppercase">Loading</p>
+  </div>
+);
 
 export default LoadingFallback;

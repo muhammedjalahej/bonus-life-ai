@@ -151,7 +151,7 @@ Now provide a detailed response in {language}:"""
         """Return contextual error message"""
         error_messages = {
             "english": f"🚨 **AI Service Error**\n\nI encountered an error while processing your question about '{original_message}'. This might be due to:\n\n• Temporary service interruption\n• Network connectivity issues\n• API configuration problems\n\nPlease try again in a moment or contact support if this persists.",
-            "swahili": f"🚨 **Hitilafu ya Huduma ya AK**\n\nNimekutana na hitilafu wakati wa kuchakata swali lako kuhusu '{original_message}'. Hii inaweza kusababishwa na:\n\n• Usumbufu wa muda wa huduma\n• Matatizo ya muunganisho wa mtandao\n• Matatizo ya usanidi wa API\n\nTafadhali jaribu tena baada ya muda mfupi au wasiliana na usaidizi ikiwa itaendelea."
+            "turkish": f"🚨 **Yapay Zeka Hizmet Hatası**\n\n'{original_message}' hakkındaki sorunuzu işlerken bir hatayla karşılaştım. Bu şunlardan kaynaklanabilir:\n\n• Geçici hizmet kesintisi\n• Ağ bağlantı sorunları\n• API yapılandırma sorunları\n\nLütfen birazdan tekrar deneyin veya sorun devam ederse destek ile iletişime geçin."
         }
         return error_messages.get(language, error_messages["english"])
 

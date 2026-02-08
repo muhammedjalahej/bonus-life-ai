@@ -35,14 +35,11 @@ class VoiceChatService:
 
     async def _transcribe_with_google_speech(self, audio_data: io.BytesIO, language: str) -> tuple:
         lang_map = {
-            "english": "en-US", "swahili": "sw-KE",
-            "spanish": "es-ES", "french": "fr-FR",
+            "english": "en-US", "turkish": "tr-TR",
         }
         mock_responses = {
             "en-US": "I'm concerned about diabetes in my family",
-            "sw-KE": "Nina wasiwasi kuhusu kisukari katika familia yangu",
-            "es-ES": "Estoy preocupado por la diabetes en mi familia",
-            "fr-FR": "Je suis preoccupe par le diabete dans ma famille",
+            "tr-TR": "Ailemdeki diyabet konusunda endişeliyim",
         }
         recognition_language = lang_map.get(language.lower(), "en-US")
         transcribed_text = mock_responses.get(recognition_language, "I have questions about diabetes")

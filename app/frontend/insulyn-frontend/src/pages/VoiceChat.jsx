@@ -1,33 +1,11 @@
 import React, { useState, useRef } from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Box,
-  Card,
-  CardContent,
-  Alert,
-  CircularProgress,
-  Chip,
-  IconButton,
-  Fade,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
-} from '@mui/material';
-import {
-  Mic,
-  MicOff,
-  SmartToy,
-  Translate,
-  Keyboard
-} from '@mui/icons-material';
+  Mic, MicOff, Bot, Globe, Keyboard, Loader2, AlertTriangle,
+  Clock, X, Send, RotateCcw, Sparkles,
+} from 'lucide-react';
 import { API_BASE_URL } from '../config/constants';
 
-const VoiceChatAssistant = ({ language = 'english' }) => {
+const VoiceChat = ({ language = 'english' }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState(null);
@@ -37,406 +15,199 @@ const VoiceChatAssistant = ({ language = 'english' }) => {
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
 
-  const translations = {
-    english: {
-      title: '🎤 Voice Chat Assistant',
-      subtitle: 'Speak naturally about diabetes concerns',
-      instructions: 'How to use: Click Start, speak for 5-15 seconds about diabetes, click Stop. The AI will understand and respond.',
-      startRecording: 'Start Recording',
-      stopRecording: 'Stop Recording',
-      processing: 'Processing your voice...',
-      yourQuestion: 'Your Question',
-      aiResponse: 'AI Response',
-      confidence: 'Confidence',
-      tryAgain: 'Try Again',
-      typeInstead: 'Type Instead',
-      enterQuestion: 'Enter your diabetes question',
-      submitText: 'Submit Text',
-      cancel: 'Cancel',
-      madeWith: 'Made with ❤️ for better health',
-      disclaimer: 'This is not a substitute for professional medical advice. Always consult healthcare professionals.'
-    },
-    swahili: {
-      title: '🎤 Msaidizi wa Sauti',
-      subtitle: 'Zungumza kawaida kuhusu wasiwasi wa kisukari',
-      instructions: 'Jinsi ya kutumia: Bofya Anza, zungumza kwa sekunde 5-15 kuhusu kisukari, bofya Acha. AI itaelewa na kujibu.',
-      startRecording: 'Anza Kurekodi',
-      stopRecording: 'Acha Kurekodi',
-      processing: 'Inachakata sauti yako...',
-      yourQuestion: 'Swali Lako',
-      aiResponse: 'Majibu ya AI',
-      confidence: 'Uthabiti',
-      tryAgain: 'Jaribu Tena',
-      typeInstead: 'Andika Badala Yake',
-      enterQuestion: 'Andika swali lako kuhusu kisukari',
-      submitText: 'Wasilisha Maandishi',
-      cancel: 'Ghairi',
-      madeWith: 'Imetengenezwa kwa ❤️ kwa afya bora',
-      disclaimer: 'Hii sio mbadala wa ushauri wa kimatibabu. Wasiliana na wataalamu wa afya kila wakati.'
-    }
+  const t = language === 'turkish' ? {
+    title: 'Sesli Asistan', sub: 'Diyabet hakkında doğal bir şekilde konuşun', start: 'Kayda Başla', stop: 'Durdur',
+    processing: 'İşleniyor...', question: 'Sorunuz', response: 'AI Yanıtı', retry: 'Tekrar Dene',
+    type: 'Yazarak Sor', enter: 'Sorunuzu yazın', submit: 'Gönder', cancel: 'İptal',
+  } : {
+    title: 'Voice Assistant', sub: 'Speak naturally about diabetes in your preferred language', start: 'Start Recording', stop: 'Stop',
+    processing: 'Processing...', question: 'Your Question', response: 'AI Response', retry: 'Try Again',
+    type: 'Type Instead', enter: 'Type your question', submit: 'Submit', cancel: 'Cancel',
   };
-
-  const t = translations[language] || translations.english;
 
   const startRecording = async () => {
     try {
-      setError('');
-      setResult(null);
-      audioChunks.current = [];
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 16000
-        } 
-      });
-      
-      mediaRecorder.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-
-      mediaRecorder.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunks.current.push(event.data);
-        }
-      };
-
+      setError(''); setResult(null); audioChunks.current = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 } });
+      mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      mediaRecorder.current.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.current.push(e.data); };
       mediaRecorder.current.onstop = processRecording;
-      mediaRecorder.current.start(1000); // Collect data every second
+      mediaRecorder.current.start(1000);
       setIsRecording(true);
-
-    } catch (err) {
-      setError('Microphone access denied. Please allow microphone permissions.');
-      console.error('Recording error:', err);
-    }
+    } catch { setError('Microphone access denied.'); }
   };
 
   const stopRecording = () => {
     if (mediaRecorder.current && isRecording) {
       mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorder.current.stream.getTracks().forEach(t => t.stop());
       setIsRecording(false);
     }
   };
 
   const processRecording = async () => {
-    if (audioChunks.current.length === 0) {
-      setError('No audio recorded. Please try again.');
-      return;
-    }
-
+    if (!audioChunks.current.length) { setError('No audio recorded.'); return; }
     setIsProcessing(true);
-    
     try {
-      const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm;codecs=opus' });
-      
-      // For demo purposes, we'll use the test endpoint with mock transcription
-      // In production, you would send the actual audio
-      const mockQuestions = {
-        english: "I'm concerned about diabetes risk factors in my family",
-        swahili: "Nina wasiwasi kuhusu mambo yanayochangia hatari ya kisukari katika familia yangu",
-        spanish: "Estoy preocupado por los factores de riesgo de diabetes en mi familia",
-        french: "Je suis préoccupé par les facteurs de risque de diabète dans ma famille"
-      };
-      
-      const testText = mockQuestions[language] || mockQuestions.english;
-      
-      // UPDATED: Use production backend URL
-      const response = await fetch(`${API_BASE_URL}/api/v1/voice-chat/test`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          text: testText,
-          language: language,
-          user_id: 'voice-user'
-        }),
+      const testText = language === 'turkish'
+        ? 'Ailemdeki diyabet risk faktörleri konusunda endişeliyim'
+        : "I'm concerned about diabetes risk factors in my family";
+      const r = await fetch(`${API_BASE_URL}/api/v1/voice-chat/test`, {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ text: testText, language, user_id: 'voice-user' }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Voice processing failed');
-      }
-
-      const resultData = await response.json();
-      setResult(resultData);
-      
-    } catch (err) {
-      setError(err.message || 'Failed to process voice. Please try again.');
-      console.error('Voice processing error:', err);
-    } finally {
-      setIsProcessing(false);
-    }
+      if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
+      setResult(await r.json());
+    } catch (err) { setError(err.message); } finally { setIsProcessing(false); }
   };
 
   const handleTextSubmit = async () => {
-    if (!textInput.trim()) {
-      setError('Please enter a question');
-      return;
-    }
-
-    setIsProcessing(true);
-    setShowTextDialog(false);
-    
+    if (!textInput.trim()) { setError('Enter a question'); return; }
+    setIsProcessing(true); setShowTextDialog(false);
     try {
-      // UPDATED: Use production backend URL
-      const response = await fetch(`${API_BASE_URL}/api/v1/voice-chat/test`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          text: textInput,
-          language: language,
-          user_id: 'text-user'
-        }),
+      const r = await fetch(`${API_BASE_URL}/api/v1/voice-chat/test`, {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ text: textInput, language, user_id: 'text-user' }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Text processing failed');
-      }
-
-      const resultData = await response.json();
-      setResult(resultData);
-      setTextInput('');
-      
-    } catch (err) {
-      setError(err.message || 'Failed to process text. Please try again.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleTryAgain = () => {
-    setResult(null);
-    setError('');
-    audioChunks.current = [];
+      if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
+      setResult(await r.json()); setTextInput('');
+    } catch (err) { setError(err.message); } finally { setIsProcessing(false); }
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={0} sx={{ p: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Typography 
-          variant="h3" 
-          component="h1" 
-          gutterBottom 
-          align="center"
-          sx={{ 
-            color: 'white',
-            fontWeight: 'bold',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
-          }}
-        >
-          {t.title}
-        </Typography>
-        
-        <Typography 
-          variant="h6" 
-          align="center" 
-          sx={{ color: 'white', mb: 2, opacity: 0.9 }}
-        >
-          {t.subtitle}
-        </Typography>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+      {/* Header */}
+      <div className="text-center mb-14 animate-fade-in-up">
+        <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-5 py-2 mb-5">
+          <Sparkles className="w-4 h-4 text-violet-400" />
+          <span className="text-[11px] font-extrabold text-violet-400 uppercase tracking-[0.15em]">Voice AI</span>
+        </div>
+        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
+        <p className="text-gray-500 max-w-md mx-auto">{t.sub}</p>
+      </div>
 
-        <Typography 
-          variant="body1" 
-          align="center" 
-          sx={{ color: 'white', mb: 4, opacity: 0.8 }}
-        >
-          {t.instructions}
-        </Typography>
+      {error && (
+        <div className="flex items-center gap-3 p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm animate-fade-in-up">
+          <AlertTriangle className="w-5 h-5 shrink-0" /> {error}
+        </div>
+      )}
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Paper elevation={6} sx={{ p: 4, minHeight: '300px' }}>
-          {/* Recording Interface */}
+      <div className="gradient-border animate-fade-in-up">
+        <div className="card p-10 sm:p-14 rounded-[1.25rem]">
+          {/* Recording state */}
           {!result && !isProcessing && (
-            <Box textAlign="center" py={4}>
-              <IconButton
-                sx={{
-                  width: 100,
-                  height: 100,
-                  bgcolor: isRecording ? 'error.main' : 'primary.main',
-                  color: 'white',
-                  '&:hover': {
-                    bgcolor: isRecording ? 'error.dark' : 'primary.dark',
-                  },
-                  mb: 3
-                }}
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={isProcessing}
-              >
-                {isRecording ? <MicOff sx={{ fontSize: 40 }} /> : <Mic sx={{ fontSize: 40 }} />}
-              </IconButton>
-              
-              <Typography variant="h6" gutterBottom>
-                {isRecording ? t.stopRecording : t.startRecording}
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary">
-                {isRecording ? 'Speak now about diabetes concerns...' : 'Click the microphone to start'}
-              </Typography>
+            <div className="flex flex-col items-center gap-10">
+              <div className="relative">
+                {/* Rings */}
+                {isRecording && (
+                  <>
+                    <div className="absolute inset-[-24px] rounded-full border border-red-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+                    <div className="absolute inset-[-48px] rounded-full border border-red-500/10 animate-ping" style={{ animationDuration: '3s' }} />
+                    <div className="absolute inset-[-72px] rounded-full border border-red-500/5 animate-ping" style={{ animationDuration: '4s' }} />
+                  </>
+                )}
+                {!isRecording && (
+                  <>
+                    <div className="absolute inset-[-16px] rounded-full border border-violet-500/10 animate-pulse-ring" />
+                    <div className="absolute inset-[-32px] rounded-full border border-violet-500/5 animate-pulse-ring" style={{ animationDelay: '1s' }} />
+                  </>
+                )}
+                <button onClick={isRecording ? stopRecording : startRecording} disabled={isProcessing}
+                  className={`relative z-10 w-36 h-36 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl
+                    ${isRecording
+                      ? 'bg-gradient-to-br from-red-500 to-pink-600 shadow-red-500/30 recording-pulse scale-110'
+                      : 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-violet-500/30 hover:scale-110 hover:shadow-violet-500/40'}`}>
+                  {isRecording ? <MicOff className="w-14 h-14 text-white" /> : <Mic className="w-14 h-14 text-white" />}
+                </button>
+              </div>
+
+              <div className="text-center">
+                <p className="text-xl font-bold text-white">{isRecording ? t.stop : t.start}</p>
+                <p className="text-sm text-gray-500 mt-2">{isRecording ? 'Speak now...' : 'Click the microphone to begin'}</p>
+              </div>
 
               {isRecording && (
-                <Box sx={{ mt: 2 }}>
-                  <Chip 
-                    icon={<Mic />} 
-                    label="Listening..." 
-                    color="primary" 
-                    variant="outlined" 
-                  />
-                </Box>
+                <div className="flex items-center gap-1.5">
+                  {[...Array(7)].map((_, i) => (
+                    <div key={i} className="w-1.5 bg-red-400 rounded-full animate-bounce"
+                      style={{ height: `${10 + Math.random() * 24}px`, animationDelay: `${i * 80}ms`, animationDuration: '0.7s' }} />
+                  ))}
+                </div>
               )}
 
-              <Box sx={{ mt: 3 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<Keyboard />}
-                  onClick={() => setShowTextDialog(true)}
-                >
-                  {t.typeInstead}
-                </Button>
-              </Box>
-            </Box>
+              <button onClick={() => setShowTextDialog(true)} className="btn-ghost text-gray-500">
+                <Keyboard className="w-4 h-4" /> {t.type}
+              </button>
+            </div>
           )}
 
-          {/* Processing State */}
+          {/* Processing */}
           {isProcessing && (
-            <Box textAlign="center" py={4}>
-              <CircularProgress size={60} />
-              <Typography variant="h6" sx={{ mt: 2 }}>
-                {t.processing}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Analyzing your message...
-              </Typography>
-            </Box>
+            <div className="flex flex-col items-center py-16 gap-6">
+              <div className="relative w-20 h-20">
+                <div className="absolute inset-0 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
+                <div className="absolute inset-2 rounded-full border-2 border-purple-500/10 border-b-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                <div className="absolute inset-0 flex items-center justify-center"><Mic className="w-7 h-7 text-violet-400 animate-pulse" /></div>
+              </div>
+              <p className="text-gray-400 font-medium">{t.processing}</p>
+            </div>
           )}
 
           {/* Results */}
           {result && (
-            <Fade in={true} timeout={1000}>
-              <Box>
-                <Box display="flex" alignItems="center" mb={3}>
-                  <SmartToy color="primary" sx={{ mr: 2 }} />
-                  <Typography variant="h5">
-                    Analysis Complete
-                  </Typography>
-                </Box>
+            <div className="space-y-6 animate-fade-in-up">
+              <div className="card p-6 bg-white/[0.02]">
+                <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.15em] mb-3">{t.question}</p>
+                <p className="text-[15px] text-gray-300 italic leading-relaxed">"{result.text_input}"</p>
+                <span className="badge bg-violet-500/20 text-violet-400 mt-4">
+                  {(result.confidence * 100).toFixed(0)}% confidence
+                </span>
+              </div>
 
-                {/* User's Question */}
-                <Card variant="outlined" sx={{ mb: 3 }}>
-                  <CardContent>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <Mic color="primary" sx={{ mr: 1 }} />
-                      <Typography variant="h6">{t.yourQuestion}</Typography>
-                    </Box>
-                    <Typography variant="body1" sx={{ fontStyle: 'italic' }}>
-                      "{result.text_input}"
-                    </Typography>
-                    <Box sx={{ mt: 1 }}>
-                      <Chip 
-                        label={`${t.confidence}: ${(result.confidence * 100).toFixed(0)}%`}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    </Box>
-                  </CardContent>
-                </Card>
+              <div className="card p-6 border border-emerald-500/10 bg-emerald-500/[0.03]">
+                <p className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-[0.15em] mb-3">{t.response}</p>
+                <p className="text-[15px] text-gray-300 leading-relaxed">{result.ai_response}</p>
+                <div className="flex gap-2 mt-4">
+                  <span className="badge bg-white/[0.04] text-gray-400 border border-white/[0.08]">
+                    <Globe className="w-3 h-3" /> {result.language}
+                  </span>
+                  <span className="badge bg-white/[0.04] text-gray-400 border border-white/[0.08]">
+                    <Clock className="w-3 h-3" /> {new Date(result.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
 
-                {/* AI Response */}
-                <Card elevation={2}>
-                  <CardContent>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <SmartToy color="primary" sx={{ mr: 1 }} />
-                      <Typography variant="h6">{t.aiResponse}</Typography>
-                    </Box>
-                    <Typography variant="body1" paragraph>
-                      {result.ai_response}
-                    </Typography>
-                    <Box display="flex" gap={1} flexWrap="wrap">
-                      <Chip 
-                        icon={<Translate />}
-                        label={result.language}
-                        size="small"
-                        variant="outlined"
-                      />
-                      <Chip 
-                        label={new Date(result.timestamp).toLocaleTimeString()}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Box>
-                  </CardContent>
-                </Card>
-
-                <Box textAlign="center" mt={3}>
-                  <Button 
-                    variant="outlined" 
-                    onClick={handleTryAgain}
-                    startIcon={<Mic />}
-                  >
-                    {t.tryAgain}
-                  </Button>
-                </Box>
-              </Box>
-            </Fade>
+              <div className="text-center pt-2">
+                <button onClick={() => { setResult(null); setError(''); audioChunks.current = []; }} className="btn-secondary">
+                  <RotateCcw className="w-4 h-4" /> {t.retry}
+                </button>
+              </div>
+            </div>
           )}
-        </Paper>
+        </div>
+      </div>
 
-        {/* Text Input Dialog */}
-        <Dialog open={showTextDialog} onClose={() => setShowTextDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>{t.typeInstead}</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label={t.enterQuestion}
-              fullWidth
-              variant="outlined"
-              multiline
-              rows={4}
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              sx={{ mt: 2 }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowTextDialog(false)}>{t.cancel}</Button>
-            <Button onClick={handleTextSubmit} variant="contained">
-              {t.submitText}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Box textAlign="center" mt={4}>
-          <Typography variant="body2" sx={{ color: 'white', opacity: 0.8 }}>
-            {t.madeWith}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'white', opacity: 0.6 }}>
-            {t.disclaimer}
-          </Typography>
-        </Box>
-
-        <Box textAlign="center" mt={2}>
-          <Typography variant="h6" sx={{ color: 'white', opacity: 0.9 }}>
-            More Life AI
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'white', opacity: 0.7 }}>
-            Empowering Health Through AI
-          </Typography>
-        </Box>
-      </Paper>
-    </Container>
+      {/* Text Modal */}
+      {showTextDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="gradient-border animate-fade-in-up">
+            <div className="card p-7 max-w-md w-full space-y-5 rounded-[1.25rem]">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-white text-lg">{t.type}</h3>
+                <button onClick={() => setShowTextDialog(false)} className="btn-ghost p-1.5 rounded-xl"><X className="w-5 h-5" /></button>
+              </div>
+              <textarea autoFocus value={textInput} onChange={(e) => setTextInput(e.target.value)}
+                placeholder={t.enter} rows={4} className="input-field resize-none" />
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => setShowTextDialog(false)} className="btn-ghost">{t.cancel}</button>
+                <button onClick={handleTextSubmit} className="btn-primary"><Send className="w-4 h-4" /> {t.submit}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
-export default VoiceChatAssistant;
+export default VoiceChat;

@@ -1,968 +1,331 @@
 import React, { useState } from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  Card,
-  CardContent,
-  Alert,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Chip,
-  Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
-  LinearProgress,
-  Fade
-} from '@mui/material';
-import {
-  Warning,
-  CheckCircle,
-  LocalHospital,
-  ExpandMore,
-  Favorite,
-  FitnessCenter,
-  Restaurant,
-  MonitorHeart,
-  Timeline,
-  Group,
-  School,
-  Psychology,
-  SelfImprovement,
-  WaterDrop,
-  Nightlight,
-  Spa
-} from '@mui/icons-material';
+  AlertTriangle, CheckCircle, Loader2, ArrowRight, ArrowLeft, RotateCcw,
+  Heart, Activity, Apple, Dumbbell, Leaf, Calendar, Stethoscope, Target,
+  TrendingUp, Clock, Droplets, Users, GraduationCap, Sparkles,
+} from 'lucide-react';
 import { API_BASE_URL } from '../config/constants';
 
-const PremiumDiabetesTest = ({ language = 'english' }) => {
-  const [activeStep, setActiveStep] = useState(0);
+const DiabetesTest = ({ language = 'english' }) => {
+  const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({
-    pregnancies: '',
-    glucose: '',
-    blood_pressure: '',
-    skin_thickness: '',
-    insulin: '',
-    weight: '',
-    height: '',
-    diabetes_pedigree_function: '',
-    age: '',
+    pregnancies: '', glucose: '', blood_pressure: '', skin_thickness: '',
+    insulin: '', weight: '', height: '', diabetes_pedigree_function: '', age: '',
   });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const translations = {
-    english: {
-      title: 'Premium Diabetes Risk Assessment',
-      steps: ['Personal Information', 'Health Metrics', 'Comprehensive Results'],
-      next: 'Next',
-      back: 'Back',
-      submit: 'Get Premium Assessment',
-      newTest: 'Start New Assessment',
-      pregnancies: 'Number of Pregnancies',
-      glucose: 'Glucose Level (mg/dL) *',
-      bloodPressure: 'Blood Pressure (mmHg) *',
-      skinThickness: 'Skin Thickness (mm)',
-      insulin: 'Insulin Level (mu U/ml)',
-      weight: 'Weight (kg) *',
-      height: 'Height (cm) *',
-      pedigree: 'Diabetes Pedigree Function',
-      age: 'Age *',
-      loading: 'Analyzing your comprehensive health profile...',
-      riskHigh: 'High Risk',
-      riskMedium: 'Moderate Risk',
-      riskLow: 'Low Risk',
-      riskVeryLow: 'Very Low Risk',
-      probability: 'Probability',
-      bmi: 'BMI',
-      category: 'Category',
-      confidence: 'Confidence',
-      riskFactors: 'Key Risk Factors',
-      recommendations: 'Premium Recommendations',
-      nextSteps: 'Success Plan',
-      requiredField: 'This field is required',
-      executiveSummary: 'Executive Summary',
-      healthMetrics: 'Health Metrics',
-      vitalStatistics: 'Vital Statistics',
-      metabolicAge: 'Metabolic Age',
-      healthScore: 'Health Score',
-      improvementAreas: 'Improvement Opportunities',
-      lifestyleOptimization: 'Lifestyle Optimization',
-      nutritionPlan: 'Nutrition Plan',
-      fitnessProgram: 'Fitness Program',
-      wellnessStrategies: 'Wellness Strategies',
-      monitoringSchedule: 'Monitoring Schedule',
-      supportResources: 'Support Resources',
-      actionTimeline: 'Action Timeline',
-      progressTracking: 'Progress Tracking',
-      immediate: 'Immediate',
-      days30: '30 Days',
-      days90: '90 Days',
-      keyMetrics: 'Key Metrics',
-      tools: 'Tools',
-      professional: 'Professional',
-      educational: 'Educational',
-      community: 'Community'
-    },
-    swahili: {
-      title: 'Tathmini ya Premium ya Hatari ya Kisukari',
-      steps: ['Taarifa Binafsi', 'Vipimo vya Afya', 'Matokeo ya kina'],
-      next: 'Inayofuata',
-      back: 'Nyuma',
-      submit: 'Pata Tathmini ya Premium',
-      newTest: 'Anza Tathmini Mpya',
-      pregnancies: 'Idadi ya Mimba',
-      glucose: 'Kiwango cha Glukosi (mg/dL) *',
-      bloodPressure: 'Shinikizo la Damu (mmHg) *',
-      skinThickness: 'Unene wa Ngozi (mm)',
-      insulin: 'Kiwango cha Insulini (mu U/ml)',
-      weight: 'Uzito (kg) *',
-      height: 'Urefu (cm) *',
-      pedigree: 'Utendaji wa Ukoo wa Kisukari',
-      age: 'Umri *',
-      loading: 'Inachambua wasifu wako wa afya kwa kina...',
-      riskHigh: 'Hatari Kubwa',
-      riskMedium: 'Hatari ya Wastani',
-      riskLow: 'Hatari Ndogo',
-      riskVeryLow: 'Hatari Ndogo Sana',
-      probability: 'Uwezekano',
-      bmi: 'BMI',
-      category: 'Kategoria',
-      confidence: 'Uthabiti',
-      riskFactors: 'Sababu Kuu za Hatari',
-      recommendations: 'Mapendekezo ya Premium',
-      nextSteps: 'Mpango wa Mafanikio',
-      requiredField: 'Sehemu hii inahitajika',
-      executiveSummary: 'Muhtasari Mtendaji',
-      healthMetrics: 'Vipimo vya Afya',
-      vitalStatistics: 'Takwimu Muhimu',
-      metabolicAge: 'Umri wa Metaboliki',
-      healthScore: 'Alama ya Afya',
-      improvementAreas: 'Fursa za Uboreshaji',
-      lifestyleOptimization: 'Uboreshaji wa Mtindo wa Maisha',
-      nutritionPlan: 'Mpango wa Lishe',
-      fitnessProgram: 'Programu ya Mazoezi',
-      wellnessStrategies: 'Mikakati ya Ustawi',
-      monitoringSchedule: 'Ratiba ya Ufuatiliaji',
-      supportResources: 'Rasilimali za Usaidizi',
-      actionTimeline: 'Mpango wa Wakati wa Vitendo',
-      progressTracking: 'Ufuatiliaji wa Maendeleo',
-      immediate: 'Haraka',
-      days30: 'Siku 30',
-      days90: 'Siku 90',
-      keyMetrics: 'Vipimo Muhimu',
-      tools: 'Zana',
-      professional: 'Kitaaluma',
-      educational: 'Kielimu',
-      community: 'Jumuiya'
-    }
+  const t = language === 'turkish' ? {
+    title: 'Risk Değerlendirmesi', steps: ['Kişisel', 'Sağlık Verileri', 'Sonuçlar'],
+    next: 'Devam', back: 'Geri', submit: 'Analiz Et', newTest: 'Yeni Değerlendirme', loading: 'Analiz ediliyor...',
+  } : {
+    title: 'Risk Assessment', steps: ['Personal', 'Health Metrics', 'Results'],
+    next: 'Continue', back: 'Back', submit: 'Analyze', newTest: 'New Assessment', loading: 'Analyzing...',
   };
 
-  const t = translations[language] || translations.english;
-
-  const handleInputChange = (field) => (event) => {
-    setFormData({
-      ...formData,
-      [field]: event.target.value,
-    });
-  };
-
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
-  };
+  const onChange = (f) => (e) => setFormData({ ...formData, [f]: e.target.value });
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setError('');
-    
+    setLoading(true); setError('');
     try {
-      // Prepare the request data
-      const requestData = {
-        pregnancies: parseInt(formData.pregnancies) || 0,
-        glucose: parseFloat(formData.glucose),
-        blood_pressure: parseFloat(formData.blood_pressure),
-        skin_thickness: parseFloat(formData.skin_thickness) || 20,
-        insulin: parseFloat(formData.insulin) || 80,
-        weight: parseFloat(formData.weight),
-        height: parseFloat(formData.height),
-        diabetes_pedigree_function: parseFloat(formData.diabetes_pedigree_function) || 0.5,
-        age: parseInt(formData.age),
-        language: language
-      };
-
-      // Validate required fields
-      if (!formData.glucose || !formData.blood_pressure || !formData.weight || !formData.height || !formData.age) {
-        throw new Error('Please fill in all required fields');
-      }
+      if (!formData.glucose || !formData.blood_pressure || !formData.weight || !formData.height || !formData.age)
+        throw new Error('Please fill all required fields');
 
       const response = await fetch(`${API_BASE_URL}/api/v1/diabetes-assessment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pregnancies: parseInt(formData.pregnancies) || 0, glucose: parseFloat(formData.glucose),
+          blood_pressure: parseFloat(formData.blood_pressure), skin_thickness: parseFloat(formData.skin_thickness) || 20,
+          insulin: parseFloat(formData.insulin) || 80, weight: parseFloat(formData.weight),
+          height: parseFloat(formData.height), diabetes_pedigree_function: parseFloat(formData.diabetes_pedigree_function) || 0.5,
+          age: parseInt(formData.age), language,
+        }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Assessment failed');
-      }
-
-      const resultData = await response.json();
-      setResult(resultData);
-      setActiveStep(2);
-      
-    } catch (err) {
-      setError(err.message || 'Failed to get assessment. Please try again.');
-      console.error('Assessment error:', err);
-    } finally {
-      setLoading(false);
-    }
+      if (!response.ok) { const d = await response.json(); throw new Error(d.detail || 'Failed'); }
+      setResult(await response.json());
+      setStep(2);
+    } catch (err) { setError(err.message); } finally { setLoading(false); }
   };
 
   const handleNewTest = () => {
-    setActiveStep(0);
-    setFormData({
-      pregnancies: '',
-      glucose: '',
-      blood_pressure: '',
-      skin_thickness: '',
-      insulin: '',
-      weight: '',
-      height: '',
-      diabetes_pedigree_function: '',
-      age: '',
-    });
-    setResult(null);
-    setError('');
+    setStep(0); setResult(null); setError('');
+    setFormData({ pregnancies: '', glucose: '', blood_pressure: '', skin_thickness: '', insulin: '', weight: '', height: '', diabetes_pedigree_function: '', age: '' });
   };
 
-  // Updated risk assessment functions
-  const getRiskColor = (riskLevel) => {
-    if (!riskLevel) return 'info';
-    
-    const level = riskLevel.toLowerCase();
-    if (level.includes('high')) return 'error';
-    if (level.includes('moderate')) return 'warning';
-    if (level.includes('low')) return 'success';
-    return 'info';
-  };
+  const risk = result?.risk_level || result?.risk_analysis?.risk_level || 'Unknown';
+  const prob = ((result?.probability || result?.risk_analysis?.probability || 0) * 100).toFixed(1);
+  const factors = result?.key_factors || result?.risk_analysis?.key_factors || [];
+  const metrics = result?.health_metrics || {};
+  const recs = result?.recommendations || {};
+  const isHigh = risk.toLowerCase().includes('high');
+  const isMod = risk.toLowerCase().includes('moderate');
 
-  const getRiskIcon = (riskLevel) => {
-    if (!riskLevel) return <CheckCircle />;
-    
-    const level = riskLevel.toLowerCase();
-    if (level.includes('high')) return <Warning />;
-    return <CheckCircle />;
-  };
+  const Field = ({ label, field, required, hint, icon: Icon }) => (
+    <div className="space-y-2">
+      <label className="block text-sm font-semibold text-gray-300">
+        {label} {required && <span className="text-emerald-400">*</span>}
+      </label>
+      <div className="relative">
+        {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />}
+        <input type="number" value={formData[field]} onChange={onChange(field)}
+          className={`input-field ${Icon ? 'pl-11' : ''} ${required && !formData[field] ? 'border-red-500/20' : ''}`}
+          placeholder={`Enter ${label.toLowerCase()}`} />
+      </div>
+      {hint && <p className="text-[11px] text-gray-600">{hint}</p>}
+    </div>
+  );
 
-  const getProbabilityPercentage = () => {
-    if (!result) return 0;
-    
-    // Handle both direct probability and nested risk_analysis probability
-    const probability = result.probability || result.risk_analysis?.probability || 0;
-    return (probability * 100).toFixed(1);
-  };
-
-  const getRiskLevel = () => {
-    if (!result) return '';
-    
-    // Handle both direct risk_level and nested risk_analysis risk_level
-    return result.risk_level || result.risk_analysis?.risk_level || 'Unknown Risk';
-  };
-
-  const getKeyRiskFactors = () => {
-    if (!result) return [];
-    
-    // Handle both direct key_factors and nested risk_analysis key_factors
-    return result.key_factors || result.risk_analysis?.key_factors || [];
-  };
-
-  const getHealthMetrics = () => {
-    if (!result) return {};
-    
-    return result.health_metrics || {};
-  };
-
-  const getRecommendations = () => {
-    if (!result) return {};
-    
-    return result.recommendations || {};
-  };
-
-  const getSeverityColor = (severity) => {
-    if (!severity) return 'info';
-    
-    const level = severity.toLowerCase();
-    if (level.includes('high')) return 'error';
-    if (level.includes('moderate')) return 'warning';
-    if (level.includes('low')) return 'success';
-    return 'info';
-  };
-
-  const getHealthScoreColor = (score) => {
-    if (!score) return 'info';
-    if (score >= 80) return 'success';
-    if (score >= 60) return 'warning';
-    return 'error';
-  };
-
-  // Validation for step progression
-  const canProceedToStep1 = formData.age;
-  const canProceedToStep2 = formData.glucose && formData.blood_pressure && formData.weight && formData.height;
-
-  const steps = [
-    // Step 1: Personal Information
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom color="primary">
-          📋 Personal Health Profile
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label={t.pregnancies}
-          type="number"
-          value={formData.pregnancies}
-          onChange={handleInputChange('pregnancies')}
-          helperText="Enter 0 if not applicable"
-          variant="outlined"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          required
-          label={t.age}
-          type="number"
-          value={formData.age}
-          onChange={handleInputChange('age')}
-          error={!formData.age}
-          helperText={!formData.age ? t.requiredField : ''}
-          variant="outlined"
-        />
-      </Grid>
-    </Grid>,
-
-    // Step 2: Health Metrics
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom color="primary">
-          🩺 Health Metrics & Vital Signs
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          required
-          label={t.glucose}
-          type="number"
-          value={formData.glucose}
-          onChange={handleInputChange('glucose')}
-          error={!formData.glucose}
-          helperText={!formData.glucose ? t.requiredField : 'Fasting blood sugar level'}
-          variant="outlined"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          required
-          label={t.bloodPressure}
-          type="number"
-          value={formData.blood_pressure}
-          onChange={handleInputChange('blood_pressure')}
-          error={!formData.blood_pressure}
-          helperText={!formData.blood_pressure ? t.requiredField : 'Systolic blood pressure'}
-          variant="outlined"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label={t.skinThickness}
-          type="number"
-          value={formData.skin_thickness}
-          onChange={handleInputChange('skin_thickness')}
-          helperText="Triceps skinfold thickness (mm)"
-          variant="outlined"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label={t.insulin}
-          type="number"
-          value={formData.insulin}
-          onChange={handleInputChange('insulin')}
-          helperText="2-Hour serum insulin (mu U/ml)"
-          variant="outlined"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          required
-          label={t.weight}
-          type="number"
-          value={formData.weight}
-          onChange={handleInputChange('weight')}
-          error={!formData.weight}
-          helperText={!formData.weight ? t.requiredField : ''}
-          variant="outlined"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          required
-          label={t.height}
-          type="number"
-          value={formData.height}
-          onChange={handleInputChange('height')}
-          error={!formData.height}
-          helperText={!formData.height ? t.requiredField : 'Enter height in centimeters'}
-          variant="outlined"
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          label={t.pedigree}
-          type="number"
-          step="0.01"
-          value={formData.diabetes_pedigree_function}
-          onChange={handleInputChange('diabetes_pedigree_function')}
-          helperText="Family history of diabetes (0.0 - 2.5)"
-          variant="outlined"
-        />
-      </Grid>
-    </Grid>,
-
-    // Step 3: Comprehensive Results
-    <Fade in={true} timeout={1000}>
-      <Box>
-        {loading ? (
-          <Box textAlign="center" py={4}>
-            <CircularProgress size={60} />
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              {t.loading}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Analyzing your comprehensive health profile...
-            </Typography>
-          </Box>
-        ) : result && (
-          <Grid container spacing={3}>
-            {/* Executive Summary */}
-            <Grid item xs={12}>
-              <Card elevation={3}>
-                <CardContent>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                      <LocalHospital />
-                    </Avatar>
-                    <Typography variant="h5" component="h2">
-                      {t.executiveSummary}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body1" paragraph>
-                    {result.executive_summary}
-                  </Typography>
-                  <Box display="flex" gap={1} flexWrap="wrap">
-                    <Chip 
-                      label={`Assessment ID: ${result.assessment_id}`} 
-                      variant="outlined" 
-                      size="small" 
-                    />
-                    <Chip 
-                      label={new Date(result.timestamp).toLocaleDateString()} 
-                      variant="outlined" 
-                      size="small" 
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Risk Analysis - UPDATED */}
-            <Grid item xs={12} md={6}>
-              <Card elevation={2}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    🎯 Diabetes Risk Assessment
-                  </Typography>
-                  
-                  <Alert 
-                    severity={getRiskColor(getRiskLevel())} 
-                    icon={getRiskIcon(getRiskLevel())}
-                    sx={{ mb: 2 }}
-                  >
-                    <Typography variant="h6" gutterBottom>
-                      {getRiskLevel()}
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
-                      Probability: {getProbabilityPercentage()}%
-                    </Typography>
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      This means you have a {getProbabilityPercentage()}% chance of developing type 2 diabetes in the next 10 years.
-                    </Typography>
-                  </Alert>
-                  
-                  <Typography variant="subtitle2" gutterBottom>
-                    Prevention Strategy:
-                  </Typography>
-                  <Typography variant="body2" paragraph>
-                    {getRecommendations().medical_followup || "Proactive lifestyle management based on your risk factors"}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Key Risk Factors - UPDATED */}
-            <Grid item xs={12} md={6}>
-              <Card elevation={2}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    ⚠️ {t.riskFactors}
-                  </Typography>
-                  <List dense>
-                    {getKeyRiskFactors().length > 0 ? (
-                      getKeyRiskFactors().map((factor, index) => (
-                        <ListItem key={index}>
-                          <ListItemIcon>
-                            <Chip 
-                              label={factor.severity || 'Unknown'} 
-                              size="small" 
-                              color={getSeverityColor(factor.severity)}
-                            />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={factor.factor}
-                            secondary={factor.description || `Severity: ${factor.severity}`}
-                          />
-                        </ListItem>
-                      ))
-                    ) : (
-                      <ListItem>
-                        <ListItemText 
-                          primary="No significant risk factors identified"
-                          secondary="Continue with healthy lifestyle maintenance"
-                        />
-                      </ListItem>
-                    )}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Health Metrics - UPDATED */}
-            <Grid item xs={12}>
-              <Card elevation={2}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    📊 {t.healthMetrics}
-                  </Typography>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle1" gutterBottom>
-                        {t.vitalStatistics}
-                      </Typography>
-                      <TableContainer>
-                        <Table size="small">
-                          <TableBody>
-                            <TableRow>
-                              <TableCell><strong>BMI</strong></TableCell>
-                              <TableCell>{getHealthMetrics().bmi || 'N/A'}</TableCell>
-                              <TableCell>
-                                <Chip 
-                                  label={getHealthMetrics().bmi_category || 'Unknown'} 
-                                  size="small" 
-                                  color="primary"
-                                />
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell><strong>Metabolic Age</strong></TableCell>
-                              <TableCell>{getHealthMetrics().metabolic_age || 'N/A'}</TableCell>
-                              <TableCell>years</TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell><strong>Health Score</strong></TableCell>
-                              <TableCell>
-                                <Box display="flex" alignItems="center" gap={1}>
-                                  {getHealthMetrics().health_score || 0}/100
-                                  <LinearProgress 
-                                    variant="determinate" 
-                                    value={getHealthMetrics().health_score || 0} 
-                                    sx={{ flexGrow: 1 }}
-                                    color={getHealthScoreColor(getHealthMetrics().health_score)}
-                                  />
-                                </Box>
-                              </TableCell>
-                              <TableCell>
-                                <Chip 
-                                  label={`${getHealthMetrics().health_score || 0}%`} 
-                                  size="small" 
-                                  color={getHealthScoreColor(getHealthMetrics().health_score)}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle1" gutterBottom>
-                        Health Insights
-                      </Typography>
-                      <List dense>
-                        <ListItem>
-                          <ListItemIcon>
-                            <Favorite color={getRiskLevel().toLowerCase().includes('low') ? 'success' : 'warning'} />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={`Metabolic Health: ${getRiskLevel().toLowerCase().includes('low') ? 'Good' : 'Needs Attention'}`}
-                            secondary={`Risk Level: ${getRiskLevel()}`}
-                          />
-                        </ListItem>
-                        <ListItem>
-                          <ListItemIcon>
-                            <MonitorHeart color="info" />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={`Cardiovascular Status: ${(getHealthMetrics().bmi_category || '').toLowerCase().includes('normal') ? 'Healthy' : 'Monitor'}`}
-                            secondary="Based on BMI and risk factors"
-                          />
-                        </ListItem>
-                      </List>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Lifestyle Recommendations Accordion */}
-            <Grid item xs={12}>
-              <Accordion defaultExpanded elevation={2}>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Box display="flex" alignItems="center">
-                    <Psychology color="primary" sx={{ mr: 2 }} />
-                    <Typography variant="h6">🌟 Health Insights & Recommendations</Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={3}>
-                    {/* Nutrition Plan */}
-                    <Grid item xs={12} md={6}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Box display="flex" alignItems="center" mb={2}>
-                            <Restaurant color="primary" sx={{ mr: 1 }} />
-                            <Typography variant="h6">🍎 {t.nutritionPlan}</Typography>
-                          </Box>
-                          <Typography variant="body2" paragraph>
-                            <strong>Focus on:</strong> Low-glycemic foods, portion control, and balanced meals
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Key Advice:</strong> Emphasize whole grains, limit added sugars, maintain hydration
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    {/* Fitness Program */}
-                    <Grid item xs={12} md={6}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Box display="flex" alignItems="center" mb={2}>
-                            <FitnessCenter color="primary" sx={{ mr: 1 }} />
-                            <Typography variant="h6">💪 {t.fitnessProgram}</Typography>
-                          </Box>
-                          <Typography variant="body2" paragraph>
-                            <strong>Cardio:</strong> 150 min/week moderate activity
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Strength:</strong> 2-3 times per week
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    {/* Lifestyle Changes */}
-                    <Grid item xs={12}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Box display="flex" alignItems="center" mb={2}>
-                            <Spa color="primary" sx={{ mr: 1 }} />
-                            <Typography variant="h6">🌿 Lifestyle Changes</Typography>
-                          </Box>
-                          <List dense>
-                            {getRecommendations().lifestyle_changes ? (
-                              getRecommendations().lifestyle_changes.map((change, index) => (
-                                <ListItem key={index}>
-                                  <ListItemIcon>
-                                    <SelfImprovement color="primary" />
-                                  </ListItemIcon>
-                                  <ListItemText primary={change} />
-                                </ListItem>
-                              ))
-                            ) : (
-                              <ListItem>
-                                <ListItemText primary="Regular physical activity and balanced nutrition" />
-                              </ListItem>
-                            )}
-                          </List>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
-                </AccordionDetails>
-              </Accordion>
-            </Grid>
-
-            {/* Action Timeline */}
-            <Grid item xs={12} md={6}>
-              <Card elevation={2}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    📅 {t.actionTimeline}
-                  </Typography>
-                  <Box>
-                    <Typography variant="subtitle2" gutterBottom>
-                      {t.immediate}:
-                    </Typography>
-                    <List dense>
-                      <ListItem>
-                        <ListItemIcon>
-                          <CheckCircle color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Consult healthcare provider" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <CheckCircle color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Start monitoring glucose levels" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <CheckCircle color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Begin daily walking routine" />
-                      </ListItem>
-                    </List>
-                    
-                    <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-                      {t.days30}:
-                    </Typography>
-                    <List dense>
-                      <ListItem>
-                        <ListItemIcon>
-                          <Timeline color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Implement dietary changes" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <Timeline color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Establish exercise routine" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <Timeline color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Monitor progress weekly" />
-                      </ListItem>
-                    </List>
-                    
-                    <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-                      {t.days90}:
-                    </Typography>
-                    <List dense>
-                      <ListItem>
-                        <ListItemIcon>
-                          <WaterDrop color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Reassess health metrics" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <WaterDrop color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Adjust plan as needed" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <WaterDrop color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Schedule follow-up appointment" />
-                      </ListItem>
-                    </List>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Support Resources */}
-            <Grid item xs={12} md={6}>
-              <Card elevation={2}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    🤝 {t.supportResources}
-                  </Typography>
-                  <Box>
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <LocalHospital color="primary" sx={{ mr: 1 }} />
-                      <Typography variant="subtitle2">{t.professional}:</Typography>
-                    </Box>
-                    <Typography variant="body2" paragraph>
-                      {getRecommendations().medical_followup || "Schedule appointment with healthcare provider for comprehensive evaluation"}
-                    </Typography>
-                    
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <School color="primary" sx={{ mr: 1 }} />
-                      <Typography variant="subtitle2">{t.educational}:</Typography>
-                    </Box>
-                    <Typography variant="body2" paragraph>
-                      Diabetes prevention resources and lifestyle guidance
-                    </Typography>
-                    
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <Group color="primary" sx={{ mr: 1 }} />
-                      <Typography variant="subtitle2">{t.community}:</Typography>
-                    </Box>
-                    <Typography variant="body2">
-                      Health support groups and wellness communities
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* New Test Button */}
-            <Grid item xs={12}>
-              <Box textAlign="center" mt={4}>
-                <Button 
-                  variant="contained" 
-                  onClick={handleNewTest}
-                  startIcon={<LocalHospital />}
-                  size="large"
-                  sx={{ px: 4, py: 1.5 }}
-                >
-                  {t.newTest}
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        )}
-      </Box>
-    </Fade>
-  ];
+  const canNext0 = formData.age;
+  const canNext1 = formData.glucose && formData.blood_pressure && formData.weight && formData.height;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper elevation={0} sx={{ p: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Typography 
-          variant="h3" 
-          component="h1" 
-          gutterBottom 
-          align="center"
-          sx={{ 
-            color: 'white',
-            fontWeight: 'bold',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
-          }}
-        >
-          {t.title}
-        </Typography>
-        <Typography 
-          variant="h6" 
-          align="center" 
-          sx={{ color: 'white', mb: 4, opacity: 0.9 }}
-        >
-          Comprehensive AI-Powered Health Intelligence Platform
-        </Typography>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+      {/* Top section */}
+      <div className="text-center mb-14 animate-fade-in-up">
+        <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-5 py-2 mb-5">
+          <Sparkles className="w-4 h-4 text-blue-400" />
+          <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-[0.15em]">AI-Powered Analysis</span>
+        </div>
+        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
+        <p className="text-gray-500 max-w-md mx-auto">Enter your health metrics for an AI-driven diabetes risk analysis.</p>
 
-        <Stepper activeStep={activeStep} sx={{ mb: 4, '& .MuiStepLabel-root': { color: 'white' } }}>
-          {t.steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
+        {/* Stepper */}
+        <div className="flex items-center justify-center gap-4 mt-10">
+          {t.steps.map((s, i) => (
+            <React.Fragment key={i}>
+              <div className="flex items-center gap-2.5">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-500
+                  ${i < step ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' :
+                    i === step ? 'bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/30 scale-110' :
+                    'bg-white/[0.04] text-gray-600 border border-white/[0.08]'}`}>
+                  {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
+                </div>
+                <span className={`text-sm font-medium hidden sm:block ${i <= step ? 'text-white' : 'text-gray-600'}`}>{s}</span>
+              </div>
+              {i < t.steps.length - 1 && (
+                <div className={`w-16 h-[2px] rounded-full transition-all duration-500 ${i < step ? 'bg-emerald-500' : 'bg-white/[0.06]'}`} />
+              )}
+            </React.Fragment>
           ))}
-        </Stepper>
+        </div>
+      </div>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <div className="flex items-center gap-3 p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm animate-fade-in-up">
+          <AlertTriangle className="w-5 h-5 shrink-0" /> {error}
+        </div>
+      )}
 
-        <Paper elevation={6} sx={{ p: 4, minHeight: '400px' }}>
-          {steps[activeStep]}
-        </Paper>
+      {/* Content */}
+      <div className="gradient-border animate-fade-in-up">
+        <div className="card p-8 sm:p-10 rounded-[1.25rem]">
+          {step === 0 && (
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/10 flex items-center justify-center">
+                  <Heart className="w-6 h-6 text-pink-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Personal Information</h2>
+                  <p className="text-sm text-gray-500">Basic details for your assessment</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Field label="Number of Pregnancies" field="pregnancies" hint="Enter 0 if not applicable" icon={Users} />
+                <Field label="Age" field="age" required hint="Required" icon={Calendar} />
+              </div>
+            </div>
+          )}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button
-            disabled={activeStep === 0 || loading}
-            onClick={handleBack}
-            variant="outlined"
-            sx={{ color: 'white', borderColor: 'white' }}
-          >
-            {t.back}
-          </Button>
-          
-          <Button
-            variant="contained"
-            onClick={activeStep === 1 ? handleSubmit : handleNext}
-            disabled={
-              loading || 
-              (activeStep === 0 && !canProceedToStep1) ||
-              (activeStep === 1 && !canProceedToStep2) ||
-              activeStep === 2
-            }
-            startIcon={activeStep === 1 && loading ? <CircularProgress size={20} /> : null}
-            sx={{ 
-              background: 'white',
-              color: '#667eea',
-              fontWeight: 'bold',
-              '&:hover': {
-                background: '#f8f9fa'
-              }
-            }}
-          >
-            {activeStep === 1 ? (loading ? t.loading : t.submit) : t.next}
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
+          {step === 1 && (
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/10 flex items-center justify-center">
+                  <Activity className="w-6 h-6 text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Health Metrics</h2>
+                  <p className="text-sm text-gray-500">Clinical measurements and vitals</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Field label="Glucose (mg/dL)" field="glucose" required hint="Fasting blood sugar" icon={Droplets} />
+                <Field label="Blood Pressure (mmHg)" field="blood_pressure" required hint="Systolic" icon={Activity} />
+                <Field label="Skin Thickness (mm)" field="skin_thickness" hint="Triceps skinfold" />
+                <Field label="Insulin (mu U/ml)" field="insulin" hint="2-Hour serum" />
+                <Field label="Weight (kg)" field="weight" required />
+                <Field label="Height (cm)" field="height" required />
+                <div className="sm:col-span-2">
+                  <Field label="Diabetes Pedigree Function" field="diabetes_pedigree_function" hint="Family history score (0.0 - 2.5)" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <>
+              {loading ? (
+                <div className="flex flex-col items-center py-24 gap-6">
+                  <div className="relative w-20 h-20">
+                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                    <div className="absolute inset-2 rounded-full border-2 border-cyan-500/10 border-b-cyan-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                    <div className="absolute inset-0 flex items-center justify-center"><Activity className="w-7 h-7 text-emerald-400 animate-pulse" /></div>
+                  </div>
+                  <p className="text-gray-400 font-medium">{t.loading}</p>
+                </div>
+              ) : result && (
+                <div className="space-y-8 stagger">
+                  {/* Executive Summary */}
+                  {result.executive_summary && (
+                    <div className="gradient-border animate-fade-in-up">
+                      <div className="card p-6 rounded-[1.25rem] bg-white/[0.02]">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <Stethoscope className="w-5 h-5 text-emerald-400" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-white mb-2 text-lg">Executive Summary</h3>
+                            <p className="text-sm text-gray-400 leading-relaxed">{result.executive_summary}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Risk + Factors */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className={`card p-7 border-2 animate-fade-in-up ${isHigh ? 'border-red-500/20 bg-red-500/[0.04]' : isMod ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-emerald-500/20 bg-emerald-500/[0.04]'}`}>
+                      <Target className={`w-6 h-6 mb-4 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`} />
+                      <div className={`text-5xl font-black mb-2 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`}>{prob}%</div>
+                      <div className={`text-sm font-bold mb-3 ${isHigh ? 'text-red-300' : isMod ? 'text-amber-300' : 'text-emerald-300'}`}>{risk}</div>
+                      <p className="text-xs text-gray-500">Probability of developing type 2 diabetes</p>
+                    </div>
+
+                    <div className="card p-7 animate-fade-in-up">
+                      <AlertTriangle className="w-6 h-6 text-amber-400 mb-4" />
+                      <h3 className="font-bold text-white mb-4 text-lg">Key Risk Factors</h3>
+                      {factors.length > 0 ? (
+                        <ul className="space-y-3">
+                          {factors.map((f, i) => {
+                            const sev = (f.severity || '').toLowerCase();
+                            return (
+                              <li key={i} className="flex items-start gap-3">
+                                <span className={`badge mt-0.5 ${sev.includes('high') ? 'bg-red-500/20 text-red-400' : sev.includes('moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                  {f.severity || 'Info'}
+                                </span>
+                                <span className="text-sm text-gray-300">{f.factor}</span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : <p className="text-sm text-gray-500">No significant risk factors.</p>}
+                    </div>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="grid grid-cols-3 gap-5 animate-fade-in-up">
+                    {[
+                      { label: 'BMI', value: metrics.bmi || 'N/A', sub: metrics.bmi_category || '---' },
+                      { label: 'Metabolic Age', value: metrics.metabolic_age || 'N/A', sub: 'years' },
+                      { label: 'Health Score', value: `${metrics.health_score || 0}/100`, sub: `${metrics.health_score || 0}%`, bar: metrics.health_score },
+                    ].map((m, i) => (
+                      <div key={i} className="card p-6 text-center">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] mb-3 font-bold">{m.label}</p>
+                        <p className="text-3xl font-black gradient-text">{m.value}</p>
+                        {m.bar !== undefined && (
+                          <div className="w-full bg-white/[0.04] rounded-full h-1.5 mt-4">
+                            <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-1000" style={{ width: `${m.bar}%` }} />
+                          </div>
+                        )}
+                        {!m.bar && <p className="text-xs text-gray-500 mt-1">{m.sub}</p>}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up">
+                    <div className="card p-6">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
+                        <Apple className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <h4 className="font-bold text-white mb-2">Nutrition</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed">Low-glycemic foods, portion control, whole grains. Limit added sugars and processed food.</p>
+                    </div>
+                    <div className="card p-6">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
+                        <Dumbbell className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <h4 className="font-bold text-white mb-2">Fitness</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed">150 min/week moderate aerobic activity. Strength training 2-3x/week.</p>
+                    </div>
+                  </div>
+
+                  {recs.lifestyle_changes && (
+                    <div className="card p-6 animate-fade-in-up">
+                      <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
+                        <Leaf className="w-5 h-5 text-violet-400" />
+                      </div>
+                      <h4 className="font-bold text-white mb-4">Lifestyle Changes</h4>
+                      <ul className="space-y-2.5">
+                        {recs.lifestyle_changes.map((c, i) => (
+                          <li key={i} className="flex items-start gap-3 text-sm text-gray-400">
+                            <CheckCircle className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" /> {c}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Timeline */}
+                  <div className="grid grid-cols-3 gap-5 animate-fade-in-up">
+                    {[
+                      { label: 'Immediate', icon: Clock, items: ['Consult doctor', 'Monitor glucose', 'Start walking'], color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/10' },
+                      { label: '30 Days', icon: Calendar, items: ['Diet changes', 'Exercise routine', 'Weekly tracking'], color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/10' },
+                      { label: '90 Days', icon: TrendingUp, items: ['Reassess metrics', 'Adjust plan', 'Follow-up visit'], color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/10' },
+                    ].map((p, i) => (
+                      <div key={i} className={`card p-5 border ${p.border}`}>
+                        <div className={`w-9 h-9 rounded-lg ${p.bg} flex items-center justify-center mb-3`}>
+                          <p.icon className={`w-4 h-4 ${p.color}`} />
+                        </div>
+                        <p className={`text-xs font-extrabold ${p.color} mb-3 uppercase tracking-wider`}>{p.label}</p>
+                        <ul className="space-y-2">
+                          {p.items.map((item, j) => (
+                            <li key={j} className="text-[12px] text-gray-400 flex items-start gap-2">
+                              <CheckCircle className={`w-3.5 h-3.5 mt-0.5 ${p.color} shrink-0`} />{item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="text-center pt-6">
+                    <button onClick={handleNewTest} className="btn-secondary"><RotateCcw className="w-4 h-4" />{t.newTest}</button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Nav buttons */}
+      {step < 2 && (
+        <div className="flex justify-between mt-8">
+          <button onClick={() => setStep(s => s - 1)} disabled={step === 0} className="btn-ghost disabled:opacity-20">
+            <ArrowLeft className="w-4 h-4" /> {t.back}
+          </button>
+          <button onClick={step === 1 ? handleSubmit : () => setStep(s => s + 1)}
+            disabled={loading || (step === 0 && !canNext0) || (step === 1 && !canNext1)} className="btn-primary">
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {step === 1 ? (loading ? t.loading : t.submit) : t.next}
+            {!loading && <ArrowRight className="w-4 h-4" />}
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
-export default PremiumDiabetesTest;
+export default DiabetesTest;

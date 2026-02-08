@@ -1,26 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Box,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemText,
-  Avatar,
-  Chip,
-  Grid,
-  CircularProgress,
-  IconButton,
-  Alert,
-  Snackbar,
-  LinearProgress
-} from '@mui/material';
-import { Send, SmartToy, Person, Delete, Refresh, Warning } from '@mui/icons-material';
+  Send, Bot, User, Trash2, RefreshCw, AlertTriangle,
+  Loader2, Wifi, WifiOff, Sparkles,
+} from 'lucide-react';
 import { API_BASE_URL } from '../config/constants';
 
 const ChatBot = ({ language = 'english' }) => {
@@ -33,590 +15,231 @@ const ChatBot = ({ language = 'english' }) => {
   const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef(null);
 
-  // Initialize conversation
-  useEffect(() => {
-    initializeConversation();
-    checkBackendConnection();
-  }, [language]);
+  useEffect(() => { initializeConversation(); checkBackendConnection(); }, [language]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const checkBackendConnection = async () => {
     try {
-      console.log('🔍 Checking backend connection...');
-      const response = await fetch(`${API_BASE_URL}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setBackendStatus('connected');
-        console.log('✅ Backend connected successfully:', data);
-        setError('');
-      } else {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (error) {
-      console.error('❌ Backend connection failed:', error);
-      setBackendStatus('disconnected');
-      setError(`Backend connection failed: ${error.message}. Please ensure the server is running.`);
-    }
+      const r = await fetch(`${API_BASE_URL}/health`);
+      if (r.ok) { setBackendStatus('connected'); setError(''); }
+      else throw new Error(`HTTP ${r.status}`);
+    } catch (err) { setBackendStatus('disconnected'); setError(`Connection failed: ${err.message}`); }
   };
 
   const initializeConversation = () => {
-    const newConversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    setConversationId(newConversationId);
-    
+    setConversationId(`conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
     setMessages([{
-      text: getWelcomeMessage(language),
-      sender: 'bot',
-      timestamp: new Date(),
-      id: Date.now(),
-      isSystem: true
+      text: language === 'turkish'
+        ? "Merhaba! Ben yapay zeka diyabet uzmanınızım. Diyabet önleme, risk faktörleri, tedavi veya yaşam tarzı yönetimi hakkında bana her şeyi sorabilirsiniz."
+        : "Hello! I'm your AI diabetes specialist. Ask me anything about diabetes prevention, risk factors, treatment, or lifestyle management.",
+      sender: 'bot', timestamp: new Date(), id: Date.now(), isSystem: true,
     }]);
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const getWelcomeMessage = (lang) => {
-    const welcomeMessages = {
-      english: "🔬 **AI Diabetes Assistant - Live LLM Mode**\n\nI'm connected to the Groq LLM and ready to provide intelligent, real-time responses about diabetes prevention and management.\n\n**I can help with:**\n• Detailed medical explanations\n• Personalized risk assessments\n• Latest research insights\n• Comprehensive treatment options\n• Lifestyle recommendations\n\nAsk me anything about diabetes!",
-      swahili: "🔬 **Msaidizi wa Kisukari wa AK - Hali ya LLM ya Moja kwa Moja**\n\nNimeunganishwa na Groq LLM na niko tayari kutoa majibu ya kisasa na ya wakati halisi kuhusu kuzuia na kudhibiti kisukari.\n\n**Ninaweza kusaidia kwa:**\n• Maelezo ya kina ya kitabibu\n• Tathmini binafsi za hatari\n• Ufahamu wa utafiti wa hivi karibuni\n• Chaguo kamili za matibabu\n• Mapendekezo ya mtindo wa maisha\n\nNiulize chochote kuhusu kisukari!",
-      sheng: "🔬 **AI Diabetes Assistant - Live LLM Mode**\n\nNiko connected na Groq LLM na niko ready kutoa smart, real-time answers about diabetes.\n\n**Naeza help na:**\n• Detailed medical info\n• Personal risk assessment\n• Latest research\n• Treatment options\n• Lifestyle advice\n\nAsk me anything about diabetes!"
-    };
-    return welcomeMessages[lang] || welcomeMessages.english;
-  };
-
-  // Force LLM response - no fallbacks
   const handleSend = async () => {
     if (!input.trim()) return;
-
-    const userMessage = { 
-      text: input, 
-      sender: 'user', 
-      timestamp: new Date(),
-      id: Date.now()
-    };
-    
+    const userMessage = { text: input, sender: 'user', timestamp: new Date(), id: Date.now() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
     setError('');
 
     try {
-      // Enhanced payload for better LLM context
-      const payload = {
-        message: input,
-        language: language,
-        conversation_context: "diabetes_medical_advice",
-        conversation_id: conversationId,
-        require_llm: true, // Force LLM usage
-        timestamp: new Date().toISOString(),
-        message_type: "user_query"
-      };
-
-      console.log('🚀 Sending to LLM backend:', {
-        url: `${API_BASE_URL}/api/v1/chat`,
-        payload: payload
-      });
-
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       const response = await fetch(`${API_BASE_URL}/api/v1/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: input, language, conversation_context: 'diabetes_medical_advice',
+          conversation_id: conversationId, require_llm: true, timestamp: new Date().toISOString(), message_type: 'user_query',
+        }),
+        signal: controller.signal,
       });
-
       clearTimeout(timeoutId);
 
-      console.log('📨 LLM Response status:', response.status);
-      
       if (!response.ok) {
-        let errorMessage = `LLM Service Error: HTTP ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.detail || errorData.message || errorMessage;
-          console.log('❌ LLM backend error details:', errorData);
-        } catch (e) {
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
-          console.log('❌ LLM backend error text:', errorText);
-        }
-        throw new Error(errorMessage);
+        let msg = `HTTP ${response.status}`;
+        try { const d = await response.json(); msg = d.detail || d.message || msg; } catch { msg = (await response.text()) || msg; }
+        throw new Error(msg);
       }
 
       const data = await response.json();
-      console.log('✅ LLM Response received:', data);
-
-      // Validate LLM response
-      if (!data || (!data.response && !data.message)) {
-        throw new Error('LLM returned empty or invalid response');
-      }
-
+      if (!data || (!data.response && !data.message)) throw new Error('Empty response');
       const llmResponse = data.response || data.message || data;
-      
-      setMessages(prev => [...prev, { 
-        text: llmResponse,
-        sender: 'bot',
-        timestamp: new Date(),
-        id: Date.now() + 1,
-        isLLMResponse: true,
-        suggestions: data.suggestions || generateLLMSuggestions(input, llmResponse)
-      }]);
 
+      setMessages(prev => [...prev, {
+        text: llmResponse, sender: 'bot', timestamp: new Date(), id: Date.now() + 1,
+        isLLMResponse: true, suggestions: data.suggestions || generateSuggestions(llmResponse),
+      }]);
       setBackendStatus('connected');
-      setRetryCount(0); // Reset retry count on success
-
-    } catch (error) {
-      console.error('💥 LLM Communication Error:', error);
-      
-      const errorMessage = error.name === 'AbortError' 
-        ? 'LLM request timeout - server is taking too long to respond'
-        : `LLM Service Error: ${error.message}`;
-
-      setError(errorMessage);
+      setRetryCount(0);
+    } catch (err) {
+      const msg = err.name === 'AbortError' ? 'Request timeout' : err.message;
+      setError(msg);
       setBackendStatus('disconnected');
-      
-      // Increment retry count
-      const newRetryCount = retryCount + 1;
-      setRetryCount(newRetryCount);
-
-      // Show error message to user
-      setMessages(prev => [...prev, { 
-        text: `🚨 **LLM Service Unavailable**\n\nI'm unable to connect to the AI service right now.\n\n**Error:** ${errorMessage}\n**Retry Attempt:** ${newRetryCount}\n\nPlease:\n1. Check if the backend server is running\n2. Try again in a moment\n3. Contact support if this persists`,
-        sender: 'bot',
-        timestamp: new Date(),
-        id: Date.now() + 1,
-        isError: true
-      }]);
-    } finally {
-      setLoading(false);
-    }
+      setRetryCount(r => r + 1);
+      setMessages(prev => [...prev, { text: `Connection error: ${msg}\nPlease check if the backend is running.`, sender: 'bot', timestamp: new Date(), id: Date.now() + 1, isError: true }]);
+    } finally { setLoading(false); }
   };
 
-  // Generate intelligent follow-up suggestions based on LLM response
-  const generateLLMSuggestions = (userInput, llmResponse) => {
-    const inputLower = userInput.toLowerCase();
-    const responseLower = llmResponse.toLowerCase();
-
-    // Medical topic detection
-    if (responseLower.includes('blood sugar') || responseLower.includes('glucose')) {
-      return [
-        "What are normal blood sugar ranges?",
-        "How often should I check my glucose?",
-        "Symptoms of hyperglycemia",
-        "Best foods for blood sugar control"
-      ];
-    }
-
-    if (responseLower.includes('risk') || responseLower.includes('prevent')) {
-      return [
-        "Specific lifestyle changes for prevention",
-        "Genetic risk factors explained",
-        "Early warning signs to watch for",
-        "Medical screening recommendations"
-      ];
-    }
-
-    if (responseLower.includes('treatment') || responseLower.includes('medication')) {
-      return [
-        "Latest diabetes medications",
-        "Natural treatment options",
-        "Side effects management",
-        "Combination therapies"
-      ];
-    }
-
-    if (responseLower.includes('diet') || responseLower.includes('nutrition')) {
-      return [
-        "Sample meal plans",
-        "Foods to completely avoid",
-        "Carbohydrate counting guide",
-        "Glycemic index explained"
-      ];
-    }
-
-    if (responseLower.includes('exercise') || responseLower.includes('workout')) {
-      return [
-        "Best exercises for diabetics",
-        "Exercise timing and frequency",
-        "Managing blood sugar during exercise",
-        "Safety precautions"
-      ];
-    }
-
-    // Default intelligent suggestions
-    return [
-      "Explain this in more detail",
-      "What are the latest research findings?",
-      "How does this apply to different age groups?",
-      "Are there any new treatments available?"
-    ];
+  const generateSuggestions = (r) => {
+    const l = r.toLowerCase();
+    if (l.includes('blood sugar') || l.includes('glucose')) return ['Normal blood sugar ranges?', 'Foods for blood sugar control'];
+    if (l.includes('risk') || l.includes('prevent')) return ['Lifestyle changes?', 'Early warning signs'];
+    if (l.includes('diet') || l.includes('nutrition')) return ['Sample meal plans', 'Glycemic index explained'];
+    return ['Explain more', 'Latest research?', 'Treatment options?'];
   };
 
-  const handleQuickQuestion = (question) => {
-    setInput(question);
-    // Auto-send after a brief delay
-    setTimeout(() => {
-      if (backendStatus === 'connected') {
-        handleSend();
-      } else {
-        setError('Please wait for backend connection before sending questions');
-      }
-    }, 100);
-  };
-
-  const clearConversation = () => {
-    initializeConversation();
-    setError('');
-    setRetryCount(0);
-  };
-
-  const retryBackendConnection = async () => {
-    setError('Retrying backend connection...');
-    await checkBackendConnection();
-    if (backendStatus === 'connected') {
-      setError('');
-    }
-  };
+  const handleQuick = (q) => { setInput(q); setTimeout(() => { if (backendStatus === 'connected') handleSend(); }, 100); };
+  const connected = backendStatus === 'connected';
 
   const quickQuestions = [
-    "Explain type 2 diabetes pathophysiology",
-    "Latest advancements in diabetes treatment",
-    "Comprehensive diabetes risk assessment",
-    "Evidence-based dietary recommendations",
-    "Exercise physiology for diabetes management",
-    "Pharmacological treatment options",
-    "Diabetes complications and prevention",
-    "Mental health aspects of diabetes care"
+    'Diabetes pathophysiology', 'Treatment advancements', 'Diet recommendations',
+    'Exercise benefits', 'Complications', 'Mental health impact',
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ p: 3, position: 'relative' }}>
-        {/* Connection Status Bar */}
-        {backendStatus !== 'connected' && (
-          <LinearProgress 
-            color="warning" 
-            sx={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              right: 0,
-              height: 3
-            }} 
-          />
-        )}
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+      {/* Page header */}
+      <div className="text-center mb-10 animate-fade-in-up">
+        <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-5 py-2 mb-5">
+          <Sparkles className="w-4 h-4 text-emerald-400" />
+          <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-[0.15em]">Live AI Chat</span>
+        </div>
+        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">AI Diabetes Specialist</h1>
+        <p className="text-gray-500 max-w-md mx-auto">Get expert answers about diabetes prevention, management, and treatment.</p>
+      </div>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              🧠 AI Diabetes Specialist
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: '50%',
-                  backgroundColor: backendStatus === 'connected' ? '#4caf50' : '#ff9800',
-                  animation: backendStatus === 'connected' ? 'pulse 2s infinite' : 'none'
-                }}
-              />
-              <Typography variant="caption" color={backendStatus === 'connected' ? 'success.main' : 'warning.main'}>
-                {backendStatus === 'connected' ? '🟢 LLM Connected' : '🟡 Connecting to LLM...'}
-              </Typography>
-              {retryCount > 0 && (
-                <Typography variant="caption" color="text.secondary">
-                  (Retry {retryCount})
-                </Typography>
-              )}
-            </Box>
-          </Box>
-          <Box>
-            <IconButton 
-              onClick={retryBackendConnection} 
-              title="Reconnect to LLM"
-              size="small"
-              color={backendStatus === 'connected' ? 'success' : 'warning'}
-            >
-              <Refresh />
-            </IconButton>
-            <IconButton 
-              onClick={clearConversation} 
-              title="Start new conversation"
-              size="small"
-            >
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
+      <div className="gradient-border animate-fade-in-up">
+        <div className="card overflow-hidden rounded-[1.25rem]">
+          {/* Chat header */}
+          <div className="p-6 border-b border-white/[0.05]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <Bot className="w-6 h-6 text-white" />
+                  </div>
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#060611]
+                    ${connected ? 'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-amber-400'}`} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">More Life AI</h2>
+                  <p className={`text-xs font-medium ${connected ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {connected ? 'Online -- Groq LLM' : `Connecting... ${retryCount > 0 ? `(${retryCount})` : ''}`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={checkBackendConnection} className="btn-ghost p-2.5 rounded-xl"><RefreshCw className="w-4 h-4" /></button>
+                <button onClick={() => { initializeConversation(); setError(''); }} className="btn-ghost p-2.5 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            </div>
 
-        {/* System Status Alert */}
-        {backendStatus !== 'connected' && (
-          <Alert 
-            severity="warning" 
-            icon={<Warning />}
-            sx={{ mb: 2 }}
-            action={
-              <Button 
-                color="inherit" 
-                size="small" 
-                onClick={retryBackendConnection}
-              >
-                RETRY
-              </Button>
-            }
-          >
-            <Typography variant="body2">
-              <strong>LLM Service Offline</strong> - Real-time AI responses unavailable. 
-              {retryCount > 0 && ` Failed ${retryCount} time(s).`}
-            </Typography>
-          </Alert>
-        )}
-
-        {/* Quick Questions */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="h6" gutterBottom>🧪 Medical Questions:</Typography>
-          <Grid container spacing={1}>
-            {quickQuestions.map((question, index) => (
-              <Grid item key={index}>
-                <Chip
-                  label={question}
-                  onClick={() => handleQuickQuestion(question)}
-                  variant="outlined"
-                  clickable
-                  size="small"
-                  disabled={backendStatus !== 'connected' || loading}
-                  color={backendStatus === 'connected' ? 'primary' : 'default'}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-
-        {/* Chat Messages */}
-        <Card sx={{ 
-          height: '500px', 
-          overflow: 'auto', 
-          mb: 2, 
-          border: backendStatus === 'connected' ? '2px solid #4caf50' : '2px solid #ff9800',
-          position: 'relative'
-        }}>
-          {backendStatus !== 'connected' && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 1
-              }}
-            >
-              <Typography variant="h6" color="warning.main" sx={{ opacity: 0.7 }}>
-                ⚠️ LLM Service Offline - Connect to enable AI responses
-              </Typography>
-            </Box>
-          )}
-          
-          <CardContent>
-            <List>
-              {messages.map((message) => (
-                <ListItem key={message.id} alignItems="flex-start" sx={{ mb: 2 }}>
-                  <Avatar sx={{ 
-                    mr: 2, 
-                    bgcolor: message.sender === 'user' ? 'primary.main' : 
-                            message.isError ? 'error.main' : 
-                            message.isSystem ? 'info.main' : 'success.main'
-                  }}>
-                    {message.sender === 'user' ? <Person /> : <SmartToy />}
-                  </Avatar>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
-                        {message.text}
-                        {message.suggestions && message.suggestions.length > 0 && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="caption" fontWeight="bold" color="primary">
-                              🔍 Follow-up Questions:
-                            </Typography>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                              {message.suggestions.map((suggestion, idx) => (
-                                <Chip
-                                  key={idx}
-                                  label={suggestion}
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() => handleQuickQuestion(suggestion)}
-                                  disabled={backendStatus !== 'connected'}
-                                  color="primary"
-                                />
-                              ))}
-                            </Box>
-                          </Box>
-                        )}
-                      </Box>
-                    }
-                    secondary={
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, alignItems: 'center' }}>
-                        <Box>
-                          <Typography variant="caption">
-                            {message.sender === 'user' ? '👤 You' : 
-                             message.isError ? '🚨 System' : 
-                             message.isSystem ? 'ℹ️ System' : '🤖 AI Specialist'}
-                          </Typography>
-                          {message.isLLMResponse && (
-                            <Typography variant="caption" color="success.main" sx={{ ml: 1 }}>
-                              • Live LLM
-                            </Typography>
-                          )}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {message.timestamp.toLocaleTimeString()}
-                        </Typography>
-                      </Box>
-                    }
-                    sx={{
-                      backgroundColor: message.sender === 'user' ? '#f0f7ff' : 
-                                     message.isError ? '#ffebee' : 
-                                     message.isSystem ? '#e3f2fd' : '#e8f5e8',
-                      p: 3,
-                      borderRadius: 3,
-                      border: message.isLLMResponse ? '2px solid #4caf50' : 
-                             message.isError ? '2px solid #f44336' : '1px solid #e0e0e0'
-                    }}
-                  />
-                </ListItem>
+            {/* Quick questions */}
+            <div className="flex flex-wrap gap-2 mt-5">
+              {quickQuestions.map((q, i) => (
+                <button key={i} onClick={() => handleQuick(q)} disabled={!connected || loading}
+                  className="badge bg-white/[0.03] border border-white/[0.07] text-gray-500 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20 transition-all cursor-pointer disabled:opacity-30">
+                  {q}
+                </button>
               ))}
-              {loading && (
-                <ListItem>
-                  <Avatar sx={{ mr: 2, bgcolor: 'success.main' }}>
-                    <SmartToy />
-                  </Avatar>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                    <CircularProgress size={24} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        🧠 Processing with LLM...
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Analyzing your medical query with AI
-                      </Typography>
-                    </Box>
-                  </Box>
-                </ListItem>
-              )}
-              <div ref={messagesEndRef} />
-            </List>
-          </CardContent>
-        </Card>
+            </div>
+          </div>
 
-        {/* Input Area */}
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder={
-              backendStatus === 'connected' 
-                ? "Ask detailed medical questions about diabetes... (LLM Connected 🟢)"
-                : "LLM Service Offline - Please wait for connection... (Connecting 🟡)"
-            }
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && backendStatus === 'connected' && handleSend()}
-            disabled={loading || backendStatus !== 'connected'}
-            multiline
-            maxRows={4}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: backendStatus === 'connected' ? '#f8fff8' : '#fffbf0',
-                borderColor: backendStatus === 'connected' ? '#4caf50' : '#ff9800'
-              }
-            }}
-          />
-          <Button
-            variant="contained"
-            endIcon={<Send />}
-            onClick={handleSend}
-            disabled={loading || !input.trim() || backendStatus !== 'connected'}
-            sx={{ 
-              minWidth: '120px', 
-              height: '56px',
-              backgroundColor: backendStatus === 'connected' ? '#4caf50' : '#ff9800',
-              '&:hover': {
-                backgroundColor: backendStatus === 'connected' ? '#45a049' : '#f57c00'
-              }
-            }}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Ask LLM'}
-          </Button>
-        </Box>
+          {/* Messages */}
+          <div className="h-[500px] overflow-y-auto p-6 space-y-6">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''} animate-fade-in-up`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  msg.sender === 'user' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' :
+                  msg.isError ? 'bg-red-500/15 border border-red-500/20' :
+                  'bg-gradient-to-br from-emerald-500/15 to-cyan-500/15 border border-emerald-500/15'
+                }`}>
+                  {msg.sender === 'user' ? <User className="w-4 h-4 text-white" /> :
+                    <Bot className={`w-4 h-4 ${msg.isError ? 'text-red-400' : 'text-emerald-400'}`} />}
+                </div>
 
-        {/* Status Information */}
-        <Box sx={{ 
-          mt: 2, 
-          p: 2, 
-          backgroundColor: backendStatus === 'connected' ? '#e8f5e8' : '#fff3e0',
-          borderRadius: 2,
-          border: `1px solid ${backendStatus === 'connected' ? '#4caf50' : '#ff9800'}`
-        }}>
-          <Typography variant="caption" color={backendStatus === 'connected' ? 'success.main' : 'warning.main'}>
-            <strong>
-              {backendStatus === 'connected' 
-                ? '✅ LIVE MODE: Connected to Groq LLM - All responses are AI-generated in real-time'
-                : '⚠️ OFFLINE MODE: LLM service unavailable - Please check backend server connection'
-              }
-            </strong>
-          </Typography>
-        </Box>
-      </Paper>
+                <div className={`max-w-[75%] rounded-2xl p-4 ${
+                  msg.sender === 'user'
+                    ? 'bg-gradient-to-br from-blue-500/15 to-indigo-500/15 border border-blue-500/15 rounded-tr-md'
+                    : msg.isError
+                    ? 'bg-red-500/[0.06] border border-red-500/15 rounded-tl-md'
+                    : 'bg-white/[0.02] border border-white/[0.05] rounded-tl-md'
+                }`}>
+                  <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">{msg.text}</p>
 
-      {/* Error Snackbar */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={8000}
-        onClose={() => setError('')}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={() => setError('')} 
-          severity="error" 
-          sx={{ width: '100%' }}
-          action={
-            <Button color="inherit" size="small" onClick={retryBackendConnection}>
-              RETRY
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      </Snackbar>
+                  {msg.suggestions?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/[0.04] flex flex-wrap gap-1.5">
+                      {msg.suggestions.map((s, i) => (
+                        <button key={i} onClick={() => handleQuick(s)} disabled={!connected}
+                          className="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer text-[11px]">
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-      <style jsx>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
-    </Container>
+                  <div className="flex items-center justify-between mt-2.5">
+                    <span className="text-[10px] text-gray-600 font-medium">
+                      {msg.sender === 'user' ? 'You' : msg.isError ? 'Error' : 'AI'}
+                      {msg.isLLMResponse && <span className="text-emerald-500 ml-1.5">Live</span>}
+                    </span>
+                    <span className="text-[10px] text-gray-600">{msg.timestamp.toLocaleTimeString()}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex gap-3 animate-fade-in-up">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl rounded-tl-md p-4 flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-500">Thinking...</span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="p-5 border-t border-white/[0.04]">
+            <div className="flex gap-3">
+              <textarea value={input} onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && connected) { e.preventDefault(); handleSend(); } }}
+                disabled={loading || !connected}
+                placeholder={connected ? 'Ask about diabetes...' : 'Waiting for connection...'}
+                rows={1} className="input-field resize-none flex-1" />
+              <button onClick={handleSend} disabled={loading || !input.trim() || !connected} className="btn-primary px-5 rounded-xl">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </button>
+            </div>
+            <div className={`mt-3 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.15em] ${connected ? 'text-emerald-500' : 'text-amber-500'}`}>
+              {connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {connected ? 'Live -- Groq LLM Connected' : 'Offline'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div className="card flex items-center gap-3 p-4 border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+            <p className="text-sm text-red-300 flex-1">{error}</p>
+            <button onClick={() => setError('')} className="text-red-400 text-xs font-bold hover:text-red-300 transition-colors">Close</button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
