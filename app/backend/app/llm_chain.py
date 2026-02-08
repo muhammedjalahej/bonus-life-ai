@@ -9,9 +9,9 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-class InsulynAILLM:
+class MoreLifeAILLM:
     """
-    Fixed Insulyn AI LLM service with proper chat functionality
+    More Life AI LLM service with proper chat functionality
     """
 
     def __init__(self):
@@ -45,7 +45,7 @@ class InsulynAILLM:
             )
 
             self._initialize_chat_chain()
-            logger.info("✅ Insulyn AI LLM initialized successfully")
+            logger.info("✅ More Life AI LLM initialized successfully")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize LLM: {e}")
@@ -58,7 +58,7 @@ class InsulynAILLM:
 
     def _initialize_chat_chain(self):
         """Initialize the main chat chain with proper diabetes expertise"""
-        chat_template = """You are Insulyn AI, a specialized medical AI assistant focused exclusively on diabetes prevention, management, and education.
+        chat_template = """You are More Life AI, a specialized medical AI assistant focused exclusively on diabetes prevention, management, and education.
 
 IMPORTANT: You must provide accurate, evidence-based medical information about diabetes. Always be specific and detailed.
 
@@ -193,7 +193,7 @@ Now provide a detailed response in {language}:"""
         }
 
 # Global instance
-insulyn_llm = InsulynAILLM()
+morelife_llm = MoreLifeAILLM()
 
 def initialize_llm_service():
-    return insulyn_llm.llm is not None
+    return morelife_llm.llm is not None

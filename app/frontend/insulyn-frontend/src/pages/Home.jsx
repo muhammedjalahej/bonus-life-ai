@@ -23,7 +23,7 @@ const Home = ({ language }) => {
 
   const translations = {
     english: {
-      welcome: 'Welcome to Insulyn AI',
+      welcome: 'Welcome to More Life AI',
       tagline: 'Your AI-powered diabetes prevention and management companion',
       features: 'Features',
       testTitle: 'Diabetes Risk Assessment',
@@ -43,7 +43,7 @@ const Home = ({ language }) => {
       checkSymptoms: 'Check Symptoms',
     },
     swahili: {
-      welcome: 'Karibu kwenye Insulyn AI',
+      welcome: 'Karibu kwenye More Life AI',
       tagline: 'Msaidizi wako wa kuzuia na kudhibiti kisukari unaotumia AI',
       features: 'Vipengele',
       testTitle: 'Tathmini ya Hatari ya Kisukari',
@@ -63,7 +63,7 @@ const Home = ({ language }) => {
       checkSymptoms: 'Kagua Dalili',
     },
     sheng: {
-      welcome: 'Welcome to Insulyn AI',
+      welcome: 'Welcome to More Life AI',
       tagline: 'Your AI-powered diabetes prevention and management companion',
       features: 'Features',
       testTitle: 'Diabetes Risk Assessment',

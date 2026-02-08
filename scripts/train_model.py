@@ -1,8 +1,8 @@
 """
-Insulyn AI - Diabetes Prediction Model Training Script
+More Life AI - Diabetes Prediction Model Training Script
 ======================================================
 This script trains and evaluates the XGBoost binary classifier
-used for diabetes risk prediction in the Insulyn AI platform.
+used for diabetes risk prediction in the More Life AI platform.
 
 Features used (8 total):
     - pregnancies, glucose, blood_pressure, skin_thickness,
@@ -357,7 +357,7 @@ def save_model(model, scaler, best_name, results):
     summary_path = os.path.join(RESULTS_DIR, "training_summary.txt")
     with open(summary_path, "w") as f:
         f.write("=" * 60 + "\n")
-        f.write("INSULYN AI - MODEL TRAINING SUMMARY\n")
+        f.write("MORE LIFE AI - MODEL TRAINING SUMMARY\n")
         f.write("=" * 60 + "\n\n")
         f.write(f"Best Model: {best_name}\n")
         f.write(f"Model Type: {type(model).__name__}\n")
@@ -463,7 +463,7 @@ def generate_shap_analysis(best_model, X_train, X_test, feature_names):
 # ============================================================
 def main():
     print("=" * 60)
-    print("  INSULYN AI - MODEL TRAINING PIPELINE")
+    print("  MORE LIFE AI - MODEL TRAINING PIPELINE")
     print("=" * 60)
 
     # Step 1: Load Data

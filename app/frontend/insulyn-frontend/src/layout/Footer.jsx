@@ -39,7 +39,7 @@ const Footer = ({ language }) => {
       <Container maxWidth="lg">
         <Typography variant="h6" gutterBottom align="center">
           <MedicalInformation sx={{ mr: 1, verticalAlign: 'middle' }} />
-          Insulyn AI
+          More Life AI
         </Typography>
         <Typography variant="subtitle1" align="center" gutterBottom>
           {t.tagline}

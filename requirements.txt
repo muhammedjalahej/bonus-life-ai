@@ -1,4 +1,4 @@
-# Insulyn AI - Training & Notebook Dependencies
+# More Life AI - Training & Notebook Dependencies
 # Authors: Muhammed Jalahej, Yazen Emino
 
 numpy>=1.26.4

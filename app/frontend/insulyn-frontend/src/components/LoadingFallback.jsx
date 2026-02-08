@@ -18,7 +18,7 @@ const LoadingFallback = () => {
         fontSize: '18px',
         fontWeight: '500'
       }}>
-        Loading Insulyn AI...
+        Loading More Life AI...
       </p>
       
       <style>

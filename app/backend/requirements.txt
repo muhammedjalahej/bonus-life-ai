@@ -1,4 +1,4 @@
-# Insulyn AI - Backend Dependencies
+# More Life AI - Backend Dependencies
 # Authors: Muhammed Jalahej, Yazen Emino
 
 # === Web Framework ===

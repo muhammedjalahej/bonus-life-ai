@@ -40,7 +40,7 @@ class AIDiabetesSpecialist:
     # -- prompt -----------------------------------------------------------
     def create_medical_prompt(self, message: str, language: str, user_context: Dict = None) -> str:
         prompt = (
-            "You are Insulyn AI, an expert diabetes specialist and health advisor. "
+            "You are More Life AI, an expert diabetes specialist and health advisor. "
             "Provide accurate, helpful medical information about diabetes prevention, management, and treatment.\n\n"
             f'USER QUESTION: "{message}"\n'
             f"LANGUAGE: {language}\n\n"
@@ -186,14 +186,14 @@ class GPTOSSDiabetesSpecialist:
     def create_diabetes_prompt(self, message: str, language: str, context: Dict = None) -> List[Dict]:
         if language == "swahili":
             system_content = (
-                "Uko kwenye mfumo wa Insulyn AI, mtaalamu wa kisukari. "
+                "Uko kwenye mfumo wa More Life AI, mtaalamu wa kisukari. "
                 "JIBU KWA KISWAHILI KWA USAHIHI WA KITAALAMU. "
                 "Toa maelezo ya kina ya kitabibu kuhusu kisukari. "
                 "MUHIMU: Onyesha kuwa wewe ni msaidizi wa AI."
             )
         else:
             system_content = (
-                "You are Insulyn AI, an expert diabetes specialist. "
+                "You are More Life AI, an expert diabetes specialist. "
                 "Provide medically accurate, evidence-based information. "
                 "Give specific, actionable advice. "
                 "Always state that you are an AI assistant."

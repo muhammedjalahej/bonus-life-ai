@@ -50,7 +50,7 @@ const Header = ({ language, setLanguage }) => {
       <Toolbar>
         <MedicalInformation sx={{ mr: 2 }} />
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Insulyn AI
+          More Life AI
         </Typography>
         
         <Box sx={{ display: 'flex', gap: 1, mr: 2, flexWrap: 'wrap' }}>

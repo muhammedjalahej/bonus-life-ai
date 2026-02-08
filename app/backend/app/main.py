@@ -1,5 +1,5 @@
 """
-Insulyn AI - Type 2 Diabetes Early Detection Platform
+More Life AI - Type 2 Diabetes Early Detection Platform
 Backend entry point.
 
 Authors: Muhammed Jalahej, Yazen Emino
@@ -202,18 +202,18 @@ voice_service = VoiceChatService()
 # ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("[START] Starting Insulyn AI Platform")
+    logger.info("[START] Starting More Life AI Platform")
     logger.info(f"   LLM Status: {'Connected' if ai_specialist.client else 'Disconnected'}")
     logger.info(f"   ML Model:   {'Loaded' if diabetes_model.model else 'Rule-based fallback'}")
     yield
-    logger.info("[STOP] Shutting down Insulyn AI Platform")
+    logger.info("[STOP] Shutting down More Life AI Platform")
 
 
 # ---------------------------------------------------------------------------
 # FastAPI App
 # ---------------------------------------------------------------------------
 app = FastAPI(
-    title="Insulyn AI",
+    title="More Life AI",
     description="Type 2 Diabetes Early Detection Platform - AI-Powered Health Insights",
     version="4.0.0",
     docs_url="/docs",

@@ -428,7 +428,7 @@ const VoiceChatAssistant = ({ language = 'english' }) => {
 
         <Box textAlign="center" mt={2}>
           <Typography variant="h6" sx={{ color: 'white', opacity: 0.9 }}>
-            Insulyn AI
+            More Life AI
           </Typography>
           <Typography variant="body2" sx={{ color: 'white', opacity: 0.7 }}>
             Empowering Health Through AI

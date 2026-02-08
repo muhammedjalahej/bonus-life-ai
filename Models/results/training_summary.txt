@@ -1,5 +1,5 @@
 ============================================================
-INSULYN AI - MODEL TRAINING SUMMARY
+MORE LIFE AI - MODEL TRAINING SUMMARY
 ============================================================
 
 Best Model: Random Forest
