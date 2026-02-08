@@ -1,4 +1,7 @@
-"""Language detection service."""
+"""Language detection service.
+
+Authors: Muhammed Jalahej, Yazen Emino
+"""
 
 import logging
 

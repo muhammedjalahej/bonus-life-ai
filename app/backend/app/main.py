@@ -13,6 +13,12 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 from contextlib import asynccontextmanager
 
+try:
+    import shap
+    SHAP_AVAILABLE = True
+except ImportError:
+    SHAP_AVAILABLE = False
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -40,44 +46,75 @@ app_start_time = datetime.utcnow()
 # ML Model  (simple inline loader – will be replaced in Phase 2)
 # ---------------------------------------------------------------------------
 class DiabetesMLModel:
-    """Load and run the trained diabetes model from best_model.pkl."""
+    """Load and run the trained diabetes model from a bundled .pkl artifact.
+
+    The bundle is a dict: {"model": <sklearn model>, "scaler": <StandardScaler>, "feature_names": [...]}
+    Saved by scripts/train_model.py.
+    """
+
+    FEATURE_MAP = {
+        # maps incoming key -> lower-case feature name used by the training script
+        "Pregnancies": "pregnancies",
+        "Glucose": "glucose",
+        "BloodPressure": "blood_pressure",
+        "SkinThickness": "skin_thickness",
+        "Insulin": "insulin",
+        "BMI": "bmi",
+        "DiabetesPedigreeFunction": "diabetes_pedigree_function",
+        "Age": "age",
+    }
 
     def __init__(self):
         self.model = None
+        self.scaler = None
+        self.feature_names = list(self.FEATURE_MAP.keys())  # PascalCase order
         self.load_model()
 
     def load_model(self):
         model_path = os.getenv("MODEL_PATH", "data/best_model.pkl")
         try:
-            if os.path.exists(model_path):
-                with open(model_path, "rb") as f:
-                    self.model = pickle.load(f)
-                logger.info(f"ML model loaded from {model_path}")
-            else:
+            if not os.path.exists(model_path):
                 logger.warning(f"Model file not found at {model_path}, using rule-based fallback")
+                return
+
+            with open(model_path, "rb") as f:
+                artifact = pickle.load(f)
+
+            # Support both bundle dict and raw model
+            if isinstance(artifact, dict) and "model" in artifact:
+                self.model = artifact["model"]
+                self.scaler = artifact.get("scaler")
+                stored_names = artifact.get("feature_names")
+                if stored_names:
+                    self.feature_names = [
+                        next((k for k, v in self.FEATURE_MAP.items() if v == n), n)
+                        for n in stored_names
+                    ]
+                logger.info(f"Model bundle loaded from {model_path} (scaler={'yes' if self.scaler else 'no'})")
+            else:
+                # Legacy: raw sklearn model (no scaler)
+                self.model = artifact
+                logger.info(f"Legacy model loaded from {model_path} (no scaler)")
+
         except Exception as e:
             logger.error(f"Model loading failed: {e}")
             self.model = None
 
     def predict(self, features: Dict[str, Any]) -> tuple:
-        feature_names = [
-            "Pregnancies", "Glucose", "BloodPressure", "SkinThickness",
-            "Insulin", "BMI", "DiabetesPedigreeFunction", "Age",
-        ]
         feature_values = [
-            features.get("Pregnancies", 0),
-            features.get("Glucose", 100),
-            features.get("BloodPressure", 120),
-            features.get("SkinThickness", 20),
-            features.get("Insulin", 80),
-            features.get("BMI", 25),
-            features.get("DiabetesPedigreeFunction", 0.5),
-            features.get("Age", 30),
+            features.get(fn, 0) for fn in self.feature_names
         ]
+
         if self.model and hasattr(self.model, "predict_proba"):
             try:
                 X = np.array([feature_values])
+
+                # Apply scaler if available
+                if self.scaler is not None:
+                    X = self.scaler.transform(X)
+
                 probability = float(self.model.predict_proba(X)[0][1])
+
                 if probability >= 0.7:
                     risk_label = "High Risk"
                 elif probability >= 0.4:
@@ -86,37 +123,58 @@ class DiabetesMLModel:
                     risk_label = "Low Risk"
                 else:
                     risk_label = "Very Low Risk"
+
                 if hasattr(self.model, "feature_importances_"):
-                    fi = dict(zip(feature_names, self.model.feature_importances_))
+                    fi = dict(zip(self.feature_names, self.model.feature_importances_))
                 else:
-                    fi = {"Glucose": 0.35, "BMI": 0.25, "Age": 0.15, "BloodPressure": 0.10,
-                          "DiabetesPedigreeFunction": 0.08, "Pregnancies": 0.05,
-                          "SkinThickness": 0.01, "Insulin": 0.01}
+                    fi = {fn: round(1.0 / len(self.feature_names), 3) for fn in self.feature_names}
+
                 logger.info(f"ML Prediction: {risk_label} (probability: {probability:.3f})")
                 return risk_label, probability, fi
+
             except Exception as e:
                 logger.error(f"Prediction error: {e}")
                 return self._rule_based_risk(features)
+
         return self._rule_based_risk(features)
 
+    def explain(self, features: Dict[str, Any]) -> Optional[Dict[str, float]]:
+        """Return per-feature SHAP values for a single prediction (explainable AI)."""
+        if not SHAP_AVAILABLE or self.model is None:
+            return None
+        try:
+            feature_values = [features.get(fn, 0) for fn in self.feature_names]
+            X = np.array([feature_values])
+            if self.scaler is not None:
+                X = self.scaler.transform(X)
+
+            explainer = shap.TreeExplainer(self.model)
+            sv = explainer.shap_values(X)
+            # For binary classifiers sv may be [class0, class1]
+            vals = sv[1][0] if isinstance(sv, list) else sv[0]
+            return {fn: round(float(v), 4) for fn, v in zip(self.feature_names, vals)}
+        except Exception as e:
+            logger.warning(f"SHAP explanation failed: {e}")
+            return None
+
     def _rule_based_risk(self, features: Dict[str, Any]) -> tuple:
-        risk_score = 0.0
         g = features.get("Glucose", 100)
         b = features.get("BMI", 25)
         a = features.get("Age", 30)
         bp = features.get("BloodPressure", 120)
-        if g >= 126:   risk_score += 0.6
-        elif g >= 100: risk_score += 0.3
-        else:          risk_score += 0.1
-        if b >= 30:    risk_score += 0.5
-        elif b >= 25:  risk_score += 0.3
-        else:          risk_score += 0.1
-        if a >= 45:    risk_score += 0.3
-        elif a >= 35:  risk_score += 0.2
-        else:          risk_score += 0.1
-        if bp >= 140:  risk_score += 0.4
+        risk_score = 0.0
+        if g >= 126:    risk_score += 0.6
+        elif g >= 100:  risk_score += 0.3
+        else:           risk_score += 0.1
+        if b >= 30:     risk_score += 0.5
+        elif b >= 25:   risk_score += 0.3
+        else:           risk_score += 0.1
+        if a >= 45:     risk_score += 0.3
+        elif a >= 35:   risk_score += 0.2
+        else:           risk_score += 0.1
+        if bp >= 140:   risk_score += 0.4
         elif bp >= 130: risk_score += 0.2
-        else:          risk_score += 0.1
+        else:           risk_score += 0.1
         probability = min(0.95, risk_score / 2.0)
         if probability >= 0.7:   risk_label = "High Risk"
         elif probability >= 0.4: risk_label = "Moderate Risk"
@@ -183,7 +241,7 @@ from app.routes import chat, assessment, diet, emergency, health, topics, user, 
 chat.init(ai_specialist)
 assessment.init(ai_specialist, diabetes_model)
 diet.init(meal_service)
-health.init(ai_specialist, llm_service, app_start_time)
+health.init(ai_specialist, llm_service, diabetes_model, app_start_time)
 user.init(ai_specialist)
 voice_chat.init(voice_service, gpt_oss_specialist)
 

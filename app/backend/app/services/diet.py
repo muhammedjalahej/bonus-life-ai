@@ -1,4 +1,7 @@
-"""Diet plan generation service using Groq LLM."""
+"""Diet plan generation service using Groq LLM.
+
+Authors: Muhammed Jalahej, Yazen Emino
+"""
 
 import os
 import time

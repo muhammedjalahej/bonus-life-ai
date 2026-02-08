@@ -33,10 +33,12 @@ from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     classification_report, confusion_matrix, roc_curve, auc,
-    accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+    accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
+    precision_recall_curve, average_precision_score
 )
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from xgboost import XGBClassifier
+import shap
 
 warnings.filterwarnings('ignore')
 
@@ -302,7 +304,23 @@ def generate_plots(results, best_name, X_test, y_test):
         plt.close()
         print("  Saved: feature_importance.png")
 
-    # --- 5. Classification Report Heatmap ---
+    # --- 5. Precision-Recall Curve ---
+    fig, ax = plt.subplots(figsize=(8, 6))
+    for name, res in results.items():
+        prec_vals, rec_vals, _ = precision_recall_curve(y_test, res["y_proba"])
+        ap = average_precision_score(y_test, res["y_proba"])
+        ax.plot(rec_vals, prec_vals, label=f"{name} (AP = {ap:.3f})")
+    ax.set_xlabel("Recall")
+    ax.set_ylabel("Precision")
+    ax.set_title("Precision-Recall Curves - Model Comparison")
+    ax.legend(loc="lower left")
+    ax.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "precision_recall_curve.png"), dpi=150)
+    plt.close()
+    print("  Saved: precision_recall_curve.png")
+
+    # --- 6. Classification Report Heatmap ---
     fig, ax = plt.subplots(figsize=(8, 4))
     report = classification_report(y_test, best["y_pred"], target_names=["No Diabetes", "Diabetes"], output_dict=True)
     report_df = pd.DataFrame(report).iloc[:3, :2].T
@@ -314,19 +332,26 @@ def generate_plots(results, best_name, X_test, y_test):
     print("  Saved: classification_report.png")
 
 
-def save_model(model, best_name, results):
-    """Save the best model to disk."""
+def save_model(model, scaler, best_name, results):
+    """Save the best model as a bundle {model, scaler, feature_names}."""
+    bundle = {
+        "model": model,
+        "scaler": scaler,
+        "feature_names": FEATURE_NAMES,
+    }
+
     # Save to backend data directory
     os.makedirs(os.path.dirname(MODEL_OUTPUT_PATH), exist_ok=True)
     with open(MODEL_OUTPUT_PATH, "wb") as f:
-        pickle.dump(model, f)
-    print(f"\n  Model saved to: {MODEL_OUTPUT_PATH}")
+        pickle.dump(bundle, f)
+    print(f"\n  Model bundle saved to: {MODEL_OUTPUT_PATH}")
+    print(f"    Contains: model ({type(model).__name__}), scaler (StandardScaler), feature_names ({len(FEATURE_NAMES)})")
 
     # Save copy to Models directory
     os.makedirs(os.path.dirname(MODEL_COPY_PATH), exist_ok=True)
     with open(MODEL_COPY_PATH, "wb") as f:
-        pickle.dump(model, f)
-    print(f"  Model copy saved to: {MODEL_COPY_PATH}")
+        pickle.dump(bundle, f)
+    print(f"  Model bundle copy saved to: {MODEL_COPY_PATH}")
 
     # Save training results summary
     summary_path = os.path.join(RESULTS_DIR, "training_summary.txt")
@@ -336,8 +361,11 @@ def save_model(model, best_name, results):
         f.write("=" * 60 + "\n\n")
         f.write(f"Best Model: {best_name}\n")
         f.write(f"Model Type: {type(model).__name__}\n")
+        f.write(f"Preprocessing: StandardScaler (fitted on training data)\n")
         f.write(f"Objective: Binary Classification (Diabetes Detection)\n")
-        f.write(f"Features: {', '.join(FEATURE_NAMES)}\n\n")
+        f.write(f"Dataset: Pima Indians Diabetes Database (768 samples)\n")
+        f.write(f"Features: {', '.join(FEATURE_NAMES)}\n")
+        f.write(f"Bundle: model + scaler + feature_names saved as dict\n\n")
 
         f.write("MODEL COMPARISON RESULTS\n")
         f.write("-" * 60 + "\n")
@@ -372,6 +400,64 @@ def save_results_csv(results):
     print(f"  Results CSV saved to: {csv_path}")
 
 
+def generate_shap_analysis(best_model, X_train, X_test, feature_names):
+    """Generate SHAP explainability plots for the best model."""
+    print("\n  SHAP EXPLAINABILITY ANALYSIS")
+    print("  " + "-" * 40)
+
+    try:
+        explainer = shap.TreeExplainer(best_model)
+        shap_values = explainer.shap_values(X_test)
+
+        # For binary classifiers, shap_values may be a list [class0, class1]
+        if isinstance(shap_values, list):
+            shap_vals = shap_values[1]  # positive class (diabetes)
+        else:
+            shap_vals = shap_values
+
+        # 1. SHAP Summary (Beeswarm) Plot
+        fig, ax = plt.subplots(figsize=(10, 6))
+        shap.summary_plot(
+            shap_vals, X_test,
+            feature_names=feature_names,
+            show=False,
+        )
+        plt.tight_layout()
+        plt.savefig(os.path.join(RESULTS_DIR, "shap_summary.png"), dpi=150, bbox_inches="tight")
+        plt.close("all")
+        print("  Saved: shap_summary.png")
+
+        # 2. SHAP Bar Plot (mean absolute SHAP values)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        shap.summary_plot(
+            shap_vals, X_test,
+            feature_names=feature_names,
+            plot_type="bar",
+            show=False,
+        )
+        plt.tight_layout()
+        plt.savefig(os.path.join(RESULTS_DIR, "shap_feature_importance.png"), dpi=150, bbox_inches="tight")
+        plt.close("all")
+        print("  Saved: shap_feature_importance.png")
+
+        # 3. Save SHAP values for later use
+        shap_path = os.path.join(RESULTS_DIR, "shap_values.pkl")
+        with open(shap_path, "wb") as f:
+            pickle.dump({
+                "shap_values": shap_vals,
+                "expected_value": explainer.expected_value if not isinstance(explainer.expected_value, list) else explainer.expected_value[1],
+                "feature_names": feature_names,
+            }, f)
+        print(f"  SHAP values saved to: {shap_path}")
+
+        print("  SHAP analysis complete!")
+        return True
+
+    except Exception as e:
+        print(f"  [WARNING] SHAP analysis failed: {e}")
+        return False
+
+
 # ============================================================
 # MAIN EXECUTION
 # ============================================================
@@ -389,7 +475,7 @@ def main():
     df = preprocess_data(df)
 
     # Step 3: Split Data
-    print("\n[3/6] SPLITTING DATA")
+    print("\n[3/7] SPLITTING DATA")
     X = df[FEATURE_NAMES].values
     y = df["outcome"].values
     X_train, X_test, y_train, y_test = train_test_split(
@@ -398,12 +484,19 @@ def main():
     print(f"  Training set: {X_train.shape[0]} samples")
     print(f"  Test set:     {X_test.shape[0]} samples")
 
+    # Step 3.5: Scale Features
+    print("\n  SCALING FEATURES (StandardScaler)")
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+    print(f"  Scaler fitted on training data (mean, std per feature)")
+
     # Step 4: Train Models
-    print("\n[4/6] TRAINING MODELS")
+    print("\n[4/7] TRAINING MODELS")
     results = train_and_evaluate_models(X_train, X_test, y_train, y_test)
 
     # Step 5: Select Best Model
-    print("\n[5/6] SELECTING BEST MODEL")
+    print("\n[5/7] SELECTING BEST MODEL")
     best_name, best_result = select_best_model(results)
 
     # Print full classification report
@@ -423,12 +516,22 @@ def main():
     print(f"  Actual No-DM  [{cm[0][0]:5d}  {cm[0][1]:5d}]")
     print(f"  Actual DM     [{cm[1][0]:5d}  {cm[1][1]:5d}]")
 
-    # Step 6: Save Everything
-    print("\n[6/6] SAVING MODEL & RESULTS")
+    # Step 6: Save Everything (model + scaler bundle)
+    print("\n[6/7] SAVING MODEL & RESULTS")
     os.makedirs(RESULTS_DIR, exist_ok=True)
-    save_model(best_result["model"], best_name, results)
+    save_model(best_result["model"], scaler, best_name, results)
     save_results_csv(results)
     generate_plots(results, best_name, X_test, y_test)
+
+    # Step 7: SHAP Explainability
+    print("\n[7/8] SHAP EXPLAINABILITY")
+    generate_shap_analysis(best_result["model"], X_train, X_test, FEATURE_NAMES)
+
+    # Step 8: Save preprocessed dataset
+    print("\n[8/8] SAVING PREPROCESSED DATASET")
+    preprocessed_path = os.path.join(DATA_DIR, "preprocessed_dataset.csv")
+    df.to_csv(preprocessed_path, index=False)
+    print(f"  Preprocessed data saved to: {preprocessed_path}")
 
     print("\n" + "=" * 60)
     print("  TRAINING COMPLETE!")

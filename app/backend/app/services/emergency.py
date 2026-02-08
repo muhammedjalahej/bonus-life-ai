@@ -1,3 +1,11 @@
+"""Emergency symptom assessment service.
+
+Provides personalized emergency analysis for diabetes-related symptoms
+with risk scoring, urgency classification, and actionable recommendations.
+
+Authors: Muhammed Jalahej, Yazen Emino
+"""
+
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime

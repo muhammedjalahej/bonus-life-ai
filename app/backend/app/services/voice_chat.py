@@ -1,4 +1,7 @@
-"""Voice chat transcription service."""
+"""Voice chat transcription service.
+
+Authors: Muhammed Jalahej, Yazen Emino
+"""
 
 import io
 import base64

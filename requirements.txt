@@ -1,1 +1,11 @@
-keras-tuner
+# Insulyn AI - Training & Notebook Dependencies
+# Authors: Muhammed Jalahej, Yazen Emino
+
+numpy>=1.26.4
+pandas==2.2.3
+scikit-learn>=1.5.2
+xgboost==3.0.0
+shap>=0.45.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+scipy>=1.13.0

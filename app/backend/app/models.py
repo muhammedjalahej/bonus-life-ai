@@ -28,16 +28,16 @@ class ChatResponse(BaseModel):
 # Diabetes Assessment
 # ---------------------------------------------------------------
 class DiabetesAssessmentRequest(BaseModel):
-    glucose: float
-    blood_pressure: float
-    weight: float
-    height: float
-    age: int
-    pregnancies: Optional[int] = 0
-    skin_thickness: Optional[float] = 20.0
-    insulin: Optional[float] = 80.0
-    diabetes_pedigree_function: Optional[float] = 0.5
-    language: Optional[str] = "english"
+    glucose: float = Field(..., ge=0, le=500, description="Glucose level in mg/dL")
+    blood_pressure: float = Field(..., ge=0, le=300, description="Blood pressure in mmHg")
+    weight: float = Field(..., ge=20, le=300, description="Weight in kg")
+    height: float = Field(..., ge=50, le=250, description="Height in cm")
+    age: int = Field(..., ge=1, le=120, description="Age in years")
+    pregnancies: Optional[int] = Field(0, ge=0, le=20, description="Number of pregnancies")
+    skin_thickness: Optional[float] = Field(20.0, ge=0, le=100, description="Skin thickness in mm")
+    insulin: Optional[float] = Field(80.0, ge=0, le=900, description="Insulin level in mu U/ml")
+    diabetes_pedigree_function: Optional[float] = Field(0.5, ge=0, le=3.0, description="Diabetes pedigree function")
+    language: Optional[str] = Field("english", description="Response language")
 
 
 class AssessmentResponse(BaseModel):

@@ -50,6 +50,11 @@ async def diabetes_assessment(request: DiabetesAssessmentRequest):
 
         risk_label, probability, feature_importances = _diabetes_model.predict(features)
 
+        # SHAP explainability (per-prediction)
+        shap_explanation = None
+        if hasattr(_diabetes_model, "explain"):
+            shap_explanation = _diabetes_model.explain(features)
+
         insights_prompt = (
             f"Provide a comprehensive diabetes risk assessment summary in {request.language} "
             f"based on these metrics:\n"
@@ -82,6 +87,8 @@ async def diabetes_assessment(request: DiabetesAssessmentRequest):
                 "risk_level": risk_label,
                 "probability": round(probability, 3),
                 "key_factors": _identify_risk_factors(features, bmi),
+                "feature_importances": feature_importances,
+                **({"shap_explanation": shap_explanation} if shap_explanation else {}),
             },
             health_metrics={
                 "bmi": round(bmi, 1),

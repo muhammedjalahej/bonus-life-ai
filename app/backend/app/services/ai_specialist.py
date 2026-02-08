@@ -1,4 +1,7 @@
-"""AI Diabetes Specialist services using Groq LLM."""
+"""AI Diabetes Specialist services using Groq LLM.
+
+Authors: Muhammed Jalahej, Yazen Emino
+"""
 
 import os
 import logging
