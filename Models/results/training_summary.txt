@@ -1,0 +1,17 @@
+============================================================
+INSULYN AI - MODEL TRAINING SUMMARY
+============================================================
+
+Best Model: Random Forest
+Model Type: RandomForestClassifier
+Objective: Binary Classification (Diabetes Detection)
+Features: pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, diabetes_pedigree_function, age
+
+MODEL COMPARISON RESULTS
+------------------------------------------------------------
+Model                       Accuracy  Precision     Recall         F1        AUC
+------------------------------------------------------------
+Random Forest                  0.760      0.649      0.685      0.667      0.826 <-- BEST
+XGBoost                        0.734      0.618      0.630      0.624      0.817
+XGBoost (Tuned)                0.734      0.614      0.648      0.631      0.818
+------------------------------------------------------------

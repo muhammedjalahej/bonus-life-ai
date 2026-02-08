@@ -1,0 +1,52 @@
+"""Chat endpoint - real-time AI diabetes specialist."""
+
+import logging
+from datetime import datetime
+
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+
+from app.models import ChatRequest, ChatResponse
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+# Service instances injected at startup via app.state
+_ai_specialist = None
+
+
+def init(ai_specialist):
+    global _ai_specialist
+    _ai_specialist = ai_specialist
+
+
+@router.post("/chat", response_model=ChatResponse)
+async def diabetes_chat(chat_request: ChatRequest, background_tasks: BackgroundTasks):
+    """Main chat endpoint with real LLM integration."""
+    try:
+        message = chat_request.message.strip()
+        language = chat_request.language
+        user_id = chat_request.user_id or "default"
+
+        if not message:
+            raise HTTPException(status_code=422, detail="Message cannot be empty")
+
+        logger.info(f"[AI] Chat request from {user_id}: {message[:50]}...")
+
+        llm_result = await _ai_specialist.generate_medical_response(
+            message=message, language=language, user_id=user_id
+        )
+
+        return ChatResponse(
+            response=llm_result["response"],
+            timestamp=datetime.utcnow().isoformat(),
+            conversation_id=user_id,
+            model=llm_result["model"],
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Chat error")
+        raise HTTPException(
+            status_code=500,
+            detail="Our AI diabetes specialist is currently unavailable. Please try again later.",
+        )

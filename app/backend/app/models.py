@@ -1,0 +1,198 @@
+"""Pydantic models for all API request/response schemas.
+
+Authors: Muhammed Jalahej, Yazen Emino
+"""
+
+from typing import Optional, Dict, Any, List
+from pydantic import BaseModel, Field, validator
+from datetime import datetime
+
+
+# ---------------------------------------------------------------
+# Chat
+# ---------------------------------------------------------------
+class ChatRequest(BaseModel):
+    message: str
+    language: Optional[str] = "english"
+    user_id: Optional[str] = "default"
+
+
+class ChatResponse(BaseModel):
+    response: str
+    timestamp: str
+    conversation_id: str
+    model: str
+
+
+# ---------------------------------------------------------------
+# Diabetes Assessment
+# ---------------------------------------------------------------
+class DiabetesAssessmentRequest(BaseModel):
+    glucose: float
+    blood_pressure: float
+    weight: float
+    height: float
+    age: int
+    pregnancies: Optional[int] = 0
+    skin_thickness: Optional[float] = 20.0
+    insulin: Optional[float] = 80.0
+    diabetes_pedigree_function: Optional[float] = 0.5
+    language: Optional[str] = "english"
+
+
+class AssessmentResponse(BaseModel):
+    assessment_id: str
+    timestamp: str
+    executive_summary: str
+    risk_analysis: Dict[str, Any]
+    health_metrics: Dict[str, Any]
+    recommendations: Dict[str, Any]
+
+
+# ---------------------------------------------------------------
+# Diet Plan
+# ---------------------------------------------------------------
+class DietPlanRequest(BaseModel):
+    age: int
+    weight: float
+    height: float
+    gender: str
+    dietaryPreference: str = "balanced"
+    healthConditions: str = ""
+    activityLevel: str = "moderate"
+    goals: str = "diabetes_prevention"
+    allergies: str = ""
+    typicalDay: str = ""
+    language: str = "english"
+
+
+class DietPlanResponse(BaseModel):
+    overview: str
+    daily_plan: str
+    grocery_list: str
+    important_notes: str
+    nutritional_info: Dict[str, Any] = {}
+    timestamp: str
+    status: str = "success"
+    generation_time: float = 0.0
+
+
+# ---------------------------------------------------------------
+# Emergency Assessment
+# ---------------------------------------------------------------
+class EmergencyAssessmentRequest(BaseModel):
+    symptoms: List[str]
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    existing_conditions: List[str] = []
+    current_medications: List[str] = []
+    last_meal_time: Optional[str] = None
+    language: str = "english"
+
+
+class EmergencyAssessmentResponse(BaseModel):
+    assessment: str
+    personalized_analysis: str
+    recommendations: List[str]
+    urgency_level: str
+    risk_factors: List[str]
+    next_steps: List[str]
+    timestamp: str
+
+
+# ---------------------------------------------------------------
+# Voice Chat
+# ---------------------------------------------------------------
+class VoiceChatRequest(BaseModel):
+    audio_data: str
+    language: str = "english"
+    user_id: str = "default"
+
+
+class VoiceChatResponse(BaseModel):
+    text_input: str
+    ai_response: str
+    timestamp: str
+    language: str
+    confidence: float
+
+
+# ---------------------------------------------------------------
+# ML Model (used by ml_model.py / prediction pipeline)
+# ---------------------------------------------------------------
+class DiabetesInput(BaseModel):
+    pregnancies: int = Field(..., ge=0, le=20, description="Number of pregnancies")
+    glucose: float = Field(..., ge=0, le=200, description="Glucose level in mg/dL")
+    blood_pressure: float = Field(..., ge=0, le=122, description="Blood pressure in mmHg")
+    skin_thickness: float = Field(..., ge=0, le=99, description="Skin thickness in mm")
+    insulin: float = Field(..., ge=0, le=846, description="Insulin level in mu U/ml")
+    weight: float = Field(..., ge=20, le=200, description="Weight in kg")
+    height: float = Field(..., ge=0.5, le=2.5, description="Height in meters")
+    diabetes_pedigree_function: float = Field(..., ge=0.08, le=2.42, description="Diabetes pedigree function")
+    age: int = Field(..., ge=21, le=81, description="Age in years")
+
+    @validator("height")
+    def validate_height(cls, v):
+        if v <= 0:
+            raise ValueError("Height must be positive")
+        return v
+
+    @property
+    def bmi(self) -> float:
+        return round(self.weight / (self.height ** 2), 1)
+
+
+class MLModelOutput(BaseModel):
+    risk_label: str = Field(..., description="Risk label")
+    probability: float = Field(..., ge=0.0, le=1.0, description="Probability of diabetes")
+    feature_importances: Optional[Dict[str, float]] = Field(None, description="Feature importance scores")
+    calculated_bmi: float = Field(..., description="BMI calculated from weight and height")
+
+
+class LLMAdviceResponse(BaseModel):
+    risk_summary: str
+    clinical_interpretation: List[str]
+    recommendations: Dict[str, str]
+    prevention_tips: List[str]
+    monitoring_plan: List[str]
+    clinician_message: str
+    feature_explanation: str
+    safety_note: str
+
+    @validator("recommendations", pre=True)
+    def validate_recommendations(cls, v):
+        if isinstance(v, dict):
+            for key, value in v.items():
+                if isinstance(value, list):
+                    v[key] = "\n".join(
+                        [f"- {item}" if not item.startswith("-") else item for item in value]
+                    )
+                elif not isinstance(value, str):
+                    v[key] = str(value)
+        return v
+
+
+class CombinedResponse(BaseModel):
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    ml_output: MLModelOutput
+    llm_advice: LLMAdviceResponse
+    bmi_category: str = Field(..., description="Underweight, Normal, Overweight, or Obese")
+
+
+class ChatMessage(BaseModel):
+    message: str = Field(..., min_length=1, max_length=1000, description="User's message")
+    conversation_context: Optional[str] = Field(None, description="Previous conversation context")
+
+
+class HealthMetrics(BaseModel):
+    status: str
+    timestamp: datetime
+    version: str
+    uptime_seconds: float
+    services: Dict[str, bool]
+    metrics: Dict[str, Any]
+
+
+class ErrorResponse(BaseModel):
+    detail: str
