@@ -186,11 +186,6 @@
 .stagger > *:nth-child(4) { animation-delay: 240ms; }
 .stagger > *:nth-child(5) { animation-delay: 320ms; }
 
-/* ───────────────── Scrollbar ───────────────── */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { @apply bg-transparent; }
-::-webkit-scrollbar-thumb { @apply bg-white/10 rounded-full; }
-::-webkit-scrollbar-thumb:hover { @apply bg-white/20; }
 
 /* ───────────────── Subtle grid ───────────────── */
 .grid-pattern {
@@ -208,4 +203,40 @@
   background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.012'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 9999;
+}
+
+/* ───────────────── Scrollbar (scoped to app root + !important so it always wins) ───────────────── */
+.insulyn-app,
+.insulyn-app * {
+  scrollbar-width: thin !important;
+  scrollbar-color: #10b981 #1a1a2e !important;
+}
+.insulyn-app ::-webkit-scrollbar,
+.insulyn-app *::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+.insulyn-app ::-webkit-scrollbar-track,
+.insulyn-app *::-webkit-scrollbar-track {
+  background: #1a1a2e !important;
+  border-radius: 9999px;
+}
+.insulyn-app ::-webkit-scrollbar-thumb,
+.insulyn-app *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10b981 0%, #06b6d4 100%) !important;
+  border-radius: 9999px !important;
+  border: 2px solid #060611;
+  min-height: 40px;
+}
+.insulyn-app ::-webkit-scrollbar-thumb:hover,
+.insulyn-app *::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #34d399 0%, #22d3ee 100%) !important;
+}
+.insulyn-app ::-webkit-scrollbar-thumb:active,
+.insulyn-app *::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #059669 0%, #0891b2 100%) !important;
+}
+.insulyn-app ::-webkit-scrollbar-corner,
+.insulyn-app *::-webkit-scrollbar-corner {
+  background: transparent !important;
 }

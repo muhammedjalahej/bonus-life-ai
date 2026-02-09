@@ -22,6 +22,7 @@ except ImportError:
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from dotenv import load_dotenv
 
@@ -205,7 +206,50 @@ voice_service = VoiceChatService()
 # ---------------------------------------------------------------------------
 from app.database import engine, Base
 from app import db_models as _  # noqa: F401 - ensure models are registered
+from sqlalchemy import text
+
 Base.metadata.create_all(bind=engine)
+
+# Add new columns to existing SQLite DB if missing
+try:
+    with engine.connect() as conn:
+        for col_sql in [
+            "ALTER TABLE users ADD COLUMN password_reset_token VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
+            "ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'user'",
+            "ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1",
+            "ALTER TABLE users ADD COLUMN preferred_language VARCHAR(20) DEFAULT 'english'",
+            "ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(512)",
+            # New feature columns
+            "ALTER TABLE users ADD COLUMN dietary_preference VARCHAR(50) DEFAULT ''",
+            "ALTER TABLE users ADD COLUMN allergies VARCHAR(500) DEFAULT ''",
+            "ALTER TABLE users ADD COLUMN calorie_goal INTEGER",
+            "ALTER TABLE users ADD COLUMN admin_notes TEXT DEFAULT ''",
+            "ALTER TABLE users ADD COLUMN totp_secret VARCHAR(64)",
+            "ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN onboarding_completed INTEGER DEFAULT 0",
+            "ALTER TABLE assessments ADD COLUMN share_token VARCHAR(64)",
+        ]:
+            try:
+                conn.execute(text(col_sql))
+                conn.commit()
+            except Exception:
+                pass  # column may already exist
+except Exception as e:
+    logger.warning(f"Optional DB migration skipped: {e}")
+
+# Fix old avatar URLs: strip any http://host:port prefix, keep only /uploads/...
+try:
+    with engine.connect() as conn:
+        conn.execute(text(
+            "UPDATE users SET avatar_url = substr(avatar_url, instr(avatar_url, '/uploads')) "
+            "WHERE avatar_url IS NOT NULL AND avatar_url LIKE 'http%/uploads/%'"
+        ))
+        conn.commit()
+except Exception:
+    pass
 
 
 @asynccontextmanager
@@ -241,6 +285,63 @@ app.add_middleware(
 
 
 # ---------------------------------------------------------------------------
+# Maintenance-mode middleware
+# ---------------------------------------------------------------------------
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+from app.database import SessionLocal
+from app.db_models import SiteSetting
+
+
+class MaintenanceModeMiddleware(BaseHTTPMiddleware):
+    """Return 503 for non-admin requests when maintenance_mode is enabled."""
+
+    # Paths that are always allowed (login, admin endpoints, static assets, health, user identity)
+    _ALLOWED_PREFIXES = (
+        "/docs", "/redoc", "/openapi.json",
+        "/api/v1/auth/",
+        "/api/v1/admin/",
+        "/api/v1/announcements/",
+        "/api/v1/shared/",
+        "/uploads/",
+        "/health", "/",
+    )
+    # Exact paths allowed (not prefix-matched)
+    _ALLOWED_EXACT = ("/api/v1/users/me",)
+
+    async def dispatch(self, request, call_next):
+        path = request.url.path
+
+        # Always allow admin, auth, static, health endpoints, and exact identity endpoint
+        if path in ("/", "/health") or path in self._ALLOWED_EXACT or any(
+            path.startswith(p) for p in self._ALLOWED_PREFIXES if p not in ("/", "/health")
+        ):
+            return await call_next(request)
+
+        # Check maintenance mode in DB
+        try:
+            db = SessionLocal()
+            row = db.query(SiteSetting).filter(SiteSetting.key == "maintenance_mode").first()
+            is_maintenance = row and row.value.lower() in ("true", "1", "yes")
+            db.close()
+        except Exception:
+            is_maintenance = False
+
+        if is_maintenance:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "detail": "The platform is currently under maintenance. Please try again later."
+                },
+            )
+
+        return await call_next(request)
+
+
+app.add_middleware(MaintenanceModeMiddleware)
+
+
+# ---------------------------------------------------------------------------
 # Wire up routes
 # ---------------------------------------------------------------------------
 from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, language, auth, me_routes, admin_routes
@@ -266,7 +367,13 @@ app.include_router(language.router, prefix="/api/v1")      # /api/v1/detect-lang
 app.include_router(auth.router, prefix="/api/v1")          # /api/v1/auth/*
 app.include_router(me_routes.router, prefix="/api/v1")     # /api/v1/users/me/*
 app.include_router(admin_routes.router, prefix="/api/v1")  # /api/v1/admin/*
+app.include_router(admin_routes.public_router, prefix="/api/v1")  # /api/v1/announcements/active
 
+# Serve uploaded avatars at /uploads/avatars/
+_static_uploads = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
+os.makedirs(os.path.join(_static_uploads, "avatars"), exist_ok=True)
+if os.path.isdir(_static_uploads):
+    app.mount("/uploads", StaticFiles(directory=_static_uploads), name="uploads")
 
 # ---------------------------------------------------------------------------
 # Error handler

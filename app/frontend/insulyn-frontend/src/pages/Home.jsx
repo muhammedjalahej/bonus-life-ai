@@ -95,7 +95,7 @@ const Home = ({ language }) => {
 
             {/* Right: Decorative visual */}
             <div className="hidden lg:flex items-center justify-center animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-              <div className="relative w-[400px] h-[400px]">
+              <div className="relative w-[400px] h-[400px] overflow-hidden">
                 {/* Outer ring */}
                 <div className="absolute inset-0 rounded-full border border-white/[0.06] animate-pulse-ring" />
                 <div className="absolute inset-6 rounded-full border border-emerald-500/10" />
@@ -108,15 +108,15 @@ const Home = ({ language }) => {
                   </div>
                 </div>
 
-                {/* Orbiting icons */}
+                {/* Orbiting icons — inset so they stay inside the circle */}
                 {[
                   { icon: Activity, color: 'from-blue-500 to-indigo-500', delay: '0s' },
                   { icon: Brain, color: 'from-emerald-500 to-teal-500', delay: '-5s' },
                   { icon: Shield, color: 'from-violet-500 to-purple-500', delay: '-10s' },
                   { icon: Zap, color: 'from-amber-500 to-orange-500', delay: '-15s' },
                 ].map((item, i) => (
-                  <div key={i} className="absolute inset-0 animate-orbit" style={{ animationDelay: item.delay }}>
-                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                  <div key={i} className="absolute inset-16 animate-orbit" style={{ animationDelay: item.delay }}>
+                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
                       <item.icon className="w-5 h-5 text-white" />
                     </div>
                   </div>

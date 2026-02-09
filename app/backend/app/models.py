@@ -15,6 +15,7 @@ class ChatRequest(BaseModel):
     message: str
     language: Optional[str] = "english"
     user_id: Optional[str] = "default"
+    user_context: Optional[str] = None  # Latest assessment context for personalized responses
 
 
 class ChatResponse(BaseModel):
@@ -222,17 +223,96 @@ class UserMeResponse(BaseModel):
     id: int
     email: str
     full_name: str
+    avatar_url: Optional[str] = None
     role: str
     preferred_language: str
     is_active: bool
     created_at: Optional[datetime] = None
+    # Diet preferences
+    dietary_preference: str = ""
+    allergies: str = ""
+    calorie_goal: Optional[int] = None
+    # 2FA
+    totp_enabled: bool = False
+    # Onboarding
+    onboarding_completed: bool = False
 
 
 class ProfileUpdateRequest(BaseModel):
     full_name: Optional[str] = None
     preferred_language: Optional[str] = None
+    avatar_url: Optional[str] = None
+    # Diet preferences
+    dietary_preference: Optional[str] = None
+    allergies: Optional[str] = None
+    calorie_goal: Optional[int] = None
+    # Onboarding
+    onboarding_completed: Optional[bool] = None
+
+
+class AdminUserUpdateRequest(BaseModel):
+    """Admin can update user role and active status."""
+    role: Optional[str] = None  # "user" or "admin"
+    is_active: Optional[bool] = None
 
 
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+# ---------------------------------------------------------------
+# Admin: Create user, Bulk actions, Announcements, Settings
+# ---------------------------------------------------------------
+class AdminCreateUserRequest(BaseModel):
+    email: str
+    password: str
+    full_name: str = ""
+    role: str = "user"
+
+class AdminBulkActionRequest(BaseModel):
+    user_ids: List[int]
+    action: str  # "deactivate", "activate", "delete"
+
+class AnnouncementRequest(BaseModel):
+    title: str
+    message: str
+    is_active: bool = True
+
+class SiteSettingUpdate(BaseModel):
+    key: str
+    value: str
+
+
+class AdminSendEmailRequest(BaseModel):
+    subject: str
+    body: str
+
+
+class AdminBulkEmailRequest(BaseModel):
+    subject: str
+    body: str
+    user_ids: Optional[List[int]] = None  # None = all users
+    role_filter: Optional[str] = None     # "user" | "admin"
+
+
+class AdminUserNotesRequest(BaseModel):
+    admin_notes: str
+
+
+class TOTPSetupResponse(BaseModel):
+    secret: str
+    uri: str
+
+
+class TOTPVerifyRequest(BaseModel):
+    code: str

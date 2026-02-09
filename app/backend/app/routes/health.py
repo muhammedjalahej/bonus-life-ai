@@ -51,6 +51,16 @@ async def root():
             "emergency": "/api/v1/emergency-assessment",
             "topics": "/api/v1/health-topics",
             "voice_chat": "/api/v1/voice-chat",
+            "auth_register": "/api/v1/auth/register",
+            "auth_login": "/api/v1/auth/login",
+            "auth_me": "/api/v1/auth/me",
+            "auth_forgot_password": "/api/v1/auth/forgot-password",
+            "auth_reset_password": "/api/v1/auth/reset-password",
+            "users_me": "/api/v1/users/me",
+            "admin_users": "/api/v1/admin/users",
+            "admin_stats": "/api/v1/admin/stats",
+            "admin_delete_user": "/api/v1/admin/users/{user_id} (DELETE)",
+            "admin_update_user": "/api/v1/admin/users/{user_id} (PATCH)",
         },
     }
 

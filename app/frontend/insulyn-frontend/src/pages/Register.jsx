@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { HeartPulse, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { HeartPulse, Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 import { ROUTES } from '../config/constants';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register({ language }) {
   const navigate = useNavigate();
-  const { register: doRegister } = useAuth();
+  const { register: doRegister, allowSignups } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -14,6 +14,27 @@ export default function Register({ language }) {
   const [loading, setLoading] = useState(false);
 
   const isTr = language === 'turkish';
+
+  if (allowSignups === false) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-20">
+        <div className="w-full max-w-md rounded-2xl bg-white/[0.03] border border-white/[0.08] p-8 shadow-2xl text-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-amber-500/20 flex items-center justify-center">
+            <AlertCircle className="w-7 h-7 text-amber-400" />
+          </div>
+          <h1 className="text-xl font-bold text-white mb-2">
+            {isTr ? 'Kayıt kapalı' : 'Registration disabled'}
+          </h1>
+          <p className="text-gray-400 text-sm mb-6">
+            {isTr ? 'Yeni hesap oluşturma şu an kapalı.' : 'New account registration is currently disabled.'}
+          </p>
+          <Link to={ROUTES.LOGIN} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition">
+            {isTr ? 'Giriş yap' : 'Go to Login'}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

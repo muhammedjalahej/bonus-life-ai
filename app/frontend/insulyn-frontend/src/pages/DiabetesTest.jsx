@@ -4,7 +4,31 @@ import {
   Heart, Activity, Apple, Dumbbell, Leaf, Calendar, Stethoscope, Target,
   TrendingUp, Clock, Droplets, Users, GraduationCap, Sparkles,
 } from 'lucide-react';
-import { API_BASE_URL } from '../config/constants';
+import * as apiService from '../services/api';
+
+/* Stable field component so number inputs keep focus while typing */
+function FormField({ label, value, onChange, required, hint, placeholder, icon: Icon, error }) {
+  const isNegativeError = !!error;
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-semibold text-gray-300">
+        {label} {required && <span className="text-emerald-400">*</span>}
+      </label>
+      <div className="relative">
+        {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />}
+        <input
+          type="number"
+          value={value ?? ''}
+          onChange={onChange}
+          className={`input-field ${Icon ? 'pl-11' : ''} ${isNegativeError ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' : ''} ${required && !value ? 'border-red-500/20' : ''}`}
+          placeholder={placeholder || `Enter ${(label || '').toLowerCase()}`}
+        />
+      </div>
+      {isNegativeError && <p className="text-[11px] text-red-400 font-medium">{error}</p>}
+      {hint && !isNegativeError && <p className="text-[11px] text-gray-600">{hint}</p>}
+    </div>
+  );
+}
 
 const DiabetesTest = ({ language = 'english' }) => {
   const [step, setStep] = useState(0);
@@ -34,6 +58,7 @@ const DiabetesTest = ({ language = 'english' }) => {
     height: 'Boy (cm)', heightPlaceholder: 'Boy girin',
     pedigree: 'Diyabet Aile Öyküsü', pedigreeHint: 'Aile öykü puanı (0,0 - 2,5)', pedigreePlaceholder: 'Değer girin',
     requiredError: 'Lütfen zorunlu alanları doldurun.',
+    negativeError: 'Lütfen negatif olmayan bir sayı girin.',
     execSummary: 'Özet', probLabel: 'Tip 2 diyabet geliştirme olasılığı',
     keyRiskFactors: 'Önemli Risk Faktörleri', noRiskFactors: 'Önemli risk faktörü yok.',
     bmi: 'VKİ', metabolicAge: 'Metabolik Yaş', years: 'yıl', healthScore: 'Sağlık Puanı',
@@ -60,6 +85,7 @@ const DiabetesTest = ({ language = 'english' }) => {
     height: 'Height (cm)', heightPlaceholder: 'Enter height',
     pedigree: 'Diabetes Pedigree Function', pedigreeHint: 'Family history score (0.0 - 2.5)', pedigreePlaceholder: 'Enter value',
     requiredError: 'Please fill all required fields',
+    negativeError: 'Please enter a positive number.',
     execSummary: 'Executive Summary', probLabel: 'Probability of developing type 2 diabetes',
     keyRiskFactors: 'Key Risk Factors', noRiskFactors: 'No significant risk factors.',
     bmi: 'BMI', metabolicAge: 'Metabolic Age', years: 'years', healthScore: 'Health Score',
@@ -71,26 +97,32 @@ const DiabetesTest = ({ language = 'english' }) => {
     days90: '90 Days', days90Items: ['Reassess metrics', 'Adjust plan', 'Follow-up visit'],
   };
 
-  const onChange = (f) => (e) => setFormData({ ...formData, [f]: e.target.value });
-
   const handleSubmit = async () => {
     setLoading(true); setError('');
     try {
       if (!formData.glucose || !formData.blood_pressure || !formData.weight || !formData.height || !formData.age)
         throw new Error(t.requiredError);
-
-      const response = await fetch(`${API_BASE_URL}/api/v1/diabetes-assessment`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pregnancies: parseInt(formData.pregnancies) || 0, glucose: parseFloat(formData.glucose),
-          blood_pressure: parseFloat(formData.blood_pressure), skin_thickness: parseFloat(formData.skin_thickness) || 20,
-          insulin: parseFloat(formData.insulin) || 80, weight: parseFloat(formData.weight),
-          height: parseFloat(formData.height), diabetes_pedigree_function: parseFloat(formData.diabetes_pedigree_function) || 0.5,
-          age: parseInt(formData.age), language,
-        }),
+      const numericFields = ['pregnancies', 'age', 'glucose', 'blood_pressure', 'skin_thickness', 'insulin', 'weight', 'height', 'diabetes_pedigree_function'];
+      const negativeFields = numericFields.filter(f => {
+        const v = formData[f];
+        return v !== '' && !isNaN(parseFloat(v)) && parseFloat(v) < 0;
       });
-      if (!response.ok) { const d = await response.json(); throw new Error(d.detail || 'Failed'); }
-      setResult(await response.json());
+      if (negativeFields.length) throw new Error(t.negativeError);
+
+      const payload = {
+        pregnancies: parseInt(formData.pregnancies) || 0,
+        glucose: parseFloat(formData.glucose),
+        blood_pressure: parseFloat(formData.blood_pressure),
+        skin_thickness: parseFloat(formData.skin_thickness) || 20,
+        insulin: parseFloat(formData.insulin) || 80,
+        weight: parseFloat(formData.weight),
+        height: parseFloat(formData.height),
+        diabetes_pedigree_function: parseFloat(formData.diabetes_pedigree_function) || 0.5,
+        age: parseInt(formData.age),
+        language,
+      };
+      const data = await apiService.predictDiabetesRisk(payload);
+      setResult(data);
       setStep(2);
     } catch (err) { setError(err.message); } finally { setLoading(false); }
   };
@@ -108,23 +140,12 @@ const DiabetesTest = ({ language = 'english' }) => {
   const isHigh = risk.toLowerCase().includes('high');
   const isMod = risk.toLowerCase().includes('moderate');
 
-  const Field = ({ label, field, required, hint, placeholder, icon: Icon }) => (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-300">
-        {label} {required && <span className="text-emerald-400">*</span>}
-      </label>
-      <div className="relative">
-        {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />}
-        <input type="number" value={formData[field]} onChange={onChange(field)}
-          className={`input-field ${Icon ? 'pl-11' : ''} ${required && !formData[field] ? 'border-red-500/20' : ''}`}
-          placeholder={placeholder || `Enter ${label.toLowerCase()}`} />
-      </div>
-      {hint && <p className="text-[11px] text-gray-600">{hint}</p>}
-    </div>
-  );
-
-  const canNext0 = formData.age;
-  const canNext1 = formData.glucose && formData.blood_pressure && formData.weight && formData.height;
+  const isNegative = (v) => v !== '' && !isNaN(parseFloat(v)) && parseFloat(v) < 0;
+  const negErr = t.negativeError;
+  const canNext0 = formData.age && !isNegative(formData.age) && !isNegative(formData.pregnancies);
+  const canNext1 = formData.glucose && formData.blood_pressure && formData.weight && formData.height
+    && !isNegative(formData.glucose) && !isNegative(formData.blood_pressure) && !isNegative(formData.weight) && !isNegative(formData.height)
+    && !isNegative(formData.skin_thickness) && !isNegative(formData.insulin) && !isNegative(formData.diabetes_pedigree_function);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
@@ -179,8 +200,8 @@ const DiabetesTest = ({ language = 'english' }) => {
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label={t.pregnancies} field="pregnancies" hint={t.pregnanciesHint} placeholder={t.pregnanciesPlaceholder} icon={Users} />
-                <Field label={t.age} field="age" required hint={t.ageHint} placeholder={t.agePlaceholder} icon={Calendar} />
+                <FormField label={t.pregnancies} value={formData.pregnancies} onChange={(e) => setFormData(prev => ({ ...prev, pregnancies: e.target.value }))} hint={t.pregnanciesHint} placeholder={t.pregnanciesPlaceholder} icon={Users} error={isNegative(formData.pregnancies) ? negErr : undefined} />
+                <FormField label={t.age} value={formData.age} onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))} required hint={t.ageHint} placeholder={t.agePlaceholder} icon={Calendar} error={isNegative(formData.age) ? negErr : undefined} />
               </div>
             </div>
           )}
@@ -197,14 +218,14 @@ const DiabetesTest = ({ language = 'english' }) => {
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label={t.glucose} field="glucose" required hint={t.glucoseHint} placeholder={t.glucosePlaceholder} icon={Droplets} />
-                <Field label={t.bloodPressure} field="blood_pressure" required hint={t.bloodPressureHint} placeholder={t.bloodPressurePlaceholder} icon={Activity} />
-                <Field label={t.skinThickness} field="skin_thickness" hint={t.skinThicknessHint} placeholder={t.skinThicknessPlaceholder} />
-                <Field label={t.insulin} field="insulin" hint={t.insulinHint} placeholder={t.insulinPlaceholder} />
-                <Field label={t.weight} field="weight" required placeholder={t.weightPlaceholder} />
-                <Field label={t.height} field="height" required placeholder={t.heightPlaceholder} />
+                <FormField label={t.glucose} value={formData.glucose} onChange={(e) => setFormData(prev => ({ ...prev, glucose: e.target.value }))} required hint={t.glucoseHint} placeholder={t.glucosePlaceholder} icon={Droplets} error={isNegative(formData.glucose) ? negErr : undefined} />
+                <FormField label={t.bloodPressure} value={formData.blood_pressure} onChange={(e) => setFormData(prev => ({ ...prev, blood_pressure: e.target.value }))} required hint={t.bloodPressureHint} placeholder={t.bloodPressurePlaceholder} icon={Activity} error={isNegative(formData.blood_pressure) ? negErr : undefined} />
+                <FormField label={t.skinThickness} value={formData.skin_thickness} onChange={(e) => setFormData(prev => ({ ...prev, skin_thickness: e.target.value }))} hint={t.skinThicknessHint} placeholder={t.skinThicknessPlaceholder} error={isNegative(formData.skin_thickness) ? negErr : undefined} />
+                <FormField label={t.insulin} value={formData.insulin} onChange={(e) => setFormData(prev => ({ ...prev, insulin: e.target.value }))} hint={t.insulinHint} placeholder={t.insulinPlaceholder} error={isNegative(formData.insulin) ? negErr : undefined} />
+                <FormField label={t.weight} value={formData.weight} onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))} required placeholder={t.weightPlaceholder} error={isNegative(formData.weight) ? negErr : undefined} />
+                <FormField label={t.height} value={formData.height} onChange={(e) => setFormData(prev => ({ ...prev, height: e.target.value }))} required placeholder={t.heightPlaceholder} error={isNegative(formData.height) ? negErr : undefined} />
                 <div className="sm:col-span-2">
-                  <Field label={t.pedigree} field="diabetes_pedigree_function" hint={t.pedigreeHint} placeholder={t.pedigreePlaceholder} />
+                  <FormField label={t.pedigree} value={formData.diabetes_pedigree_function} onChange={(e) => setFormData(prev => ({ ...prev, diabetes_pedigree_function: e.target.value }))} hint={t.pedigreeHint} placeholder={t.pedigreePlaceholder} error={isNegative(formData.diabetes_pedigree_function) ? negErr : undefined} />
                 </div>
               </div>
             </div>

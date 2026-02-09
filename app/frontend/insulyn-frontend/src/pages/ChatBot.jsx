@@ -4,6 +4,7 @@ import {
   Loader2, Wifi, WifiOff, Sparkles,
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/constants';
+import { getStoredToken } from '../services/api';
 
 const ChatBot = ({ language = 'english' }) => {
   const [messages, setMessages] = useState([]);
@@ -14,6 +15,7 @@ const ChatBot = ({ language = 'english' }) => {
   const [backendStatus, setBackendStatus] = useState('checking');
   const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef(null);
+  const [latestAssessment, setLatestAssessment] = useState(null);
 
   const isTr = language === 'turkish';
   const t = isTr ? {
@@ -33,6 +35,23 @@ const ChatBot = ({ language = 'english' }) => {
     requestTimeout: 'Request timeout',
     unavailable: 'Our AI specialist is currently unavailable. Please try again later or consult a healthcare provider.',
   };
+
+  // Feature f7: Load latest assessment for context
+  useEffect(() => {
+    const token = getStoredToken();
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/users/me/assessments?limit=1`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) setLatestAssessment(data[0]);
+        }
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => { initializeConversation(); checkBackendConnection(); }, [language]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -72,6 +91,10 @@ const ChatBot = ({ language = 'english' }) => {
         body: JSON.stringify({
           message: input, language, conversation_context: 'diabetes_medical_advice',
           conversation_id: conversationId, require_llm: true, timestamp: new Date().toISOString(), message_type: 'user_query',
+          // Feature f7: pass latest assessment context
+          ...(latestAssessment ? {
+            user_context: `Patient's latest assessment: Risk level: ${latestAssessment.risk_level}, Probability: ${(latestAssessment.probability * 100).toFixed(0)}%, Summary: ${(latestAssessment.executive_summary || '').slice(0, 200)}`
+          } : {}),
         }),
         signal: controller.signal,
       });

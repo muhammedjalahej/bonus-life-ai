@@ -11,6 +11,7 @@ from app.database import get_db
 from app.db_models import DietPlanRecord
 from app.auth import get_current_user_optional
 from app.models import DietPlanRequest, DietPlanResponse
+from app.services.notification_service import create_notification
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -44,6 +45,12 @@ async def generate_diet_plan(
             )
             db.add(rec)
             db.commit()
+            create_notification(
+                db, current_user.id,
+                "Diet plan ready",
+                "Your new diet plan has been saved. View it in your Dashboard.",
+                "success",
+            )
         return DietPlanResponse(**result)
     except Exception as e:
         logger.error(f"[ERROR] Plan generation failed: {e}")

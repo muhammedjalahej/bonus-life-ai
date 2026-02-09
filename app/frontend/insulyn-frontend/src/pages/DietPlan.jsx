@@ -1,10 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Salad, Download, Calculator, Loader2, AlertTriangle, CheckCircle,
   UtensilsCrossed, ShoppingCart, Lightbulb, BarChart3, Clock, Sparkles,
-  Apple, Dumbbell,
+  Apple, Dumbbell, Save, RotateCcw, ClipboardList,
 } from 'lucide-react';
-import { API_BASE_URL } from '../config/constants';
+import { Link } from 'react-router-dom';
+import { API_BASE_URL, ROUTES } from '../config/constants';
+import { getStoredToken, generateDietPlan as apiGenerateDietPlan } from '../services/api';
+
+/* Stable form components (defined outside so inputs keep focus while typing) */
+function FormInput({ label, value, onChange, type = 'text', required, hint, placeholder, error, ...rest }) {
+  const isNegativeError = !!error;
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-300 mb-2">
+        {label} {required && <span className="text-emerald-400">*</span>}
+      </label>
+      <input
+        type={type}
+        value={value ?? ''}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`input-field ${isNegativeError ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' : ''}`}
+        {...rest}
+      />
+      {isNegativeError && <p className="text-[11px] text-red-400 font-medium mt-1.5">{error}</p>}
+      {hint && !isNegativeError && <p className="text-[11px] text-gray-600 mt-1.5">{hint}</p>}
+    </div>
+  );
+}
+
+function FormSelect({ label, value, onChange, options, required, selectLabel }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-300 mb-2">
+        {label} {required && <span className="text-emerald-400">*</span>}
+      </label>
+      <select value={value ?? ''} onChange={onChange} className="select-field">
+        <option value="">{selectLabel}</option>
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
 
 const DietPlan = ({ language = 'english' }) => {
   const [formData, setFormData] = useState({
@@ -16,6 +54,40 @@ const DietPlan = ({ language = 'english' }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [savedPlans, setSavedPlans] = useState([]);
+  const [showSaved, setShowSaved] = useState(false);
+
+  // Feature f8: Load user preferences from profile to pre-fill
+  useEffect(() => {
+    const token = getStoredToken();
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const user = await res.json();
+        if (user.dietary_preference) {
+          setFormData(prev => ({
+            ...prev,
+            dietaryPreference: user.dietary_preference || prev.dietaryPreference,
+            allergies: user.allergies || prev.allergies,
+          }));
+        }
+      } catch {}
+      // Load saved plans
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/users/me/diet-plans?limit=10`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const plans = await res.json();
+          setSavedPlans(Array.isArray(plans) ? plans : []);
+        }
+      } catch {}
+    })();
+  }, []);
 
   const isTr = language === 'turkish';
   const t = isTr ? {
@@ -27,6 +99,7 @@ const DietPlan = ({ language = 'english' }) => {
     healthConditions: 'Sağlık Durumu', allergies: 'Alerjiler', dailyRoutine: 'Günlük Rutin',
     placeholders: { health: 'örn. yüksek tansiyon', allergies: 'örn. glüten', routine: 'örn. 07:00\'da kalk' },
     generate: 'Diyet Planı Oluştur', generating: 'Oluşturuluyor...', planGenerated: 'Plan oluşturuldu!',
+    savedToDashboard: 'Kontrol paneline kaydedildi.', viewInDashboard: 'Kontrol panelinde görüntüle',
     yourPlan: 'Diyet Planınız', generatedBy: 'Profilinize göre yapay zeka tarafından oluşturuldu',
     overview: 'Genel Bakış', dailyMeals: 'Günlük Öğünler', groceries: 'Alışveriş Listesi', importantNotes: 'Önemli Notlar',
     calories: 'Kalori', protein: 'Protein', carbs: 'Karbonhidrat', fat: 'Yağ',
@@ -35,6 +108,7 @@ const DietPlan = ({ language = 'english' }) => {
     activityOptions: [{ value: 'sedentary', label: 'Hareketsiz' }, { value: 'light', label: 'Hafif' }, { value: 'moderate', label: 'Orta' }, { value: 'active', label: 'Aktif' }, { value: 'very_active', label: 'Çok Aktif' }],
     goalOptions: [{ value: 'diabetes_prevention', label: 'Diyabet Önleme' }, { value: 'blood_sugar_control', label: 'Kan Şekeri Kontrolü' }, { value: 'weight_loss', label: 'Kilo Verme' }, { value: 'weight_gain', label: 'Kilo Alma' }, { value: 'maintenance', label: 'Koruma' }, { value: 'gestational_diabetes', label: 'Gestasyonel Diyabet' }],
     goalDisplay: { diabetes_prevention: 'Diyabet önleme', blood_sugar_control: 'Kan şekeri kontrolü', weight_loss: 'Kilo verme', weight_gain: 'Kilo alma', maintenance: 'Koruma', gestational_diabetes: 'Gestasyonel diyabet' },
+    negativeError: 'Lütfen negatif olmayan bir sayı girin.',
   } : {
     badge: 'AI Nutrition', title: 'Diet Planner', subtitle: 'Personalized AI-generated meal plans for diabetes prevention and management.',
     bodyMetrics: 'Body Metrics', preferences: 'Preferences', additionalInfo: 'Additional Info',
@@ -44,6 +118,7 @@ const DietPlan = ({ language = 'english' }) => {
     healthConditions: 'Health Conditions', allergies: 'Allergies', dailyRoutine: 'Daily Routine',
     placeholders: { health: 'e.g., high BP', allergies: 'e.g., gluten', routine: 'e.g., wake 7AM' },
     generate: 'Generate Diet Plan', generating: 'Generating...', planGenerated: 'Plan generated!',
+    savedToDashboard: 'Saved to your Dashboard.', viewInDashboard: 'View in Dashboard',
     yourPlan: 'Your Diet Plan', generatedBy: 'Generated by AI based on your profile',
     overview: 'Overview', dailyMeals: 'Daily Meals', groceries: 'Groceries', importantNotes: 'Important Notes',
     calories: 'Calories', protein: 'Protein', carbs: 'Carbs', fat: 'Fat',
@@ -52,19 +127,23 @@ const DietPlan = ({ language = 'english' }) => {
     activityOptions: [{ value: 'sedentary', label: 'Sedentary' }, { value: 'light', label: 'Light' }, { value: 'moderate', label: 'Moderate' }, { value: 'active', label: 'Active' }, { value: 'very_active', label: 'Very Active' }],
     goalOptions: [{ value: 'diabetes_prevention', label: 'Diabetes Prevention' }, { value: 'blood_sugar_control', label: 'Blood Sugar Control' }, { value: 'weight_loss', label: 'Weight Loss' }, { value: 'weight_gain', label: 'Weight Gain' }, { value: 'maintenance', label: 'Maintenance' }, { value: 'gestational_diabetes', label: 'Gestational Diabetes' }],
     goalDisplay: { diabetes_prevention: 'Diabetes prevention', blood_sugar_control: 'Blood sugar control', weight_loss: 'Weight loss', weight_gain: 'Weight gain', maintenance: 'Maintenance', gestational_diabetes: 'Gestational diabetes' },
+    negativeError: 'Please enter a positive number.',
   };
 
   const update = (f, v) => setFormData(p => ({ ...p, [f]: v }));
 
+  const isNegative = (v) => v !== '' && !isNaN(parseFloat(v)) && parseFloat(v) < 0;
+  const negErr = t.negativeError;
+
   const generateDietPlan = async () => {
     setLoading(true); setError(''); setSuccess('');
     try {
+      if (isNegative(formData.age) || isNegative(formData.weight) || isNegative(formData.height))
+        throw new Error(negErr);
       const d = { ...formData }; delete d.bmi; delete d.bmi_category;
-      const r = await fetch(`${API_BASE_URL}/api/v1/diet-plan/generate`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d),
-      });
-      if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
-      setDietPlan(await r.json()); setSuccess(t.planGenerated);
+      const result = await apiGenerateDietPlan(d, language);
+      setDietPlan(result);
+      setSuccess(t.planGenerated);
     } catch (err) { setError(err.message); } finally { setLoading(false); }
   };
 
@@ -81,30 +160,8 @@ const DietPlan = ({ language = 'english' }) => {
     return Math.round(bmr * (mul[formData.activityLevel] || 1.55));
   })();
 
-  const valid = formData.age && formData.weight && formData.height && formData.gender;
-
-  const Input = ({ label, field, type = 'text', required, hint, ...rest }) => (
-    <div>
-      <label className="block text-sm font-semibold text-gray-300 mb-2">
-        {label} {required && <span className="text-emerald-400">*</span>}
-      </label>
-      <input type={type} value={formData[field]} onChange={(e) => update(field, e.target.value)}
-        className="input-field" {...rest} />
-      {hint && <p className="text-[11px] text-gray-600 mt-1.5">{hint}</p>}
-    </div>
-  );
-
-  const Select = ({ label, field, options, required }) => (
-    <div>
-      <label className="block text-sm font-semibold text-gray-300 mb-2">
-        {label} {required && <span className="text-emerald-400">*</span>}
-      </label>
-      <select value={formData[field]} onChange={(e) => update(field, e.target.value)} className="select-field">
-        <option value="">{t.select}</option>
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </div>
-  );
+  const valid = formData.age && formData.weight && formData.height && formData.gender
+    && !isNegative(formData.age) && !isNegative(formData.weight) && !isNegative(formData.height);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
@@ -119,7 +176,21 @@ const DietPlan = ({ language = 'english' }) => {
       </div>
 
       {error && <div className="flex items-center gap-3 p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm animate-fade-in-up"><AlertTriangle className="w-5 h-5 shrink-0" />{error}</div>}
-      {success && <div className="flex items-center gap-3 p-4 mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm animate-fade-in-up"><CheckCircle className="w-5 h-5 shrink-0" />{success}</div>}
+      {success && (
+        <div className="flex flex-wrap items-center gap-3 p-4 mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm animate-fade-in-up">
+          <CheckCircle className="w-5 h-5 shrink-0" />
+          <span>{success}</span>
+          {getStoredToken() && (
+            <>
+              <span className="text-emerald-400/80">·</span>
+              <span className="text-gray-400">{t.savedToDashboard}</span>
+              <Link to={ROUTES.DASHBOARD} className="font-medium text-emerald-400 hover:text-emerald-300 underline">
+                {t.viewInDashboard}
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="gradient-border animate-fade-in-up">
         <div className="card p-8 sm:p-10 rounded-[1.25rem]">
@@ -132,10 +203,10 @@ const DietPlan = ({ language = 'english' }) => {
               <h2 className="text-lg font-bold text-white">{t.bodyMetrics}</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <Input label={t.age} field="age" type="number" required />
-              <Input label={t.weight} field="weight" type="number" required />
-              <Input label={t.height} field="height" type="number" required />
-              <Select label={t.gender} field="gender" required options={[{ value: 'male', label: t.male }, { value: 'female', label: t.female }]} />
+              <FormInput label={t.age} value={formData.age} onChange={(e) => update('age', e.target.value)} type="number" required error={isNegative(formData.age) ? negErr : undefined} />
+              <FormInput label={t.weight} value={formData.weight} onChange={(e) => update('weight', e.target.value)} type="number" required error={isNegative(formData.weight) ? negErr : undefined} />
+              <FormInput label={t.height} value={formData.height} onChange={(e) => update('height', e.target.value)} type="number" required error={isNegative(formData.height) ? negErr : undefined} />
+              <FormSelect label={t.gender} value={formData.gender} onChange={(e) => update('gender', e.target.value)} required options={[{ value: 'male', label: t.male }, { value: 'female', label: t.female }]} selectLabel={t.select} />
             </div>
           </div>
 
@@ -172,9 +243,9 @@ const DietPlan = ({ language = 'english' }) => {
               <h2 className="text-lg font-bold text-white">{t.preferences}</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              <Select label={t.dietType} field="dietaryPreference" options={t.dietOptions} />
-              <Select label={t.activityLevel} field="activityLevel" options={t.activityOptions} />
-              <Select label={t.goalLabel} field="goals" options={t.goalOptions} />
+              <FormSelect label={t.dietType} value={formData.dietaryPreference} onChange={(e) => update('dietaryPreference', e.target.value)} options={t.dietOptions} selectLabel={t.select} />
+              <FormSelect label={t.activityLevel} value={formData.activityLevel} onChange={(e) => update('activityLevel', e.target.value)} options={t.activityOptions} selectLabel={t.select} />
+              <FormSelect label={t.goalLabel} value={formData.goals} onChange={(e) => update('goals', e.target.value)} options={t.goalOptions} selectLabel={t.select} />
             </div>
           </div>
 
@@ -187,20 +258,56 @@ const DietPlan = ({ language = 'english' }) => {
               <h2 className="text-lg font-bold text-white">{t.additionalInfo}</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <Input label={t.healthConditions} field="healthConditions" placeholder={t.placeholders.health} />
-              <Input label={t.allergies} field="allergies" placeholder={t.placeholders.allergies} />
-              <Input label={t.dailyRoutine} field="typicalDay" placeholder={t.placeholders.routine} />
+              <FormInput label={t.healthConditions} value={formData.healthConditions} onChange={(e) => update('healthConditions', e.target.value)} placeholder={t.placeholders.health} />
+              <FormInput label={t.allergies} value={formData.allergies} onChange={(e) => update('allergies', e.target.value)} placeholder={t.placeholders.allergies} />
+              <FormInput label={t.dailyRoutine} value={formData.typicalDay} onChange={(e) => update('typicalDay', e.target.value)} placeholder={t.placeholders.routine} />
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center flex items-center justify-center gap-4">
             <button onClick={generateDietPlan} disabled={loading || !valid} className="btn-primary text-base px-10 py-4">
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <UtensilsCrossed className="w-5 h-5" />}
               {loading ? t.generating : t.generate}
             </button>
+            {savedPlans.length > 0 && (
+              <button onClick={() => setShowSaved(!showSaved)} className="btn-ghost text-sm">
+                <RotateCcw className="w-4 h-4" /> {isTr ? 'Kayıtlı Planlar' : 'Saved Plans'} ({savedPlans.length})
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Feature f10: Saved Plans list */}
+      {showSaved && savedPlans.length > 0 && (
+        <div className="gradient-border mt-6 animate-fade-in-up">
+          <div className="card p-6 rounded-[1.25rem]">
+            <h3 className="text-lg font-bold text-white mb-4">{isTr ? 'Kayıtlı Planlarım' : 'My Saved Plans'}</h3>
+            <ul className="space-y-3">
+              {savedPlans.map((plan) => (
+                <li key={plan.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white">{plan.goal || (isTr ? 'Diyet planı' : 'Diet plan')}</p>
+                    <p className="text-xs text-gray-500 truncate">{plan.overview?.slice(0, 80)}...</p>
+                    {plan.created_at && <p className="text-[10px] text-gray-600 mt-0.5">{new Date(plan.created_at).toLocaleDateString()}</p>}
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (plan.payload) {
+                        setDietPlan(plan.payload);
+                        setShowSaved(false);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition shrink-0 ml-3"
+                  >
+                    {isTr ? 'Tekrar Kullan' : 'Use Again'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {/* Result */}
       {dietPlan && (
@@ -216,7 +323,36 @@ const DietPlan = ({ language = 'english' }) => {
                   <p className="text-sm text-gray-500">{t.generatedBy}</p>
                 </div>
               </div>
-              <button className="btn-ghost text-xs"><Download className="w-4 h-4" /> PDF</button>
+              <div className="flex gap-2">
+                {dietPlan.grocery_list && (
+                  <button
+                    onClick={() => {
+                      const text = typeof dietPlan.grocery_list === 'string' ? dietPlan.grocery_list : JSON.stringify(dietPlan.grocery_list, null, 2);
+                      const blob = new Blob([text], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url; a.download = 'grocery-list.txt'; a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="btn-ghost text-xs"
+                  >
+                    <ClipboardList className="w-4 h-4" /> {language === 'turkish' ? 'Alışveriş' : 'Grocery'}
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Diet Plan</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:20px;color:#333}h1{color:#059669}h2{color:#444;margin-top:20px}pre{background:#f3f4f6;padding:12px;border-radius:8px;white-space:pre-wrap}</style></head><body><h1>${language === 'turkish' ? 'Diyet Planınız' : 'Your Diet Plan'}</h1>${dietPlan.overview ? `<h2>${language === 'turkish' ? 'Genel Bakış' : 'Overview'}</h2><p>${dietPlan.overview}</p>` : ''}${dietPlan.daily_plan ? `<h2>${language === 'turkish' ? 'Günlük Öğünler' : 'Daily Meals'}</h2><pre>${dietPlan.daily_plan}</pre>` : ''}${dietPlan.grocery_list ? `<h2>${language === 'turkish' ? 'Alışveriş Listesi' : 'Grocery List'}</h2><pre>${dietPlan.grocery_list}</pre>` : ''}${dietPlan.important_notes ? `<h2>${language === 'turkish' ? 'Önemli Notlar' : 'Important Notes'}</h2><p>${dietPlan.important_notes}</p>` : ''}</body></html>`;
+                    const blob = new Blob([html], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const w = window.open(url, '_blank');
+                    if (w) w.onload = () => setTimeout(() => w.print(), 500);
+                    setTimeout(() => URL.revokeObjectURL(url), 60000);
+                  }}
+                  className="btn-ghost text-xs"
+                >
+                  <Download className="w-4 h-4" /> PDF
+                </button>
+              </div>
             </div>
 
             <div className="space-y-8">

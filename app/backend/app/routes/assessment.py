@@ -13,6 +13,7 @@ from app.database import get_db
 from app.db_models import Assessment
 from app.auth import get_current_user_optional
 from app.models import DiabetesAssessmentRequest, AssessmentResponse
+from app.services.notification_service import create_notification
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -125,6 +126,12 @@ async def diabetes_assessment(
             )
             db.add(rec)
             db.commit()
+            create_notification(
+                db, current_user.id,
+                "Assessment complete",
+                "Your diabetes risk assessment is ready. View it in your Dashboard.",
+                "success",
+            )
 
         return AssessmentResponse(
             assessment_id=assessment_id,

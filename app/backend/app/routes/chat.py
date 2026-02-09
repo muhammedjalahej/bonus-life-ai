@@ -32,8 +32,13 @@ async def diabetes_chat(chat_request: ChatRequest, background_tasks: BackgroundT
 
         logger.info(f"[AI] Chat request from {user_id}: {message[:50]}...")
 
+        # Feature f7: prepend user context if available
+        enriched_message = message
+        if chat_request.user_context:
+            enriched_message = f"[Context: {chat_request.user_context}]\n\n{message}"
+
         llm_result = await _ai_specialist.generate_medical_response(
-            message=message, language=language, user_id=user_id
+            message=enriched_message, language=language, user_id=user_id
         )
 
         return ChatResponse(

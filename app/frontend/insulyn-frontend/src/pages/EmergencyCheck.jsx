@@ -5,6 +5,20 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/constants';
 
+function PersonalNumberInput({ label, value, onChange, icon: Icon, error }) {
+  const isNegativeError = !!error;
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 mb-2">{label}</label>
+      <div className="relative">
+        <Icon className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
+        <input type="number" value={value ?? ''} onChange={onChange} className={`input-field pl-11 ${isNegativeError ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' : ''}`} />
+      </div>
+      {isNegativeError && <p className="text-[11px] text-red-400 font-medium mt-1">{error}</p>}
+    </div>
+  );
+}
+
 const EmergencyCheck = ({ language = 'english' }) => {
   const [selected, setSelected] = useState([]);
   const [assessment, setAssessment] = useState(null);
@@ -45,6 +59,7 @@ const EmergencyCheck = ({ language = 'english' }) => {
     criticalTitle: 'KRİTİK -- Acil', highTitle: 'YÜKSEK -- Acil', mediumTitle: 'Yakından İzleyin', lowTitle: 'İzlemeye Devam',
     callNow: '911/112 arayın veya en yakın hastaneye gidin',
     errorFallback: 'Değerlendirme başarısız. Yedek kullanılıyor.',
+    negativeError: 'Lütfen negatif olmayan bir sayı girin.',
   } : {
     badge: 'Emergency Tool', title: 'Symptom Checker', subtitle: 'AI-powered emergency symptom assessment with urgency scoring.',
     warning: 'Important: This is informational only. In emergencies, call 911/112 immediately.',
@@ -56,6 +71,7 @@ const EmergencyCheck = ({ language = 'english' }) => {
     criticalTitle: 'CRITICAL -- Emergency', highTitle: 'HIGH -- Urgent', mediumTitle: 'Monitor Closely', lowTitle: 'Continue Monitoring',
     callNow: 'Call 911/112 or go to nearest hospital NOW',
     errorFallback: 'Assessment failed. Using fallback.',
+    negativeError: 'Please enter a positive number.',
   };
 
   const toggle = (id) => setSelected(p => p.includes(id) ? p.filter(s => s !== id) : [...p, id]);
@@ -68,9 +84,17 @@ const EmergencyCheck = ({ language = 'english' }) => {
 
   const getLabels = (ids) => ids.map(id => symptomsList.find(s => s.id === id) ? (isTr ? symptomsList.find(s => s.id === id).tr : symptomsList.find(s => s.id === id).en) : id);
 
+  const isNegative = (v) => v !== '' && !isNaN(parseFloat(v)) && parseFloat(v) < 0;
+  const negErr = t.negativeError;
+
   const assess = async () => {
     setLoading(true); setAssessment(null); setError(null);
     try {
+      if (isNegative(personal.age) || isNegative(personal.weight) || isNegative(personal.height)) {
+        setError(negErr);
+        setLoading(false);
+        return;
+      }
       const labels = getLabels(selected);
       const body = {
         symptoms: labels, language,
@@ -173,15 +197,9 @@ const EmergencyCheck = ({ language = 'english' }) => {
         {showPersonal && (
           <div className="mt-6 space-y-6">
             <div className="grid grid-cols-3 gap-4">
-              {[{ label: t.age, field: 'age', icon: User }, { label: t.weight, field: 'weight', icon: Weight }, { label: t.height, field: 'height', icon: Ruler }].map(({ label, field, icon: Icon }) => (
-                <div key={field}>
-                  <label className="block text-xs font-semibold text-gray-500 mb-2">{label}</label>
-                  <div className="relative">
-                    <Icon className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
-                    <input type="number" value={personal[field]} onChange={updatePersonal(field)} className="input-field pl-11" />
-                  </div>
-                </div>
-              ))}
+              <PersonalNumberInput label={t.age} value={personal.age} onChange={(e) => setPersonal(prev => ({ ...prev, age: e.target.value }))} icon={User} error={isNegative(personal.age) ? negErr : undefined} />
+              <PersonalNumberInput label={t.weight} value={personal.weight} onChange={(e) => setPersonal(prev => ({ ...prev, weight: e.target.value }))} icon={Weight} error={isNegative(personal.weight) ? negErr : undefined} />
+              <PersonalNumberInput label={t.height} value={personal.height} onChange={(e) => setPersonal(prev => ({ ...prev, height: e.target.value }))} icon={Ruler} error={isNegative(personal.height) ? negErr : undefined} />
             </div>
 
             {/* Conditions */}
