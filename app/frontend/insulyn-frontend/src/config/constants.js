@@ -2,7 +2,7 @@
 // Authors: Muhammed Jalahej, Yazen Emino
 
 // API Base URL - uses env variable in production, localhost in development
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 /** Full URL for avatar image (handles relative paths from backend uploads). */
 export function getAvatarUrl(avatarUrl) {
