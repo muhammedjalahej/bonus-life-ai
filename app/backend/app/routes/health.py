@@ -38,7 +38,7 @@ def _model_loaded() -> bool:
 @router.get("/")
 async def root():
     return {
-        "message": "More Life AI - Type 2 Diabetes Early Detection Platform",
+        "message": "Bonus Life AI - Type 2 Diabetes Early Detection Platform",
         "status": "operational",
         "version": APP_VERSION,
         "timestamp": datetime.utcnow().isoformat(),
@@ -114,7 +114,7 @@ async def system_status():
 async def api_health():
     return {
         "status": "healthy",
-        "service": "More Life AI",
+        "service": "Bonus Life AI",
         "version": APP_VERSION,
         "timestamp": datetime.utcnow().isoformat(),
         "llm_available": _llm_service.available if _llm_service else False,

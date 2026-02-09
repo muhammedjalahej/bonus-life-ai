@@ -101,7 +101,7 @@ const Header = ({ language, setLanguage }) => {
               <HeartPulse className="w-5 h-5 text-white" />
             </div>
             <div className="hidden sm:block whitespace-nowrap overflow-visible">
-              <span className="text-lg font-extrabold tracking-tight gradient-text">More Life</span>
+              <span className="text-lg font-extrabold tracking-tight gradient-text">Bonus Life</span>
               <span className="text-lg font-extrabold tracking-tight text-white ml-1">AI</span>
             </div>
           </button>

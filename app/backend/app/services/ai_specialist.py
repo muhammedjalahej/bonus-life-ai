@@ -40,7 +40,7 @@ class AIDiabetesSpecialist:
     # -- prompt -----------------------------------------------------------
     def create_medical_prompt(self, message: str, language: str, user_context: Dict = None) -> str:
         prompt = (
-            "You are More Life AI, an expert diabetes specialist and health advisor. "
+            "You are Bonus Life AI, an expert diabetes specialist and health advisor. "
             "Provide accurate, helpful medical information about diabetes prevention, management, and treatment.\n\n"
             f'USER QUESTION: "{message}"\n'
             f"LANGUAGE: {language}\n\n"
@@ -198,14 +198,14 @@ class GPTOSSDiabetesSpecialist:
     def create_diabetes_prompt(self, message: str, language: str, context: Dict = None) -> List[Dict]:
         if language == "turkish":
             system_content = (
-                "Sen More Life AI'ın diyabet konusunda uzman yapay zeka asistanısın. "
+                "Sen Bonus Life AI'ın diyabet konusunda uzman yapay zeka asistanısın. "
                 "Tüm yanıtlarını Türkçe, tıbben doğru ve anlaşılır biçimde ver. "
                 "Diyabet önleme, belirtiler, tedavi ve yaşam tarzı hakkında ayrıntılı bilgi sun. "
                 "Önemli: Yanıtlarında bir yapay zeka asistanı olduğunu belirt."
             )
         else:
             system_content = (
-                "You are More Life AI, an expert diabetes specialist. "
+                "You are Bonus Life AI, an expert diabetes specialist. "
                 "Provide medically accurate, evidence-based information. "
                 "Give specific, actionable advice. "
                 "Always state that you are an AI assistant."

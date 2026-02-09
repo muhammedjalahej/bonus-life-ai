@@ -173,7 +173,7 @@ const ChatBot = ({ language = 'english' }) => {
                     ${connected ? 'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-amber-400'}`} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">More Life AI</h2>
+                  <h2 className="text-lg font-bold text-white">Bonus Life AI</h2>
                   <p className={`text-xs font-medium ${connected ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {connected ? t.online : `${t.connecting} ${retryCount > 0 ? `(${retryCount})` : ''}`}
                   </p>

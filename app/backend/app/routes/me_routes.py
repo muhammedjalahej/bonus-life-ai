@@ -311,7 +311,7 @@ async def setup_2fa(
     user.totp_secret = secret
     db.commit()
     totp = pyotp.TOTP(secret)
-    uri = totp.provisioning_uri(name=user.email, issuer_name="More Life AI")
+    uri = totp.provisioning_uri(name=user.email, issuer_name="Bonus Life AI")
     return {"secret": secret, "uri": uri}
 
 

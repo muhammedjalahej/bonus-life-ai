@@ -49,10 +49,10 @@ def send_password_reset_email(to_email: str, reset_token: str) -> bool:
         logger.info("Dev reset link: %s", get_reset_link(reset_token))
         return False
     reset_link = get_reset_link(reset_token)
-    subject = "More Life AI - Reset your password"
+    subject = "Bonus Life AI - Reset your password"
     body = f"""Hello,
 
-You requested a password reset for your More Life AI account.
+You requested a password reset for your Bonus Life AI account.
 
 Click the link below to set a new password (link expires in 1 hour):
 
@@ -60,7 +60,7 @@ Click the link below to set a new password (link expires in 1 hour):
 
 If you did not request this, you can ignore this email.
 
-— More Life AI
+— Bonus Life AI
 """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -109,10 +109,10 @@ def send_temporary_password_email(to_email: str, temporary_password: str) -> boo
         logger.warning("SMTP not configured; temporary password email not sent.")
         logger.info("Dev temporary password for %s: %s", to_email, temporary_password)
         return False
-    subject = "More Life AI - Your new temporary password"
+    subject = "Bonus Life AI - Your new temporary password"
     body = f"""Hello,
 
-You requested a new password for your More Life AI account.
+You requested a new password for your Bonus Life AI account.
 
 Your temporary password is: {temporary_password}
 
@@ -120,7 +120,7 @@ Please log in with this password, then go to Dashboard → Profile and change it
 
 If you did not request this, please contact support or change your password after logging in.
 
-— More Life AI
+— Bonus Life AI
 """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject

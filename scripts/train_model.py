@@ -1,8 +1,8 @@
 """
-More Life AI - Diabetes Prediction Model Training Script
+Bonus Life AI - Diabetes Prediction Model Training Script
 ======================================================
 This script trains and evaluates the XGBoost binary classifier
-used for diabetes risk prediction in the More Life AI platform.
+used for diabetes risk prediction in the Bonus Life AI platform.
 
 Features used (8 total):
     - pregnancies, glucose, blood_pressure, skin_thickness,

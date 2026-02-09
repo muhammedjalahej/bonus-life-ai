@@ -1,4 +1,4 @@
-# More Life AI - Backend Dependencies
+# Bonus Life AI - Backend Dependencies
 # Authors: Muhammed Jalahej, Yazen Emino
 
 # === Web Framework ===

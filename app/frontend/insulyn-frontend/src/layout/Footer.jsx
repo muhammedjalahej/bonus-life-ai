@@ -30,7 +30,7 @@ const Footer = ({ language }) => {
                 <HeartPulse className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="text-lg font-extrabold gradient-text">More Life</span>
+                <span className="text-lg font-extrabold gradient-text">Bonus Life</span>
                 <span className="text-lg font-extrabold text-white ml-1">AI</span>
               </div>
             </div>
@@ -71,7 +71,7 @@ const Footer = ({ language }) => {
 
         <div className="border-t border-white/[0.04] mt-14 pt-6">
           <p className="text-[11px] text-gray-600 text-center tracking-wide">
-            &copy; {new Date().getFullYear()} More Life AI. All rights reserved.
+            &copy; {new Date().getFullYear()} Bonus Life AI. All rights reserved.
           </p>
         </div>
       </div>

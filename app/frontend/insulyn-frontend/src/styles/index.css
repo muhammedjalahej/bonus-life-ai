@@ -206,37 +206,37 @@
 }
 
 /* ───────────────── Scrollbar (scoped to app root + !important so it always wins) ───────────────── */
-.insulyn-app,
-.insulyn-app * {
+.bonus-life-app,
+.bonus-life-app * {
   scrollbar-width: thin !important;
   scrollbar-color: #10b981 #1a1a2e !important;
 }
-.insulyn-app ::-webkit-scrollbar,
-.insulyn-app *::-webkit-scrollbar {
+.bonus-life-app ::-webkit-scrollbar,
+.bonus-life-app *::-webkit-scrollbar {
   width: 10px !important;
   height: 10px !important;
 }
-.insulyn-app ::-webkit-scrollbar-track,
-.insulyn-app *::-webkit-scrollbar-track {
+.bonus-life-app ::-webkit-scrollbar-track,
+.bonus-life-app *::-webkit-scrollbar-track {
   background: #1a1a2e !important;
   border-radius: 9999px;
 }
-.insulyn-app ::-webkit-scrollbar-thumb,
-.insulyn-app *::-webkit-scrollbar-thumb {
+.bonus-life-app ::-webkit-scrollbar-thumb,
+.bonus-life-app *::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #10b981 0%, #06b6d4 100%) !important;
   border-radius: 9999px !important;
   border: 2px solid #060611;
   min-height: 40px;
 }
-.insulyn-app ::-webkit-scrollbar-thumb:hover,
-.insulyn-app *::-webkit-scrollbar-thumb:hover {
+.bonus-life-app ::-webkit-scrollbar-thumb:hover,
+.bonus-life-app *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #34d399 0%, #22d3ee 100%) !important;
 }
-.insulyn-app ::-webkit-scrollbar-thumb:active,
-.insulyn-app *::-webkit-scrollbar-thumb:active {
+.bonus-life-app ::-webkit-scrollbar-thumb:active,
+.bonus-life-app *::-webkit-scrollbar-thumb:active {
   background: linear-gradient(180deg, #059669 0%, #0891b2 100%) !important;
 }
-.insulyn-app ::-webkit-scrollbar-corner,
-.insulyn-app *::-webkit-scrollbar-corner {
+.bonus-life-app ::-webkit-scrollbar-corner,
+.bonus-life-app *::-webkit-scrollbar-corner {
   background: transparent !important;
 }

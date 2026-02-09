@@ -153,7 +153,7 @@ function App() {
   const [language, setLanguage] = useState('english');
 
   useEffect(() => {
-    document.title = language === 'turkish' ? 'More Life AI - Diyabet Önleme' : 'More Life AI - Diabetes Prevention';
+    document.title = language === 'turkish' ? 'Bonus Life AI - Diyabet Önleme' : 'Bonus Life AI - Diabetes Prevention';
   }, [language]);
 
   return (

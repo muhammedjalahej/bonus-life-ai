@@ -1,4 +1,4 @@
-# More Life AI - Type 2 Diabetes Early Detection Platform
+# Bonus Life AI - Type 2 Diabetes Early Detection Platform
 
 An AI-powered platform for early detection and prevention of Type 2 Diabetes, combining machine learning prediction with personalized health guidance.
 
@@ -37,7 +37,7 @@ app/
         data/                    # Trained model (best_model.pkl)
         .env                     # Environment variables (API keys)
     frontend/                    # React frontend
-        insulyn-frontend/
+        bonus-life-ai-frontend/
             src/                 # React components, pages, services
 Data/                            # Datasets (diabetes.csv, preprocessed)
 Models/                          # Saved models and training results
@@ -84,7 +84,7 @@ uvicorn app.main:app --reload --port 8000
 ### Frontend Setup
 
 ```bash
-cd app/frontend/insulyn-frontend
+cd app/frontend/bonus-life-ai-frontend
 npm install
 npm run dev
 ```

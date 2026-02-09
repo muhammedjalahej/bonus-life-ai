@@ -63,7 +63,7 @@ export default function Register({ language }) {
             {isTr ? 'Kayıt Ol' : 'Create account'}
           </h1>
           <p className="text-gray-500 text-center text-sm mb-6">
-            {isTr ? 'More Life AI ile başlayın' : 'Get started with More Life AI'}
+            {isTr ? 'Bonus Life AI ile başlayın' : 'Get started with Bonus Life AI'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

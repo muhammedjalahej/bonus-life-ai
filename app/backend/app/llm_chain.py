@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class MoreLifeAILLM:
     """
-    More Life AI LLM service with proper chat functionality
+    Bonus Life AI LLM service with proper chat functionality
     """
 
     def __init__(self):
@@ -45,7 +45,7 @@ class MoreLifeAILLM:
             )
 
             self._initialize_chat_chain()
-            logger.info("✅ More Life AI LLM initialized successfully")
+            logger.info("✅ Bonus Life AI LLM initialized successfully")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize LLM: {e}")
@@ -58,7 +58,7 @@ class MoreLifeAILLM:
 
     def _initialize_chat_chain(self):
         """Initialize the main chat chain with proper diabetes expertise"""
-        chat_template = """You are More Life AI, a specialized medical AI assistant focused exclusively on diabetes prevention, management, and education.
+        chat_template = """You are Bonus Life AI, a specialized medical AI assistant focused exclusively on diabetes prevention, management, and education.
 
 IMPORTANT: You must provide accurate, evidence-based medical information about diabetes. Always be specific and detailed.
 

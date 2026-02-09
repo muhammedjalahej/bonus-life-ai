@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings  # modern replacement for pydantic Ba
 class Settings(BaseSettings):
     # === API Configuration ===
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "More Life AI"  # Keep consistent with .env
+    PROJECT_NAME: str = "Bonus Life AI"  # Keep consistent with .env
 
     # === ML Model ===
     MODEL_PATH: str = "./data/best_model.pkl"

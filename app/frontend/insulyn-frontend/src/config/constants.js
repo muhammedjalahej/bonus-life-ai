@@ -1,4 +1,4 @@
-// More Life AI - Central Configuration
+// Bonus Life AI - Central Configuration
 // Authors: Muhammed Jalahej, Yazen Emino
 
 // API Base URL - uses env variable in production, localhost in development
@@ -13,7 +13,7 @@ export function getAvatarUrl(avatarUrl) {
 }
 
 // Application info
-export const APP_NAME = 'More Life AI';
+export const APP_NAME = 'Bonus Life AI';
 export const APP_DESCRIPTION = 'Type 2 Diabetes Early Detection Platform';
 
 // Route paths (single source of truth for navigation)

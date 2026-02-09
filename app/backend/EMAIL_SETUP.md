@@ -12,7 +12,7 @@ To receive password reset emails (e.g. to your Hotmail or Gmail), add your SMTP 
 
 2. **Create an App Password**:
    - Go to [App passwords](https://myaccount.google.com/apppasswords)
-   - Select app: **Mail**, device: **Other** (e.g. "More Life AI")
+   - Select app: **Mail**, device: **Other** (e.g. "Bonus Life AI")
    - Click **Generate** and copy the 16-character password.
 
 3. **Edit `app/backend/.env`** and set:
