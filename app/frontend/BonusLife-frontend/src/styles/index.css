@@ -240,3 +240,57 @@
 .bonus-life-app *::-webkit-scrollbar-corner {
   background: transparent !important;
 }
+
+/* ───────────────── Voice listening glow (Siri / Apple Intelligence style) ───────────────── */
+@keyframes voice-glow-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+.voice-listening-glow {
+  background: transparent;
+  /* Same cyan as "redefined by AI" hero text (#00E5FF) */
+  box-shadow:
+    inset 95px 0 70px -55px rgba(0, 229, 255, 0.48),
+    inset -95px 0 70px -55px rgba(0, 229, 255, 0.48),
+    inset 0 95px 70px -55px rgba(0, 229, 255, 0.44),
+    inset 0 -95px 70px -55px rgba(0, 229, 255, 0.44),
+    inset 0 0 100px 40px rgba(0, 229, 255, 0.06);
+  animation: voice-glow-pulse 2s ease-in-out infinite;
+}
+
+/* ElevenLabs-style voice agent: clean card + bar */
+.voice-agent-trigger {
+  backdrop-filter: blur(8px);
+}
+.voice-agent-bar {
+  backdrop-filter: blur(8px);
+}
+.voice-agent-card {
+  backdrop-filter: blur(8px);
+}
+
+/* Circular audio visualizer (purple/white gradient, subtle motion) */
+@keyframes voice-visualizer-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes voice-visualizer-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+.voice-agent-visualizer {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(139, 92, 246, 0.9) 0deg 60deg,
+    rgba(255, 255, 255, 0.4) 60deg 120deg,
+    rgba(168, 85, 247, 0.7) 120deg 180deg,
+    rgba(255, 255, 255, 0.5) 180deg 240deg,
+    rgba(139, 92, 246, 0.8) 240deg 300deg,
+    rgba(255, 255, 255, 0.3) 300deg 360deg
+  );
+  animation: voice-visualizer-spin 3s linear infinite, voice-visualizer-pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}

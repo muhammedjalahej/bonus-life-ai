@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LoadingFallback from './components/LoadingFallback';
 import NotFoundPage from './components/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import VoiceAgent from './components/VoiceAgent';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ROUTES } from './config/constants';
 
@@ -129,6 +130,8 @@ function AppContent({ language, setLanguage }) {
       <Suspense fallback={<div className="h-20" />}>
         <Footer language={language} />
       </Suspense>
+
+      <VoiceAgent />
     </div>
   );
 }

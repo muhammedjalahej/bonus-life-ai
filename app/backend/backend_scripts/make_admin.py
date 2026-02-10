@@ -1,17 +1,18 @@
-"""Set a user as admin by email. Run from app/backend: python make_admin.py user@example.com"""
+"""Set a user as admin by email. Run from app/backend: python backend_scripts/make_admin.py user@example.com"""
 import sys
 import os
 
-# run from app/backend so app is importable
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Ensure app is importable when run from backend_scripts (add backend dir to path)
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _backend_dir)
 
 from app.database import SessionLocal
 from app.db_models import User
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python make_admin.py <email>")
-        print("Example: python make_admin.py jojo_memo11@hotmail.com")
+        print("Usage: python backend_scripts/make_admin.py <email>")
+        print("Example: python backend_scripts/make_admin.py user@example.com")
         sys.exit(1)
     email = sys.argv[1].strip().lower()
     db = SessionLocal()

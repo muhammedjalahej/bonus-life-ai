@@ -26,7 +26,7 @@ To receive password reset emails (e.g. to your Hotmail or Gmail), add your SMTP 
    ```
    Replace `your.email@gmail.com` with your Gmail and `xxxx xxxx xxxx xxxx` with the App Password (no spaces is fine).
 
-4. **Restart the backend** (stop and run `run_backend.bat` or uvicorn again). Then use "Forgot password" in the app; the email should arrive in your Gmail inbox.
+4. **Restart the backend** (stop and run `backend_scripts\run_backend.bat` or uvicorn again). Then use "Forgot password" in the app; the email should arrive in your Gmail inbox.
 
 ---
 

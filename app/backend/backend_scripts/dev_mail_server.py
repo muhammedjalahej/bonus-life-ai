@@ -1,6 +1,6 @@
 """
 Local dev SMTP server on port 1025. Receives "forgot password" emails and prints the reset link.
-Run in a separate terminal: python dev_mail_server.py
+Run from app/backend: python backend_scripts/dev_mail_server.py
 Then use Forgot password in the app; the reset link will appear here and in mail_output/*.eml
 """
 import os

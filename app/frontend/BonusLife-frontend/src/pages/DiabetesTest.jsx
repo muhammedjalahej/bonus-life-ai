@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertTriangle, CheckCircle, Loader2, ArrowRight, ArrowLeft, RotateCcw,
   Heart, Activity, Apple, Dumbbell, Leaf, Calendar, Stethoscope, Target,
   TrendingUp, Clock, Droplets, Users, GraduationCap, Sparkles,
 } from 'lucide-react';
 import * as apiService from '../services/api';
+import { VOICE_FILL_EVENT, VOICE_CLEAR_FIELD_EVENT, VOICE_FORM_NEXT_EVENT, VOICE_FORM_BACK_EVENT } from '../components/VoiceAgent';
 
 /* Stable field component so number inputs keep focus while typing */
 function FormField({ label, value, onChange, required, hint, placeholder, icon: Icon, error }) {
@@ -39,6 +40,57 @@ const DiabetesTest = ({ language = 'english' }) => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Voice agent: fill form fields by voice command
+  useEffect(() => {
+    const handler = (e) => {
+      const { field, value } = e.detail || {};
+      const key = field === 'pedigree' ? 'diabetes_pedigree_function' : field;
+      const allowed = ['age', 'weight', 'height', 'pregnancies', 'glucose', 'blood_pressure', 'skin_thickness', 'insulin', 'diabetes_pedigree_function'];
+      if (key && allowed.includes(key) && value != null) {
+        setFormData((prev) => ({ ...prev, [key]: String(value) }));
+      }
+    };
+    window.addEventListener(VOICE_FILL_EVENT, handler);
+    return () => window.removeEventListener(VOICE_FILL_EVENT, handler);
+  }, []);
+
+  // Voice agent: clear a form field ("clear blood pressure", "delete age")
+  useEffect(() => {
+    const handler = (e) => {
+      const { field } = e.detail || {};
+      const key = field === 'pedigree' ? 'diabetes_pedigree_function' : field;
+      const allowed = ['age', 'weight', 'height', 'pregnancies', 'glucose', 'blood_pressure', 'skin_thickness', 'insulin', 'diabetes_pedigree_function'];
+      if (key && allowed.includes(key)) {
+        setFormData((prev) => ({ ...prev, [key]: '' }));
+      }
+    };
+    window.addEventListener(VOICE_CLEAR_FIELD_EVENT, handler);
+    return () => window.removeEventListener(VOICE_CLEAR_FIELD_EVENT, handler);
+  }, []);
+
+  const handleSubmitRef = useRef(() => {});
+
+  // Voice agent: continue / next and back on assessment form
+  useEffect(() => {
+    const onNext = () => {
+      setStep((s) => {
+        if (s === 0) return 1;
+        if (s === 1) {
+          handleSubmitRef.current();
+          return s;
+        }
+        return s;
+      });
+    };
+    const onBack = () => setStep((s) => (s > 0 ? s - 1 : s));
+    window.addEventListener(VOICE_FORM_NEXT_EVENT, onNext);
+    window.addEventListener(VOICE_FORM_BACK_EVENT, onBack);
+    return () => {
+      window.removeEventListener(VOICE_FORM_NEXT_EVENT, onNext);
+      window.removeEventListener(VOICE_FORM_BACK_EVENT, onBack);
+    };
+  }, []);
 
   const isTr = language === 'turkish';
   const t = isTr ? {
@@ -126,6 +178,7 @@ const DiabetesTest = ({ language = 'english' }) => {
       setStep(2);
     } catch (err) { setError(err.message); } finally { setLoading(false); }
   };
+  handleSubmitRef.current = handleSubmit;
 
   const handleNewTest = () => {
     setStep(0); setResult(null); setError('');

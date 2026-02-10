@@ -344,7 +344,7 @@ app.add_middleware(MaintenanceModeMiddleware)
 # ---------------------------------------------------------------------------
 # Wire up routes
 # ---------------------------------------------------------------------------
-from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, language, auth, me_routes, admin_routes
+from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, voice_command, tts, language, auth, me_routes, admin_routes
 
 # Inject service instances into route modules
 chat.init(ai_specialist)
@@ -363,6 +363,8 @@ app.include_router(emergency.router, prefix="/api/v1")     # /api/v1/emergency-a
 app.include_router(topics.router, prefix="/api/v1")        # /api/v1/health-topics
 app.include_router(user.router, prefix="/api/v1")          # /api/v1/user/*
 app.include_router(voice_chat.router, prefix="/api/v1")    # /api/v1/voice-chat
+app.include_router(voice_command.router, prefix="/api/v1") # /api/v1/voice-command
+app.include_router(tts.router, prefix="/api/v1")           # /api/v1/tts
 app.include_router(language.router, prefix="/api/v1")      # /api/v1/detect-language
 app.include_router(auth.router, prefix="/api/v1")          # /api/v1/auth/*
 app.include_router(me_routes.router, prefix="/api/v1")     # /api/v1/users/me/*
