@@ -46,6 +46,7 @@ async def diabetes_chat(chat_request: ChatRequest, background_tasks: BackgroundT
             timestamp=datetime.utcnow().isoformat(),
             conversation_id=user_id,
             model=llm_result["model"],
+            error_detail=llm_result.get("error_detail"),
         )
     except HTTPException:
         raise

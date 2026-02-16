@@ -7,8 +7,17 @@ import LoadingFallback from './components/LoadingFallback';
 import NotFoundPage from './components/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import VoiceAgent from './components/VoiceAgent';
+import UXSettingsModal from './components/UXSettingsModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UXSettingsProvider, useUXSettings } from './context/UXSettingsContext';
 import { ROUTES } from './config/constants';
+import { TourProvider } from './tour/TourContext';
+import TourOverlay from './tour/TourOverlay';
+
+function UXSettingsModalGate() {
+  const { uxModalOpen, setUxModalOpen } = useUXSettings();
+  return <UXSettingsModal isOpen={uxModalOpen} onClose={() => setUxModalOpen(false)} />;
+}
 
 /**
  * Wrapper that redirects admin users to /admin when they try to access
@@ -100,29 +109,38 @@ function AppContent({ language, setLanguage }) {
 
         <div className="relative z-10">
           <Suspense fallback={<LoadingFallback language={language} />}>
-            <Routes>
-              <Route path={ROUTES.HOME} element={<Home language={language} />} />
-              <Route path={ROUTES.LOGIN} element={<Login language={language} />} />
-              <Route path={ROUTES.REGISTER} element={<Register language={language} />} />
-              <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword language={language} />} />
-              <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword language={language} />} />
+            <ErrorBoundary language={language}>
+              <Routes>
+                <Route path={ROUTES.HOME} element={<Home language={language} />} />
+                <Route path={ROUTES.LOGIN} element={<Login language={language} />} />
+                <Route path={ROUTES.REGISTER} element={<Register language={language} />} />
+                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword language={language} />} />
+                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword language={language} />} />
 
-              {/* User-only pages: admin gets redirected to /admin */}
-              <Route path={ROUTES.TEST} element={<BlockIfAdmin><DiabetesTest language={language} /></BlockIfAdmin>} />
-              <Route path={ROUTES.CHAT} element={<BlockIfAdmin><ChatBot language={language} /></BlockIfAdmin>} />
-              <Route path={ROUTES.VOICE_CHAT} element={<BlockIfAdmin><VoiceChat language={language} /></BlockIfAdmin>} />
-              <Route path={ROUTES.DIET_PLAN} element={<BlockIfAdmin><DietPlan language={language} /></BlockIfAdmin>} />
-              <Route path={ROUTES.EMERGENCY} element={<BlockIfAdmin><EmergencyCheck language={language} /></BlockIfAdmin>} />
-              <Route path={ROUTES.DASHBOARD} element={<BlockIfAdmin><ProtectedRoute><Dashboard language={language} /></ProtectedRoute></BlockIfAdmin>} />
+                {/* User-only pages: admin gets redirected to /admin */}
+                <Route path={ROUTES.TEST} element={<BlockIfAdmin><DiabetesTest language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.CHAT} element={<BlockIfAdmin><ChatBot language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.VOICE_CHAT} element={<BlockIfAdmin><VoiceChat language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.DIET_PLAN} element={<BlockIfAdmin><DietPlan language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.EMERGENCY} element={<BlockIfAdmin><EmergencyCheck language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.HOSPITALS} element={<BlockIfAdmin><FindHospitals language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.DASHBOARD} element={<BlockIfAdmin><ProtectedRoute><Dashboard language={language} /></ProtectedRoute></BlockIfAdmin>} />
 
-              {/* Admin-only page */}
-              <Route path={`${ROUTES.ADMIN}/*`} element={<ProtectedRoute requireAdmin><AdminPanel language={language} /></ProtectedRoute>} />
+                {/* Admin-only pages */}
+                <Route path={ROUTES.STUDIO} element={<ProtectedRoute requireAdmin><MicroInteractionStudio language={language} /></ProtectedRoute>} />
+                <Route path={`${ROUTES.ADMIN}/*`} element={<ProtectedRoute requireAdmin><AdminPanel language={language} /></ProtectedRoute>} />
 
-              {/* Public shared assessment view */}
-              <Route path="/shared/:token" element={<SharedAssessment language={language} />} />
+                {/* Verify signed report (public) */}
+                <Route path={ROUTES.VERIFY} element={<VerifyReport language={language} />} />
+                <Route path={ROUTES.MEAL_PHOTO} element={<BlockIfAdmin><MealPhotoAnalyzer language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.SPORT} element={<BlockIfAdmin><WorkoutVideos language={language} /></BlockIfAdmin>} />
 
-              <Route path="*" element={<NotFoundPage language={language} />} />
-            </Routes>
+                {/* Public shared assessment view */}
+                <Route path="/shared/:token" element={<SharedAssessment language={language} />} />
+
+                <Route path="*" element={<NotFoundPage language={language} />} />
+              </Routes>
+            </ErrorBoundary>
           </Suspense>
         </div>
       </main>
@@ -131,7 +149,9 @@ function AppContent({ language, setLanguage }) {
         <Footer language={language} />
       </Suspense>
 
-      <VoiceAgent />
+      <ErrorBoundary language={language}>
+        <VoiceAgent />
+      </ErrorBoundary>
     </div>
   );
 }
@@ -144,13 +164,18 @@ const ChatBot = lazy(() => import('./pages/ChatBot'));
 const VoiceChat = lazy(() => import('./pages/VoiceChat'));
 const DietPlan = lazy(() => import('./pages/DietPlan'));
 const EmergencyCheck = lazy(() => import('./pages/EmergencyCheck'));
+const FindHospitals = lazy(() => import('./pages/FindHospitals'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const MicroInteractionStudio = lazy(() => import('./pages/MicroInteractionStudio'));
 const SharedAssessment = lazy(() => import('./pages/SharedAssessment'));
+const VerifyReport = lazy(() => import('./pages/VerifyReport'));
+const MealPhotoAnalyzer = lazy(() => import('./pages/MealPhotoAnalyzer'));
+const WorkoutVideos = lazy(() => import('./pages/WorkoutVideos'));
 
 function App() {
   const [language, setLanguage] = useState('english');
@@ -161,11 +186,17 @@ function App() {
 
   return (
     <ErrorBoundary language={language}>
-      <Router>
-        <AuthProvider>
-          <AppContent language={language} setLanguage={setLanguage} />
-        </AuthProvider>
-      </Router>
+      <UXSettingsProvider>
+        <Router>
+          <TourProvider>
+            <AuthProvider>
+              <AppContent language={language} setLanguage={setLanguage} />
+            </AuthProvider>
+            <TourOverlay />
+          </TourProvider>
+        </Router>
+        <UXSettingsModalGate />
+      </UXSettingsProvider>
     </ErrorBoundary>
   );
 }

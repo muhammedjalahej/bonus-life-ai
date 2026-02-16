@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, CheckCircle, XCircle, Stethoscope, Loader2,
-  User, Ruler, Weight, Plus, X, ChevronDown, ChevronUp, Phone, Sparkles, Shield,
+  User, Ruler, Weight, Plus, X, ChevronDown, ChevronUp, Phone, Sparkles, Shield, MapPin,
 } from 'lucide-react';
-import { API_BASE_URL } from '../config/constants';
+import { API_BASE_URL, ROUTES } from '../config/constants';
 
 function PersonalNumberInput({ label, value, onChange, icon: Icon, error }) {
   const isNegativeError = !!error;
@@ -20,6 +21,7 @@ function PersonalNumberInput({ label, value, onChange, icon: Icon, error }) {
 }
 
 const EmergencyCheck = ({ language = 'english' }) => {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState([]);
   const [assessment, setAssessment] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -290,8 +292,17 @@ const EmergencyCheck = ({ language = 'english' }) => {
             )}
 
             {['critical', 'high'].includes(assessment.urgency_level) && (
-              <div className="flex items-center gap-3 p-5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-300 text-sm font-bold mt-2">
-                <Phone className="w-5 h-5" /> {t.callNow}
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex items-center gap-3 p-5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-300 text-sm font-bold">
+                  <Phone className="w-5 h-5 shrink-0" /> {t.callNow}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.HOSPITALS)}
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-emerald-400 hover:border-emerald-500/30 text-sm font-medium"
+                >
+                  <MapPin className="w-4 h-4" /> {isTr ? 'Yakındaki hastaneleri bul' : 'Find nearest hospitals'}
+                </button>
               </div>
             )}
           </div>

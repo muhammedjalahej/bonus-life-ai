@@ -23,6 +23,7 @@ class ChatResponse(BaseModel):
     timestamp: str
     conversation_id: str
     model: str
+    error_detail: Optional[str] = None  # only in development when LLM fails
 
 
 # ---------------------------------------------------------------
@@ -76,6 +77,28 @@ class DietPlanResponse(BaseModel):
     timestamp: str
     status: str = "success"
     generation_time: float = 0.0
+
+
+class SaveDietPlanRequest(BaseModel):
+    """Save an existing plan to the user's account (e.g. from mobile after viewing)."""
+    goal: str = ""
+    overview: str = ""
+    payload: Dict[str, Any] = Field(..., description="Full plan object (overview, daily_plan, etc.)")
+
+
+# ---------------------------------------------------------------
+# Meal Photo Analyzer
+# ---------------------------------------------------------------
+class MealPhotoAnalyzeRequest(BaseModel):
+    image_base64: str = Field(..., description="Base64-encoded meal image (optional data URL prefix)")
+    save_to_log: bool = Field(False, description="If true and user logged in, save this meal to their log")
+
+
+class MealPhotoAnalyzeResponse(BaseModel):
+    meal_name: str
+    carb_level: str  # low | medium | high
+    healthier_swaps: str
+    saved_to_log: bool = False
 
 
 # ---------------------------------------------------------------

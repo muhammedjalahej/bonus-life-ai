@@ -2,20 +2,30 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity, MessageSquare, Mic, Salad, AlertTriangle, User, FileText, UtensilsCrossed,
-  Loader2, ChevronRight, Camera, X, Check, Upload, Download, Share2, RefreshCw,
+  Loader2, ChevronRight, ChevronDown, Camera, X, Check, Upload, Download, Share2, RefreshCw,
   Megaphone, ArrowRight, Shield, Bell, GitCompare, Heart, Apple, AlertCircle,
-  Search, Calendar, Eye, Clock, Trash2,
+  Search, Calendar, Eye, Clock, Trash2, QrCode, ScanFace, Dumbbell,
 } from 'lucide-react';
 import { ROUTES, getAvatarUrl } from '../config/constants';
 import { useAuth } from '../context/AuthContext';
-import apiService from '../services/api';
+import apiService, {
+  faceEnroll,
+  faceStatus,
+  faceToggleEnabled,
+} from '../services/api';
+import { haptic } from '../utils/haptics';
+import FluidCard from '../components/FluidCard';
 
+// accent: tailwind border/icon classes (e.g. emerald, amber, blue). primary = slightly emphasized.
 const cardLinks = [
-  { path: ROUTES.TEST, labelEn: 'Assessment', labelTr: 'Değerlendirme', icon: Activity },
-  { path: ROUTES.CHAT, labelEn: 'AI Chat', labelTr: 'Yapay Zeka Sohbet', icon: MessageSquare },
-  { path: ROUTES.VOICE_CHAT, labelEn: 'Voice Chat', labelTr: 'Sesli Sohbet', icon: Mic },
-  { path: ROUTES.DIET_PLAN, labelEn: 'Diet Plan', labelTr: 'Diyet Planı', icon: Salad },
-  { path: ROUTES.EMERGENCY, labelEn: 'Emergency', labelTr: 'Acil', icon: AlertTriangle },
+  { path: ROUTES.TEST, labelEn: 'Assessment', labelTr: 'Değerlendirme', icon: Activity, accent: 'emerald', primary: true },
+  { path: ROUTES.CHAT, labelEn: 'AI Chat', labelTr: 'Yapay Zeka Sohbet', icon: MessageSquare, accent: 'blue', primary: true },
+  { path: ROUTES.VOICE_CHAT, labelEn: 'Voice Chat', labelTr: 'Sesli Sohbet', icon: Mic, accent: 'blue' },
+  { path: ROUTES.DIET_PLAN, labelEn: 'Diet Plan', labelTr: 'Diyet Planı', icon: Salad, accent: 'emerald' },
+  { path: ROUTES.MEAL_PHOTO, labelEn: 'Meal Analyzer', labelTr: 'Öğün Analizi', icon: Apple, accent: 'emerald' },
+  { path: ROUTES.SPORT, labelEn: 'Workout Videos', labelTr: 'Antrenman Videoları', icon: Dumbbell, accent: 'cyan' },
+  { path: ROUTES.EMERGENCY, labelEn: 'Emergency', labelTr: 'Acil', icon: AlertTriangle, accent: 'amber' },
+  { path: ROUTES.VERIFY, labelEn: 'Verify Report', labelTr: 'Rapor Doğrula', icon: QrCode, accent: 'gray' },
 ];
 
 // Friendly labels for diet plan goal (stored as e.g. diabetes_prevention)
@@ -29,6 +39,34 @@ const dietGoalDisplay = (goal, isTr) => (DIET_GOAL_LABELS[isTr ? 'tr' : 'en'][go
 const formatTime = (dateStr) => {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+};
+
+// Risk level → badge color classes (Low=green, Medium=amber, High=red)
+const getRiskBadgeClasses = (riskLevel) => {
+  const r = (riskLevel || '').toLowerCase();
+  if (r.includes('low') || r.includes('minimal')) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+  if (r.includes('medium') || r.includes('moderate')) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+  if (r.includes('high') || r.includes('elevated')) return 'bg-red-500/20 text-red-400 border-red-500/30';
+  return 'bg-white/[0.08] text-gray-300 border-white/[0.12]';
+};
+const getRiskBorderClass = (riskLevel) => {
+  const r = (riskLevel || '').toLowerCase();
+  if (r.includes('low') || r.includes('minimal')) return 'border-l-emerald-500/50';
+  if (r.includes('medium') || r.includes('moderate')) return 'border-l-amber-500/50';
+  if (r.includes('high') || r.includes('elevated')) return 'border-l-red-500/50';
+  return 'border-l-white/10';
+};
+
+// Greeting by time of day (for hero)
+const getGreeting = (isTr, name) => {
+  const firstName = (name || '').split(/\s+/)[0] || (isTr ? 'Kullanıcı' : 'there');
+  const hour = new Date().getHours();
+  let timeLabel = isTr ? 'Merhaba' : 'Hi';
+  if (hour >= 5 && hour < 12) timeLabel = isTr ? 'Günaydın' : 'Good morning';
+  else if (hour >= 12 && hour < 17) timeLabel = isTr ? 'İyi günler' : 'Good afternoon';
+  else if (hour >= 17 && hour < 21) timeLabel = isTr ? 'İyi akşamlar' : 'Good evening';
+  else timeLabel = isTr ? 'İyi geceler' : 'Good evening';
+  return `${timeLabel}, ${firstName}`;
 };
 
 export default function Dashboard({ language }) {
@@ -109,46 +147,83 @@ export default function Dashboard({ language }) {
     } catch {}
   };
 
-  // PDF export helper
-  const exportAssessmentPDF = (assessment) => {
-    const payload = assessment.payload || {};
-    const riskFactors = payload.risk_analysis?.risk_factors || [];
-    const recommendations = payload.recommendations || {};
-    const date = assessment.created_at ? new Date(assessment.created_at).toLocaleString() : 'N/A';
+  // Signed PDF export: call backend sign, build PDF with pdf-lib, embed QR, download
+  const [pdfLoading, setPdfLoading] = useState(null);
+  const exportSignedAssessmentPDF = async (assessment) => {
+    setPdfLoading(assessment.id);
+    try {
+      const signResult = await apiService.signAssessmentReport(assessment.id);
+      const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
+      const QRCode = (await import('qrcode')).default;
+      const doc = await PDFDocument.create();
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+      const page = doc.addPage([595, 842]);
+      const { width, height } = page.getSize();
+      let y = height - 50;
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Assessment Report</title>
-<style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:20px;color:#333}
-h1{color:#059669;border-bottom:2px solid #059669;padding-bottom:8px}
-h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;border-radius:8px;font-weight:bold;font-size:18px}
-.high{background:#fee2e2;color:#dc2626}.moderate{background:#fef3c7;color:#d97706}
-.low{background:#d1fae5;color:#059669}.vlow{background:#ecfdf5;color:#10b981}
-.metric{display:inline-block;margin:8px 16px 8px 0;padding:8px 16px;background:#f3f4f6;border-radius:8px}
-.footer{margin-top:32px;padding-top:12px;border-top:1px solid #ddd;font-size:12px;color:#888}
-ul{padding-left:20px}li{margin:4px 0}</style></head><body>
-<h1>Diabetes Risk Assessment Report</h1>
-<p><strong>Date:</strong> ${date}</p>
-<p><strong>Patient:</strong> ${user?.full_name || user?.email || 'N/A'}</p>
-<h2>Risk Level</h2>
-<p><span class="badge ${(assessment.risk_level || '').toLowerCase().includes('high') ? 'high' : (assessment.risk_level || '').toLowerCase().includes('moderate') ? 'moderate' : 'low'}">${assessment.risk_level || 'Unknown'}</span></p>
-<p><strong>Probability:</strong> ${(assessment.probability * 100).toFixed(1)}%</p>
-<h2>Executive Summary</h2>
-<p>${assessment.executive_summary || 'No summary available.'}</p>
-${riskFactors.length ? `<h2>Key Risk Factors</h2><ul>${riskFactors.map(f => `<li>${typeof f === 'string' ? f : f.factor || f.name || JSON.stringify(f)}</li>`).join('')}</ul>` : ''}
-${recommendations.nutrition ? `<h2>Nutrition Recommendations</h2><p>${recommendations.nutrition}</p>` : ''}
-${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendations.fitness}</p>` : ''}
-<div class="footer"><p>Generated by Bonus Life AI Platform. This is not a medical diagnosis. Consult your healthcare provider.</p></div>
-</body></html>`;
+      page.drawText('Diabetes Risk Assessment Report', { x: 50, y, font: fontBold, size: 16, color: rgb(0.02, 0.6, 0.4) });
+      y -= 24;
+      const date = assessment.created_at ? new Date(assessment.created_at).toLocaleString() : 'N/A';
+      page.drawText(`Date: ${date}`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+      y -= 18;
+      page.drawText(`Patient: ${user?.full_name || user?.email || 'N/A'}`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+      y -= 18;
+      page.drawText(`Risk Level: ${assessment.risk_level || 'Unknown'}  |  Probability: ${((assessment.probability || 0) * 100).toFixed(1)}%`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+      y -= 18;
+      const summary = (assessment.executive_summary || 'No summary available.').slice(0, 500);
+      page.drawText('Summary:', { x: 50, y, font: fontBold, size: 11, color: rgb(0.2, 0.2, 0.2) });
+      y -= 14;
+      page.drawText(summary, { x: 50, y, font, size: 10, color: rgb(0.3, 0.3, 0.3), maxWidth: width - 100 });
+      y -= 60;
 
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, '_blank');
-    if (w) {
-      w.onload = () => { setTimeout(() => { w.print(); }, 500); };
-    } else {
+      const qrPayload = JSON.stringify({
+        report_id: signResult.report_id,
+        issued_at: signResult.issued_at,
+        assessment_db_id: signResult.assessment_db_id,
+        payload_hash: signResult.payload_hash,
+        signature_b64: signResult.signature_b64,
+        alg: signResult.alg,
+      });
+      const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 140, margin: 1 });
+      const base64 = qrDataUrl.split(',')[1];
+      const qrBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const qrImage = await doc.embedPng(qrBytes);
+      page.drawImage(qrImage, { x: 50, y: y - 140, width: 120, height: 120 });
+      page.drawText('Scan QR to verify signature', { x: 50, y: y - 152, font, size: 8, color: rgb(0.5, 0.5, 0.5) });
+
+      y -= 180;
+      const medicalStatements = [
+        'This report is for informational purposes only. Clinical decisions should be made in consultation with a qualified healthcare provider.',
+        'Results should be interpreted by a licensed healthcare professional in the context of the full clinical picture.',
+        'This assessment does not replace professional medical advice, diagnosis, or treatment.',
+        'For clinical use only. Interpretation by a qualified healthcare provider is recommended.',
+        'This document supports but does not substitute a comprehensive medical evaluation by your physician.',
+        'Findings are indicative only. Please consult your healthcare provider for personalized medical advice.',
+        'Generated by Bonus Life AI. This tool aids awareness; a healthcare professional should guide any treatment decisions.',
+      ];
+      const statementIndex = signResult.report_id.split('').reduce((acc, c) => (acc + c.charCodeAt(0)) % medicalStatements.length, 0);
+      const medicalStatement = medicalStatements[statementIndex];
+      page.drawText(medicalStatement, { x: 50, y, font, size: 8, color: rgb(0.45, 0.45, 0.5), maxWidth: width - 100 });
+
+      const pdfBytes = await doc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `assessment-${assessment.id}.html`; a.click();
+      a.href = url;
+      a.download = `assessment-${assessment.id}-signed.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      const msg = err.message || '';
+      const is404 = msg.includes('404');
+      const friendly = is404
+        ? (isTr ? 'PDF imzalama servisi bulunamadı (404). Backend çalışıyor mu?' : 'PDF signing service not found (404). Is the backend running?')
+        : (msg || (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
+      alert(friendly);
+    } finally {
+      setPdfLoading(null);
     }
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
 
   // Share assessment
@@ -170,7 +245,6 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
 
   const [deletingId, setDeletingId] = useState(null);
   const handleDeleteAssessment = async (a) => {
-    if (!window.confirm(isTr ? 'Bu değerlendirmeyi silmek istediğinize emin misiniz?' : 'Are you sure you want to delete this assessment?')) return;
     setDeletingId(`a-${a.id}`);
     try {
       await apiService.deleteAssessment(a.id);
@@ -182,7 +256,6 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
     }
   };
   const handleDeleteDietPlan = async (d) => {
-    if (!window.confirm(isTr ? 'Bu diyet planını silmek istediğinize emin misiniz?' : 'Are you sure you want to delete this diet plan?')) return;
     setDeletingId(`d-${d.id}`);
     try {
       await apiService.deleteDietPlan(d.id);
@@ -273,35 +346,41 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-24">
-      <h1 className="text-3xl font-bold text-white mb-2">
-        {isTr ? 'Kontrol Paneli' : 'Dashboard'}
-      </h1>
-      <p className="text-gray-500 mb-6">
-        {isTr ? 'Araçlara hızlı erişim ve kayıtlarınız' : 'Quick access to tools and your records'}
-      </p>
+    <div className="max-w-5xl mx-auto px-6 pt-32 pb-24">
+      <header className="relative rounded-2xl mb-8 p-6 bg-gradient-to-br from-white/[0.04] via-transparent to-emerald-500/[0.04] border border-white/[0.06]">
+        <p className="text-sm font-medium text-emerald-400/90 mb-1">{getGreeting(isTr, user?.full_name)}</p>
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
+          {isTr ? 'Kontrol Paneli' : 'Dashboard'}
+        </h1>
+        <p className="text-gray-400">
+          {isTr ? 'Araçlara hızlı erişim ve kayıtlarınız' : 'Quick access to tools and your records'}
+        </p>
+      </header>
 
-      {/* Feature f1: Announcements Banner (dismissible, stays hidden per user) */}
+      {/* Feature f1: Announcements Banner (dismissible, max-height + fade) */}
       {visibleAnnouncements.length > 0 && (
-        <div className="mb-6 space-y-2">
-          {visibleAnnouncements.slice(0, 3).map((ann) => (
-            <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 relative">
-              <Megaphone className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-amber-300">{ann.title}</p>
-                <p className="text-xs text-amber-400/70 mt-0.5">{ann.message}</p>
+        <div className="mb-6 relative max-h-48 overflow-y-auto overflow-x-hidden rounded-xl">
+          <div className="space-y-2 pr-2">
+            {visibleAnnouncements.slice(0, 3).map((ann) => (
+              <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 relative">
+                <Megaphone className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-amber-300">{ann.title}</p>
+                  <p className="text-xs text-amber-400/70 mt-0.5">{ann.message}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => dismissAnnouncement(ann.id)}
+                  className="p-1.5 rounded-lg text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/20 transition shrink-0 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  title={isTr ? 'Kapat (bir daha gösterme)' : 'Dismiss (don\'t show again)'}
+                  aria-label={isTr ? 'Duyuruyu kapat' : 'Dismiss announcement'}
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => dismissAnnouncement(ann.id)}
-                className="p-1.5 rounded-lg text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/20 transition shrink-0"
-                title={isTr ? 'Kapat (bir daha gösterme)' : 'Dismiss (don\'t show again)'}
-                aria-label={isTr ? 'Duyuruyu kapat' : 'Dismiss announcement'}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="sticky bottom-0 left-0 right-0 h-8 pointer-events-none bg-gradient-to-t from-[#060611] to-transparent" aria-hidden="true" />
         </div>
       )}
 
@@ -340,21 +419,25 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-8 border-b border-white/[0.06] overflow-x-auto">
-        {[
-          { id: 'overview', labelEn: 'Overview', labelTr: 'Genel Bakış' },
-          { id: 'assessments', labelEn: 'My Assessments', labelTr: 'Değerlendirmelerim' },
-          { id: 'diet-plans', labelEn: 'My Diet Plans', labelTr: 'Diyet Planlarım' },
-          { id: 'profile', labelEn: 'Profile', labelTr: 'Profil' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition whitespace-nowrap ${activeTab === tab.id ? 'bg-white/[0.06] text-emerald-400 border-b-2 border-emerald-500' : 'text-gray-500 hover:text-white'}`}
-          >
-            {isTr ? tab.labelTr : tab.labelEn}
-          </button>
-        ))}
+      <div className="relative mb-8">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent" style={{ scrollbarWidth: 'thin' }}>
+          {[
+            { id: 'overview', labelEn: 'Overview', labelTr: 'Genel Bakış', dataTour: 'dashboard-tab-overview' },
+            { id: 'assessments', labelEn: 'My Assessments', labelTr: 'Değerlendirmelerim', dataTour: 'dashboard-tab-assessments' },
+            { id: 'diet-plans', labelEn: 'My Diet Plans', labelTr: 'Diyet Planlarım', dataTour: 'dashboard-tab-diet-plans' },
+            { id: 'profile', labelEn: 'Profile', labelTr: 'Profil', dataTour: 'dashboard-tab-profile' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              data-tour={tab.dataTour}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2.5 text-sm font-medium rounded-full transition whitespace-nowrap shrink-0 ${activeTab === tab.id ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/40' : 'text-gray-500 hover:text-white hover:bg-white/[0.06]'}`}
+            >
+              {isTr ? tab.labelTr : tab.labelEn}
+            </button>
+          ))}
+        </div>
+        <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-[#060611] to-transparent pointer-events-none" aria-hidden="true" />
       </div>
 
       {/* Feature f3: Global error with retry */}
@@ -373,29 +456,41 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
 
       {activeTab === 'overview' && (
         <>
-          <section className="mb-10">
-            <h2 className="text-lg font-semibold text-white mb-4">{isTr ? 'Araçlar' : 'Tools'}</h2>
+          <section className="mb-10" data-tour="dashboard-tools">
+            <h2 className="text-lg font-semibold text-white mb-4 tracking-tight">{isTr ? 'Araçlar' : 'Tools'}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {cardLinks.map(({ path, labelEn, labelTr, icon: Icon }) => (
-                <Link
-                  key={path}
-                  to={path}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-emerald-400" />
-                  </div>
-                  <span className="text-white font-medium">{isTr ? labelTr : labelEn}</span>
-                  <ChevronRight className="w-5 h-5 text-gray-500 ml-auto" />
-                </Link>
-              ))}
+              {cardLinks.map(({ path, labelEn, labelTr, icon: Icon, accent, primary }) => {
+                const styles = {
+                  emerald: { card: 'hover:border-emerald-500/30', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400' },
+                  blue: { card: 'hover:border-blue-500/30', iconBg: 'bg-blue-500/10', iconColor: 'text-blue-400' },
+                  cyan: { card: 'hover:border-cyan-500/30', iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-400' },
+                  amber: { card: 'hover:border-amber-500/30', iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400' },
+                  gray: { card: 'hover:border-white/20', iconBg: 'bg-white/[0.08]', iconColor: 'text-gray-300' },
+                };
+                const s = styles[accent] || styles.emerald;
+                return (
+                  <FluidCard
+                    key={path}
+                    as={Link}
+                    to={path}
+                    className={`flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:shadow-lg hover:shadow-black/20 hover:scale-[1.02] transition cursor-grab active:cursor-grabbing ${s.card}`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${s.iconBg}`}>
+                      <Icon className={`w-6 h-6 ${s.iconColor}`} />
+                    </div>
+                    <span className={`text-white font-medium ${primary ? 'font-semibold' : ''}`}>{isTr ? labelTr : labelEn}</span>
+                    <ChevronRight className="w-5 h-5 text-gray-500 ml-auto" />
+                  </FluidCard>
+                );
+              })}
             </div>
           </section>
-          <section>
-            <h2 className="text-lg font-semibold text-white mb-4">{isTr ? 'Özet' : 'Summary'}</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+
+          <section className="mb-10">
+            <h2 className="text-lg font-semibold text-white mb-4 tracking-tight">{isTr ? 'Özet' : 'Summary'}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FluidCard className="p-4 rounded-xl bg-gradient-to-br from-white/[0.04] to-emerald-500/[0.06] border border-white/[0.06] cursor-grab active:cursor-grabbing">
+                <div className="flex items-center gap-2 text-emerald-400/90 text-sm mb-1">
                   <FileText className="w-4 h-4" /> {isTr ? 'Değerlendirmeler' : 'Assessments'}
                 </div>
                 {loading ? (
@@ -403,9 +498,9 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                 ) : (
                   <p className="text-2xl font-bold text-white">{assessments.length}</p>
                 )}
-              </div>
-              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+              </FluidCard>
+              <FluidCard className="p-4 rounded-xl bg-gradient-to-br from-white/[0.04] to-cyan-500/[0.06] border border-white/[0.06] cursor-grab active:cursor-grabbing">
+                <div className="flex items-center gap-2 text-cyan-400/90 text-sm mb-1">
                   <UtensilsCrossed className="w-4 h-4" /> {isTr ? 'Diyet Planları' : 'Diet plans'}
                 </div>
                 {loading ? (
@@ -413,26 +508,53 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                 ) : (
                   <p className="text-2xl font-bold text-white">{dietPlans.length}</p>
                 )}
-              </div>
+              </FluidCard>
+              <FluidCard className="p-4 rounded-xl bg-gradient-to-br from-white/[0.04] to-white/[0.06] border border-white/[0.06] cursor-grab active:cursor-grabbing">
+                <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+                  <Calendar className="w-4 h-4" /> {isTr ? 'Son değerlendirme' : 'Last assessment'}
+                </div>
+                {loading ? (
+                  <div className="h-8 w-20 rounded bg-white/[0.06] animate-pulse" />
+                ) : assessments.length > 0 && assessments[0].created_at ? (
+                  (() => {
+                    const last = new Date(assessments[0].created_at);
+                    const now = new Date();
+                    const days = Math.floor((now - last) / (24 * 60 * 60 * 1000));
+                    const label = days === 0 ? (isTr ? 'Bugün' : 'Today') : days === 1 ? (isTr ? '1 gün önce' : '1 day ago') : isTr ? `${days} gün önce` : `${days} days ago`;
+                    return <p className="text-2xl font-bold text-white">{label}</p>;
+                  })()
+                ) : (
+                  <p className="text-lg font-medium text-gray-500">{isTr ? 'Henüz yok' : 'None yet'}</p>
+                )}
+              </FluidCard>
             </div>
           </section>
 
           {/* Latest assessment summary */}
           {!loading && assessments.length > 0 && (
-            <section className="mt-6">
+            <section className="mt-8">
               <h2 className="text-lg font-semibold text-white mb-4">{isTr ? 'Son Değerlendirme' : 'Latest Assessment'}</h2>
-              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-white">{assessments[0].risk_level} · {(assessments[0].probability * 100).toFixed(0)}%</p>
-                    <p className="text-sm text-gray-500 truncate max-w-md mt-1">{assessments[0].executive_summary}</p>
-                    {assessments[0].created_at && <p className="text-xs text-gray-600 mt-1">{new Date(assessments[0].created_at).toLocaleString()}</p>}
+              <div className={`p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 ${getRiskBorderClass(assessments[0].risk_level)}`}>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${getRiskBadgeClasses(assessments[0].risk_level)}`}>
+                      {assessments[0].risk_level} · {(assessments[0].probability * 100).toFixed(0)}%
+                    </span>
+                    <p className="text-sm text-gray-400 truncate max-w-md mt-2">{assessments[0].executive_summary}</p>
+                    {assessments[0].created_at && <p className="text-xs text-gray-500 mt-1">{new Date(assessments[0].created_at).toLocaleString()}</p>}
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => exportAssessmentPDF(assessments[0])} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-emerald-400 transition" title={isTr ? 'PDF İndir' : 'Download PDF'}>
-                      <Download className="w-4 h-4" />
+                  <div className="flex gap-2 shrink-0">
+                    <Link
+                      to={ROUTES.TEST}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#060611]"
+                    >
+                      {isTr ? 'Yeni değerlendirme' : 'New assessment'}
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <button onClick={() => exportSignedAssessmentPDF(assessments[0])} disabled={pdfLoading === assessments[0].id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
+                      {pdfLoading === assessments[0].id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                     </button>
-                    <button onClick={() => handleShare(assessments[0].id)} disabled={shareLoading === assessments[0].id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-emerald-400 transition" title={isTr ? 'Doktora Paylaş' : 'Share with Doctor'}>
+                    <button onClick={() => handleShare(assessments[0].id)} disabled={shareLoading === assessments[0].id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} aria-label={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} data-tour="dashboard-share">
                       {shareLoading === assessments[0].id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                     </button>
                   </div>
@@ -457,7 +579,9 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
               {assessments.length >= 2 && (
                 <button
                   onClick={() => { setCompareMode(!compareMode); setCompareIds([]); }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition ${compareMode ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.05] text-gray-400 hover:text-white border border-white/[0.08]'}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${compareMode ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.05] text-gray-400 hover:text-white border border-white/[0.08]'}`}
+                  aria-pressed={compareMode}
+                  aria-label={isTr ? 'Değerlendirmeleri karşılaştır' : 'Compare assessments'}
                 >
                   <GitCompare className="w-3.5 h-3.5" />
                   {isTr ? 'Karşılaştır' : 'Compare'}
@@ -468,50 +592,97 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
 
           {/* Date + Search filters */}
           {!loading && assessments.length > 0 && (
-            <div className="flex flex-wrap gap-3 mb-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <div className="relative flex-1 min-w-[180px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  value={assessmentSearch}
-                  onChange={(e) => setAssessmentSearch(e.target.value)}
-                  placeholder={isTr ? 'Ara (risk, özet…)' : 'Search (risk, summary…)'}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:border-emerald-500/50"
-                />
+            <>
+              <div className="flex flex-wrap gap-3 mb-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" aria-hidden="true" />
+                  <input
+                    type="text"
+                    value={assessmentSearch}
+                    onChange={(e) => setAssessmentSearch(e.target.value)}
+                    placeholder={isTr ? 'Ara (risk, özet…)' : 'Search (risk, summary…)'}
+                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+                    aria-label={isTr ? 'Değerlendirme ara' : 'Search assessments'}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <Calendar className="w-4 h-4 text-gray-500" aria-hidden="true" />
+                  <input type="date" value={assessmentDateFrom} onChange={(e) => setAssessmentDateFrom(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Başlangıç' : 'From'} aria-label={isTr ? 'Başlangıç tarihi' : 'From date'} />
+                  <span className="text-gray-500 text-sm">–</span>
+                  <input type="date" value={assessmentDateTo} onChange={(e) => setAssessmentDateTo(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Bitiş' : 'To'} aria-label={isTr ? 'Bitiş tarihi' : 'To date'} />
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 items-center">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <input type="date" value={assessmentDateFrom} onChange={(e) => setAssessmentDateFrom(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-emerald-500/50" title={isTr ? 'Başlangıç' : 'From'} />
-                <span className="text-gray-500 text-sm">–</span>
-                <input type="date" value={assessmentDateTo} onChange={(e) => setAssessmentDateTo(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-emerald-500/50" title={isTr ? 'Bitiş' : 'To'} />
-              </div>
-            </div>
+              {(assessmentSearch || assessmentDateFrom || assessmentDateTo) && (
+                <div className="flex flex-wrap gap-2 mb-4 items-center">
+                  {assessmentSearch && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-xs border border-emerald-500/25">
+                      {isTr ? 'Ara' : 'Search'}: {assessmentSearch}
+                      <button type="button" onClick={() => setAssessmentSearch('')} className="hover:bg-emerald-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {assessmentDateFrom && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
+                      {isTr ? 'Başlangıç' : 'From'}: {assessmentDateFrom}
+                      <button type="button" onClick={() => setAssessmentDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {assessmentDateTo && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
+                      {isTr ? 'Bitiş' : 'To'}: {assessmentDateTo}
+                      <button type="button" onClick={() => setAssessmentDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-xs text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded px-2 py-1">
+                    {isTr ? 'Filtreleri temizle' : 'Clear all'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
-          {/* Feature f3: Loading skeleton */}
+          {/* Loading skeleton — matches assessment card layout */}
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] animate-pulse">
-                  <div className="h-4 w-40 bg-white/[0.06] rounded mb-2" />
-                  <div className="h-3 w-64 bg-white/[0.06] rounded mb-1" />
-                  <div className="h-2.5 w-24 bg-white/[0.06] rounded" />
+                <div key={i} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 border-l-white/10 animate-pulse">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="h-5 w-28 rounded-lg bg-white/[0.08]" />
+                      <div className="h-3 w-full max-w-md rounded bg-white/[0.06]" />
+                      <div className="h-3 w-3/4 max-w-xs rounded bg-white/[0.06]" />
+                      <div className="h-3 w-32 rounded bg-white/[0.06] mt-1.5" />
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <div className="h-8 w-8 rounded-lg bg-white/[0.06]" />
+                      <div className="h-8 w-8 rounded-lg bg-white/[0.06]" />
+                      <div className="h-8 w-8 rounded-lg bg-white/[0.06]" />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           ) : assessments.length === 0 ? (
-            <div className="text-center py-12">
-              <Activity className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-500">{isTr ? 'Henüz değerlendirme yok.' : 'No assessments yet.'}</p>
-              <Link to={ROUTES.TEST} className="inline-flex items-center gap-2 mt-3 text-sm text-emerald-400 hover:text-emerald-300">
-                {isTr ? 'İlk değerlendirmenizi yapın' : 'Take your first assessment'} <ArrowRight className="w-3.5 h-3.5" />
+            <div className="text-center py-14 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+                <Activity className="w-7 h-7 text-emerald-400" />
+              </div>
+              <h3 className="text-white font-semibold mb-1">{isTr ? 'Henüz değerlendirme yok' : 'No assessments yet'}</h3>
+              <p className="text-gray-400 text-sm max-w-sm mx-auto mb-5">{isTr ? 'İlk değerlendirmenizi yaparak diyabet riskinizi öğrenin.' : 'Take your first assessment to learn your diabetes risk.'}</p>
+              <Link to={ROUTES.TEST} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#060611]">
+                {isTr ? 'İlk değerlendirmenizi yapın' : 'Take your first assessment'} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           ) : filteredAssessments.length === 0 ? (
-            <div className="text-center py-8">
-              <Search className="w-10 h-10 text-gray-600 mx-auto mb-2" />
-              <p className="text-gray-500">{isTr ? 'Filtreye uyan değerlendirme yok.' : 'No assessments match the filters.'}</p>
-              <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="mt-2 text-sm text-emerald-400 hover:text-emerald-300">
+            <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
+              <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+              <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan değerlendirme yok.' : 'No assessments match the filters.'}</p>
+              <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-sm text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded-lg px-3 py-1.5">
                 {isTr ? 'Filtreleri temizle' : 'Clear filters'}
               </button>
             </div>
@@ -522,24 +693,31 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                 <div className="mb-6 p-4 rounded-xl bg-white/[0.03] border border-emerald-500/20">
                   <h3 className="text-sm font-semibold text-emerald-400 mb-3">{isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {comparedAssessments.map((a, i) => (
+                    {comparedAssessments.map((a) => (
                       <div key={a.id} className="space-y-2">
                         <p className="text-xs text-gray-500">{a.created_at ? new Date(a.created_at).toLocaleDateString() : 'N/A'}</p>
-                        <p className="text-white font-medium">{a.risk_level}</p>
-                        <p className="text-lg font-bold text-white">{(a.probability * 100).toFixed(1)}%</p>
-                        <p className="text-xs text-gray-400 line-clamp-2">{a.executive_summary}</p>
+                        <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${getRiskBadgeClasses(a.risk_level)}`}>
+                          {a.risk_level} · {(a.probability * 100).toFixed(1)}%
+                        </span>
+                        <p className="text-xs text-gray-400 line-clamp-2 mt-1">{a.executive_summary}</p>
                       </div>
                     ))}
                   </div>
                   {(() => {
                     const diff = comparedAssessments[1].probability - comparedAssessments[0].probability;
                     const improved = diff < 0;
+                    const pct = (Math.abs(diff) * 100).toFixed(1);
                     return (
-                      <div className={`mt-3 p-2 rounded-lg text-sm ${improved ? 'bg-emerald-500/10 text-emerald-400' : diff > 0 ? 'bg-red-500/10 text-red-400' : 'bg-white/[0.05] text-gray-400'}`}>
+                      <div className={`mt-3 p-3 rounded-lg text-sm flex items-center gap-2 ${improved ? 'bg-emerald-500/10 text-emerald-400' : diff > 0 ? 'bg-red-500/10 text-red-400' : 'bg-white/[0.05] text-gray-400'}`}>
+                        {diff !== 0 && (
+                          <span className="shrink-0" aria-hidden="true">
+                            {improved ? <span className="text-emerald-400">↓</span> : <span className="text-red-400">↑</span>}
+                          </span>
+                        )}
                         {improved
-                          ? (isTr ? `Risk ${(Math.abs(diff) * 100).toFixed(1)}% azaldı — İyi ilerleme!` : `Risk decreased by ${(Math.abs(diff) * 100).toFixed(1)}% — Good progress!`)
+                          ? (isTr ? `Risk ${pct}% azaldı — İyi ilerleme!` : `Risk decreased by ${pct}% — Good progress!`)
                           : diff > 0
-                            ? (isTr ? `Risk ${(diff * 100).toFixed(1)}% arttı` : `Risk increased by ${(diff * 100).toFixed(1)}%`)
+                            ? (isTr ? `Risk ${pct}% arttı` : `Risk increased by ${pct}%`)
                             : (isTr ? 'Değişiklik yok' : 'No change')}
                       </div>
                     );
@@ -547,29 +725,35 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                 </div>
               )}
               {compareMode && compareIds.length < 2 && (
-                <p className="text-sm text-gray-400 mb-4">
-                  {isTr ? 'Karşılaştırmak için 2 değerlendirme seçin' : 'Select 2 assessments to compare'}
-                </p>
+                <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+                  <GitCompare className="w-5 h-5 text-amber-400 shrink-0" />
+                  <p className="text-sm text-amber-200/90">
+                    {isTr ? 'Karşılaştırmak için 2 değerlendirme seçin' : 'Select 2 assessments to compare'}
+                  </p>
+                </div>
               )}
 
               <ul className="space-y-3">
                 {filteredAssessments.map((a) => (
-                  <li key={a.id} className={`p-4 rounded-xl bg-white/[0.03] border transition ${compareMode && compareIds.includes(a.id) ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-white/[0.06]'}`}>
+                  <li key={a.id} className={`p-4 rounded-xl bg-white/[0.03] border border-l-4 transition hover:border-emerald-500/30 ${compareMode && compareIds.includes(a.id) ? 'border-emerald-500/40 bg-emerald-500/5 border-l-emerald-500/60' : `border-white/[0.06] ${getRiskBorderClass(a.risk_level)}`}`}>
                     <div className="flex justify-between items-start">
                       <div className="flex items-start gap-3 min-w-0 flex-1">
                         {compareMode && (
                           <button
                             onClick={() => toggleCompare(a.id)}
-                            className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition ${compareIds.includes(a.id) ? 'bg-emerald-500 border-emerald-500' : 'border-white/20 hover:border-emerald-500/50'}`}
+                            className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${compareIds.includes(a.id) ? 'bg-emerald-500 border-emerald-500' : 'border-white/20 hover:border-emerald-500/50'}`}
+                            aria-label={compareIds.includes(a.id) ? (isTr ? 'Karşılaştırmadan çıkar' : 'Deselect from compare') : (isTr ? 'Karşılaştırmaya ekle' : 'Select to compare')}
                           >
                             {compareIds.includes(a.id) && <Check className="w-3 h-3 text-white" />}
                           </button>
                         )}
                         <div className="min-w-0">
-                          <p className="font-medium text-white">{a.risk_level} · {(a.probability * 100).toFixed(0)}%</p>
-                          <p className="text-sm text-gray-500 truncate max-w-md">{a.executive_summary}</p>
+                          <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${getRiskBadgeClasses(a.risk_level)}`}>
+                            {a.risk_level} · {(a.probability * 100).toFixed(0)}%
+                          </span>
+                          <p className="text-sm text-gray-400 mt-2 line-clamp-2 max-w-md">{a.executive_summary}</p>
                           {a.created_at && (
-                            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                            <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {new Date(a.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })} · {new Date(a.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                             </p>
@@ -578,13 +762,13 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                       </div>
                       {!compareMode && (
                         <div className="flex gap-1 shrink-0 ml-3">
-                          <button onClick={() => exportAssessmentPDF(a)} className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition" title={isTr ? 'PDF İndir' : 'Download PDF'}>
-                            <Download className="w-4 h-4" />
+                          <button onClick={() => exportSignedAssessmentPDF(a)} disabled={pdfLoading === a.id} className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'}>
+                            {pdfLoading === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                           </button>
-                          <button onClick={() => handleShare(a.id)} disabled={shareLoading === a.id} className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition" title={isTr ? 'Paylaş' : 'Share'}>
+                          <button onClick={() => handleShare(a.id)} disabled={shareLoading === a.id} className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Paylaş' : 'Share'} aria-label={isTr ? 'Paylaş' : 'Share'}>
                             {shareLoading === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                           </button>
-                          <button onClick={() => handleDeleteAssessment(a)} disabled={deletingId === `a-${a.id}`} className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition" title={isTr ? 'Sil' : 'Delete'}>
+                          <button onClick={() => handleDeleteAssessment(a)} disabled={deletingId === `a-${a.id}`} className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition focus:outline-none focus:ring-2 focus:ring-red-500/50" title={isTr ? 'Sil' : 'Delete'} aria-label={isTr ? 'Sil' : 'Delete'}>
                             {deletingId === `a-${a.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                           </button>
                         </div>
@@ -615,49 +799,95 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
 
           {/* Date + Search filters for diet plans */}
           {!loading && dietPlans.length > 0 && (
-            <div className="flex flex-wrap gap-3 mb-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <div className="relative flex-1 min-w-[180px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  value={dietPlanSearch}
-                  onChange={(e) => setDietPlanSearch(e.target.value)}
-                  placeholder={isTr ? 'Ara (hedef, özet…)' : 'Search (goal, overview…)'}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:border-emerald-500/50"
-                />
+            <>
+              <div className="flex flex-wrap gap-3 mb-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" aria-hidden="true" />
+                  <input
+                    type="text"
+                    value={dietPlanSearch}
+                    onChange={(e) => setDietPlanSearch(e.target.value)}
+                    placeholder={isTr ? 'Ara (hedef, özet…)' : 'Search (goal, overview…)'}
+                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+                    aria-label={isTr ? 'Diyet planı ara' : 'Search diet plans'}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <Calendar className="w-4 h-4 text-gray-500" aria-hidden="true" />
+                  <input type="date" value={dietPlanDateFrom} onChange={(e) => setDietPlanDateFrom(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Başlangıç' : 'From'} aria-label={isTr ? 'Başlangıç tarihi' : 'From date'} />
+                  <span className="text-gray-500 text-sm">–</span>
+                  <input type="date" value={dietPlanDateTo} onChange={(e) => setDietPlanDateTo(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Bitiş' : 'To'} aria-label={isTr ? 'Bitiş tarihi' : 'To date'} />
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 items-center">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <input type="date" value={dietPlanDateFrom} onChange={(e) => setDietPlanDateFrom(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-emerald-500/50" title={isTr ? 'Başlangıç' : 'From'} />
-                <span className="text-gray-500 text-sm">–</span>
-                <input type="date" value={dietPlanDateTo} onChange={(e) => setDietPlanDateTo(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-emerald-500/50" title={isTr ? 'Bitiş' : 'To'} />
-              </div>
-            </div>
+              {(dietPlanSearch || dietPlanDateFrom || dietPlanDateTo) && (
+                <div className="flex flex-wrap gap-2 mb-4 items-center">
+                  {dietPlanSearch && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 text-xs border border-cyan-500/25">
+                      {isTr ? 'Ara' : 'Search'}: {dietPlanSearch}
+                      <button type="button" onClick={() => setDietPlanSearch('')} className="hover:bg-cyan-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {dietPlanDateFrom && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
+                      {isTr ? 'Başlangıç' : 'From'}: {dietPlanDateFrom}
+                      <button type="button" onClick={() => setDietPlanDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {dietPlanDateTo && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
+                      {isTr ? 'Bitiş' : 'To'}: {dietPlanDateTo}
+                      <button type="button" onClick={() => setDietPlanDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-xs text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded px-2 py-1">
+                    {isTr ? 'Filtreleri temizle' : 'Clear all'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {loading ? (
             <div className="space-y-3">
-              {[1, 2].map(i => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] animate-pulse">
-                  <div className="h-4 w-32 bg-white/[0.06] rounded mb-2" />
-                  <div className="h-3 w-56 bg-white/[0.06] rounded mb-1" />
-                  <div className="h-2.5 w-20 bg-white/[0.06] rounded" />
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="h-4 w-40 rounded bg-white/[0.08]" />
+                      <div className="h-3 w-full max-w-md rounded bg-white/[0.06]" />
+                      <div className="h-3 w-36 rounded bg-white/[0.06] mt-1.5" />
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <div className="h-9 w-9 rounded-lg bg-white/[0.06]" />
+                      <div className="h-9 w-9 rounded-lg bg-white/[0.06]" />
+                      <div className="h-9 w-9 rounded-lg bg-white/[0.06]" />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           ) : dietPlans.length === 0 ? (
-            <div className="text-center py-12">
-              <Salad className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-500">{isTr ? 'Henüz diyet planı yok.' : 'No diet plans yet.'}</p>
-              <Link to={ROUTES.DIET_PLAN} className="inline-flex items-center gap-2 mt-3 text-sm text-emerald-400 hover:text-emerald-300">
-                {isTr ? 'Bir plan oluşturun' : 'Create a plan'} <ArrowRight className="w-3.5 h-3.5" />
+            <div className="text-center py-14 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
+              <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+                <Salad className="w-7 h-7 text-cyan-400" />
+              </div>
+              <h3 className="text-white font-semibold mb-1">{isTr ? 'Henüz diyet planı yok' : 'No diet plans yet'}</h3>
+              <p className="text-gray-400 text-sm max-w-sm mx-auto mb-5">{isTr ? 'Hedefinize uygun kişiselleştirilmiş bir diyet planı oluşturun.' : 'Create a personalized diet plan for your goals.'}</p>
+              <Link to={ROUTES.DIET_PLAN} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#060611]">
+                {isTr ? 'Bir plan oluşturun' : 'Create a plan'} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           ) : filteredDietPlans.length === 0 ? (
-            <div className="text-center py-8">
-              <Search className="w-10 h-10 text-gray-600 mx-auto mb-2" />
-              <p className="text-gray-500">{isTr ? 'Filtreye uyan diyet planı yok.' : 'No diet plans match the filters.'}</p>
-              <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="mt-2 text-sm text-emerald-400 hover:text-emerald-300">
+            <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
+              <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+              <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan diyet planı yok.' : 'No diet plans match the filters.'}</p>
+              <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-sm text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded-lg px-3 py-1.5">
                 {isTr ? 'Filtreleri temizle' : 'Clear filters'}
               </button>
             </div>
@@ -666,11 +896,11 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
               {filteredDietPlans.map((d) => {
                 const payload = d.payload || {};
                 return (
-                  <li key={d.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1] transition">
+                  <li key={d.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 border-l-emerald-500/50 hover:border-emerald-500/30 transition">
                     <div className="flex justify-between items-start gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-white">{dietGoalDisplay(d.goal, isTr)}</p>
-                        <p className="text-sm text-gray-500 line-clamp-2">{d.overview}</p>
+                        <p className="text-sm text-gray-400 line-clamp-2 mt-1">{d.overview}</p>
                         {d.created_at && (
                           <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
@@ -679,7 +909,7 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                         )}
                       </div>
                       <div className="flex gap-1 shrink-0">
-                        <button onClick={() => setSelectedDietPlan(d)} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition" title={isTr ? 'Planı görüntüle' : 'View plan'}>
+                        <button onClick={() => setSelectedDietPlan(d)} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Planı görüntüle' : 'View plan'} aria-label={isTr ? 'Planı görüntüle' : 'View plan'}>
                           <Eye className="w-4 h-4" />
                         </button>
                         {payload.grocery_list && (
@@ -694,13 +924,14 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                               a.click();
                               URL.revokeObjectURL(url);
                             }}
-                            className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition"
+                            className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             title={isTr ? 'Alışveriş Listesi' : 'Grocery List'}
+                            aria-label={isTr ? 'Alışveriş listesini indir' : 'Download grocery list'}
                           >
                             <Download className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={() => handleDeleteDietPlan(d)} disabled={deletingId === `d-${d.id}`} className="p-2 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition" title={isTr ? 'Sil' : 'Delete'}>
+                        <button onClick={() => handleDeleteDietPlan(d)} disabled={deletingId === `d-${d.id}`} className="p-2 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition focus:outline-none focus:ring-2 focus:ring-red-500/50" title={isTr ? 'Sil' : 'Delete'} aria-label={isTr ? 'Sil' : 'Delete'}>
                           {deletingId === `d-${d.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                         </button>
                       </div>
@@ -717,13 +948,13 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
       {selectedDietPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedDietPlan(null)}>
           <div className="bg-[#12121f] border border-white/[0.1] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b border-white/[0.06] flex items-center justify-between shrink-0">
+            <div className="sticky top-0 z-10 p-4 border-b border-white/[0.06] flex items-center justify-between shrink-0 bg-[#12121f]">
               <h3 className="text-lg font-semibold text-white">{dietGoalDisplay(selectedDietPlan.goal, isTr)}</h3>
-              <button onClick={() => setSelectedDietPlan(null)} className="p-2 rounded-lg hover:bg-white/[0.08] text-gray-400 hover:text-white transition">
+              <button onClick={() => setSelectedDietPlan(null)} className="p-2 rounded-lg hover:bg-white/[0.08] text-gray-400 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kapat' : 'Close'}>
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 overflow-y-auto space-y-4 flex-1">
+            <div className="p-4 overflow-y-auto space-y-4 flex-1" id="diet-plan-modal-content">
               {selectedDietPlan.created_at && (
                 <p className="text-sm text-gray-500 flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
@@ -735,25 +966,25 @@ ${recommendations.fitness ? `<h2>Fitness Recommendations</h2><p>${recommendation
                 return (
                   <>
                     {p.overview && (
-                      <div>
+                      <div id="diet-plan-overview">
                         <h4 className="text-sm font-semibold text-emerald-400 mb-1">{isTr ? 'Genel Bakış' : 'Overview'}</h4>
                         <p className="text-sm text-gray-300 whitespace-pre-line">{p.overview}</p>
                       </div>
                     )}
                     {p.daily_plan && (
-                      <div>
+                      <div id="diet-plan-daily">
                         <h4 className="text-sm font-semibold text-emerald-400 mb-1">{isTr ? 'Günlük Öğünler' : 'Daily Meals'}</h4>
                         <p className="text-sm text-gray-300 whitespace-pre-line">{p.daily_plan}</p>
                       </div>
                     )}
                     {p.grocery_list && (
-                      <div>
+                      <div id="diet-plan-grocery">
                         <h4 className="text-sm font-semibold text-emerald-400 mb-1">{isTr ? 'Alışveriş Listesi' : 'Grocery List'}</h4>
                         <p className="text-sm text-gray-300 whitespace-pre-line">{typeof p.grocery_list === 'string' ? p.grocery_list : JSON.stringify(p.grocery_list, null, 2)}</p>
                       </div>
                     )}
                     {p.important_notes && (
-                      <div>
+                      <div id="diet-plan-notes">
                         <h4 className="text-sm font-semibold text-blue-400 mb-1">{isTr ? 'Önemli Notlar' : 'Important Notes'}</h4>
                         <p className="text-sm text-gray-300 whitespace-pre-line">{p.important_notes}</p>
                       </div>
@@ -821,12 +1052,37 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
   const [dietPref, setDietPref] = useState(user?.dietary_preference || '');
   const [allergies, setAllergies] = useState(user?.allergies || '');
   const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || '');
+  const [dietDropdownOpen, setDietDropdownOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const dietDropdownRef = useRef(null);
+  const langDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dietDropdownRef.current && !dietDropdownRef.current.contains(e.target)) setDietDropdownOpen(false);
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) setLangDropdownOpen(false);
+    }
+    if (dietDropdownOpen || langDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [dietDropdownOpen, langDropdownOpen]);
 
   // Feature f15: 2FA state
   const [show2FA, setShow2FA] = useState(false);
   const [twoFAData, setTwoFAData] = useState(null);
   const [twoFACode, setTwoFACode] = useState('');
   const [twoFALoading, setTwoFALoading] = useState(false);
+
+  // Face login
+  const [hasFace, setHasFace] = useState(false);
+  const [faceEnabled, setFaceEnabled] = useState(false);
+  const [faceEnrollLoading, setFaceEnrollLoading] = useState(false);
+  const [faceEnrollOpen, setFaceEnrollOpen] = useState(false);
+  const [faceCameraActive, setFaceCameraActive] = useState(false);
+  const [faceToggleLoading, setFaceToggleLoading] = useState(false);
+  const faceVideoRef = useRef(null);
+  const faceStreamRef = useRef(null);
 
   useEffect(() => {
     setAvatarUrl(user?.avatar_url || '');
@@ -839,7 +1095,85 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
     setAvatarError(false);
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    faceStatus().then((r) => {
+      setHasFace(!!r.enrolled);
+      setFaceEnabled(!!r.enabled);
+    }).catch(() => { setHasFace(false); setFaceEnabled(false); });
+  }, [user]);
+
+  // Preload face models as soon as the modal opens so Capture is faster
+  useEffect(() => {
+    if (faceEnrollOpen) {
+      import('../utils/faceEmbedding').then((m) => m.preloadFaceModels());
+    }
+  }, [faceEnrollOpen]);
+
+  const handleFaceToggle = async () => {
+    setFaceToggleLoading(true);
+    setMessage('');
+    try {
+      const next = !faceEnabled;
+      await faceToggleEnabled(next);
+      setFaceEnabled(next);
+      showMessage(next ? (isTr ? 'Yüz girişi açıldı.' : 'Face login enabled.') : (isTr ? 'Yüz girişi kapatıldı.' : 'Face login disabled.'));
+      // Refetch so UI stays in sync with server
+      faceStatus().then((r) => { setHasFace(!!r.enrolled); setFaceEnabled(!!r.enabled); }).catch(() => {});
+    } catch (e) {
+      const msg = (e && e.message) || '';
+      const is404 = /404|not enrolled/i.test(msg);
+      showMessage(is404 ? (isTr ? 'Yüz kaydı bulunamadı. Lütfen önce yüz kaydı oluşturun.' : 'Face login not set up. Set it up first.') : (msg || (isTr ? 'Ayar güncellenemedi.' : 'Could not update setting.')), 'error');
+      faceStatus().then((r) => { setHasFace(!!r.enrolled); setFaceEnabled(!!r.enabled); }).catch(() => {});
+    } finally {
+      setFaceToggleLoading(false);
+    }
+  };
+
+  const startFaceEnrollCamera = async () => {
+    if (!faceVideoRef.current) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      faceStreamRef.current = stream;
+      faceVideoRef.current.srcObject = stream;
+      setFaceCameraActive(true);
+    } catch (e) {
+      showMessage(e.message || (isTr ? 'Kamera erişilemedi.' : 'Camera access denied.'), 'error');
+    }
+  };
+
+  const captureAndEnrollFace = async () => {
+    setFaceEnrollLoading(true);
+    setMessage('');
+    try {
+      const { getFaceEmbedding } = await import('../utils/faceEmbedding');
+      const embedding = await getFaceEmbedding(faceVideoRef.current);
+      if (!embedding || embedding.length === 0) {
+        showMessage(isTr ? 'Yüz algılanamadı.' : 'No face detected.', 'error');
+        setFaceEnrollLoading(false);
+        return;
+      }
+      await faceEnroll(embedding);
+      if (faceStreamRef.current) faceStreamRef.current.getTracks().forEach((t) => t.stop());
+      setFaceCameraActive(false);
+      setFaceEnrollOpen(false);
+      setHasFace(true);
+      showMessage(isTr ? 'Yüz kaydı tamamlandı.' : 'Face enrollment complete.');
+    } catch (e) {
+      showMessage(e.message || (isTr ? 'Yüz kaydı başarısız.' : 'Face enrollment failed.'), 'error');
+    } finally {
+      setFaceEnrollLoading(false);
+    }
+  };
+
+  const closeFaceEnroll = () => {
+    if (faceStreamRef.current) faceStreamRef.current.getTracks().forEach((t) => t.stop());
+    setFaceCameraActive(false);
+    setFaceEnrollOpen(false);
+  };
+
   const showMessage = (msg, type = 'success') => {
+    haptic(type === 'error' ? 'error' : 'success');
     setMessage(msg);
     setMessageType(type);
     setTimeout(() => setMessage(''), 4000);
@@ -1080,48 +1414,143 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       )}
 
       {/* Profile Form */}
-      <form onSubmit={handleSaveProfile} className="space-y-4 max-w-md">
+      <form onSubmit={handleSaveProfile} className="space-y-4 max-w-md pb-8">
         <h3 className="text-white font-medium">{isTr ? 'Profil bilgileri' : 'Profile info'}</h3>
         <div>
           <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Ad Soyad' : 'Full name'}</label>
           <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50" />
         </div>
-        <div>
+        <div ref={langDropdownRef} className="relative">
           <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Dil' : 'Language'}</label>
-          <select value={preferredLanguage} onChange={(e) => setPreferredLanguage(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50">
-            <option value="english">English</option>
-            <option value="turkish">Türkçe</option>
-          </select>
+          <button
+            type="button"
+            onClick={() => setLangDropdownOpen((o) => !o)}
+            className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50 text-left"
+          >
+            <span>{preferredLanguage === 'turkish' ? 'Türkçe' : 'English'}</span>
+            <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {langDropdownOpen && (
+            <div className="absolute z-20 mt-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a2e] shadow-xl py-1">
+              <button type="button" onClick={() => { setPreferredLanguage('english'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'english' ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>English</button>
+              <button type="button" onClick={() => { setPreferredLanguage('turkish'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'turkish' ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>Türkçe</button>
+            </div>
+          )}
         </div>
 
         {/* Feature f8: Diet preferences */}
-        <h3 className="text-white font-medium pt-4">{isTr ? 'Diyet Tercihleri' : 'Diet Preferences'}</h3>
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Diyet tipi' : 'Dietary preference'}</label>
-          <select value={dietPref} onChange={(e) => setDietPref(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50">
-            <option value="">{isTr ? 'Seçin...' : 'Select...'}</option>
-            <option value="balanced">{isTr ? 'Dengeli' : 'Balanced'}</option>
-            <option value="vegetarian">{isTr ? 'Vejetaryen' : 'Vegetarian'}</option>
-            <option value="vegan">{isTr ? 'Vegan' : 'Vegan'}</option>
-            <option value="mediterranean">{isTr ? 'Akdeniz' : 'Mediterranean'}</option>
-            <option value="low_carb">{isTr ? 'Düşük Karbonhidrat' : 'Low Carb'}</option>
-            <option value="diabetic_friendly">{isTr ? 'Diyabet Dostu' : 'Diabetic Friendly'}</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Alerjiler / kısıtlamalar' : 'Allergies / restrictions'}</label>
-          <input type="text" value={allergies} onChange={(e) => setAllergies(e.target.value)} placeholder={isTr ? 'örn. glüten, laktoz' : 'e.g. gluten, lactose'} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50" />
-        </div>
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Günlük kalori hedefi' : 'Daily calorie goal'}</label>
-          <input type="number" value={calorieGoal} onChange={(e) => setCalorieGoal(e.target.value)} placeholder={isTr ? 'örn. 2000' : 'e.g. 2000'} className={`w-full px-4 py-2 rounded-lg bg-white/[0.05] border text-white placeholder-gray-500 focus:outline-none ${calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-emerald-500/50'}`} />
-          {calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 && <p className="text-[11px] text-red-400 font-medium mt-1">{isTr ? 'Lütfen negatif olmayan bir sayı girin.' : 'Please enter a positive number.'}</p>}
+        <div className="pt-2">
+          <h3 className="text-white font-medium mb-3">{isTr ? 'Diyet Tercihleri' : 'Diet Preferences'}</h3>
+          <div className="space-y-4">
+            <div ref={dietDropdownRef} className="relative">
+              <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Diyet tipi' : 'Dietary preference'}</label>
+              <button
+                type="button"
+                onClick={() => setDietDropdownOpen((o) => !o)}
+                className="w-full flex items-center justify-between pl-4 pr-3 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50 text-left"
+              >
+                <span className={dietPref ? 'text-white' : 'text-gray-500'}>
+                  {dietPref === 'balanced' ? (isTr ? 'Dengeli' : 'Balanced') : dietPref === 'vegetarian' ? (isTr ? 'Vejetaryen' : 'Vegetarian') : dietPref === 'vegan' ? 'Vegan' : dietPref === 'mediterranean' ? (isTr ? 'Akdeniz' : 'Mediterranean') : dietPref === 'low_carb' ? (isTr ? 'Düşük Karbonhidrat' : 'Low Carb') : dietPref === 'diabetic_friendly' ? (isTr ? 'Diyabet Dostu' : 'Diabetic Friendly') : (isTr ? 'Seçin...' : 'Select...')}
+                </span>
+                <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${dietDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {dietDropdownOpen && (
+                <div className="absolute z-20 mt-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a2e] shadow-xl py-1 max-h-56 overflow-y-auto">
+                  {[
+                    { value: '', labelEn: 'Select...', labelTr: 'Seçin...' },
+                    { value: 'balanced', labelEn: 'Balanced', labelTr: 'Dengeli' },
+                    { value: 'vegetarian', labelEn: 'Vegetarian', labelTr: 'Vejetaryen' },
+                    { value: 'vegan', labelEn: 'Vegan', labelTr: 'Vegan' },
+                    { value: 'mediterranean', labelEn: 'Mediterranean', labelTr: 'Akdeniz' },
+                    { value: 'low_carb', labelEn: 'Low Carb', labelTr: 'Düşük Karbonhidrat' },
+                    { value: 'diabetic_friendly', labelEn: 'Diabetic Friendly', labelTr: 'Diyabet Dostu' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value || 'empty'}
+                      type="button"
+                      onClick={() => { setDietPref(opt.value); setDietDropdownOpen(false); }}
+                      className={`w-full px-4 py-2.5 text-left text-sm transition ${opt.value === dietPref ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}
+                    >
+                      {isTr ? opt.labelTr : opt.labelEn}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Alerjiler / kısıtlamalar' : 'Allergies / restrictions'}</label>
+              <input type="text" value={allergies} onChange={(e) => setAllergies(e.target.value)} placeholder={isTr ? 'örn. glüten, laktoz' : 'e.g. gluten, lactose'} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50" />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Günlük kalori hedefi' : 'Daily calorie goal'}</label>
+              <input type="number" value={calorieGoal} onChange={(e) => setCalorieGoal(e.target.value)} placeholder={isTr ? 'örn. 2000' : 'e.g. 2000'} className={`w-full px-4 py-2 rounded-lg bg-white/[0.05] border text-white placeholder-gray-500 focus:outline-none ${calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-emerald-500/50'}`} />
+              {calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 && <p className="text-[11px] text-red-400 font-medium mt-1">{isTr ? 'Lütfen negatif olmayan bir sayı girin.' : 'Please enter a positive number.'}</p>}
+            </div>
+          </div>
         </div>
 
-        <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-medium disabled:opacity-50 transition">
-          {saving ? (isTr ? 'Kaydediliyor…' : 'Saving…') : (isTr ? 'Kaydet' : 'Save')}
-        </button>
+        <div className="pt-4">
+          <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-medium disabled:opacity-50 transition">
+            {saving ? (isTr ? 'Kaydediliyor…' : 'Saving…') : (isTr ? 'Kaydet' : 'Save')}
+          </button>
+        </div>
       </form>
+
+      {/* Face login: full control */}
+      <div className="space-y-4 max-w-md pt-8 pb-4">
+        <h3 className="text-white font-medium">{isTr ? 'Yüz ile giriş' : 'Face login'}</h3>
+        <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-4">
+          <div className="flex items-center gap-2">
+            <ScanFace className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span className="text-gray-300">{isTr ? 'Giriş sayfasında yüzünüzle otomatik giriş yapın.' : 'Sign in on the login page with your face.'}</span>
+          </div>
+          {!hasFace ? (
+            <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-4 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-medium hover:bg-emerald-500/25 transition">
+              {isTr ? 'Yüz kaydı oluştur' : 'Set up face login'}
+            </button>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`text-sm px-2.5 py-1 rounded-lg ${faceEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.06] text-gray-400 border border-white/[0.08]'}`}>
+                {faceEnabled ? (isTr ? 'Açık' : 'On') : (isTr ? 'Kapalı' : 'Off')}
+              </span>
+              <button type="button" onClick={handleFaceToggle} disabled={faceToggleLoading} className="px-3 py-1.5 rounded-lg bg-white/[0.06] text-gray-300 hover:text-white border border-white/[0.08] text-sm font-medium disabled:opacity-50 transition">
+                {faceToggleLoading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : (faceEnabled ? (isTr ? 'Kapat' : 'Turn off') : (isTr ? 'Aç' : 'Turn on'))}
+              </button>
+              <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-medium hover:bg-emerald-500/25 transition">
+                {isTr ? 'Yüz taramasını güncelle' : 'Update face scan'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {faceEnrollOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={isTr ? 'Yüz kaydı' : 'Face enrollment'}>
+          <div className="rounded-2xl bg-[#0c0c14] border border-white/10 p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-white mb-2">{isTr ? 'Yüzünüzü kaydedin' : 'Set up face login'}</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {isTr ? 'Kamerayı açın, kameraya bakın ve Kaydet\'e tıklayın.' : 'Start camera, look at it, then click Capture. First time may take a few seconds.'}
+            </p>
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-video mb-4">
+              <video ref={faceVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+            </div>
+            <div className="flex gap-2">
+              {!faceCameraActive ? (
+                <button type="button" onClick={startFaceEnrollCamera} className="flex-1 py-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  {isTr ? 'Kamerayı aç' : 'Start camera'}
+                </button>
+              ) : (
+                <button type="button" onClick={captureAndEnrollFace} disabled={faceEnrollLoading} className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white font-medium disabled:opacity-50">
+                  {faceEnrollLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (isTr ? 'Kaydet' : 'Capture')}
+                </button>
+              )}
+              <button type="button" onClick={closeFaceEnroll} className="py-2.5 px-4 rounded-xl border border-white/20 text-gray-400 hover:text-white">
+                {isTr ? 'İptal' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Password Form */}
       <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
@@ -1161,7 +1590,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
             </button>
             {show2FA && twoFAData && (
               <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-3">
-                <p className="text-sm text-gray-400">{isTr ? 'Authenticator uygulamanıza bu gizli anahtarı ekleyin:' : 'Add this secret key to your authenticator app:'}</p>
+                <p className="text-sm text-gray-400">{isTr ? 'Google Authenticator, Microsoft Authenticator veya Authy gibi bir uygulamada bu gizli anahtarı ekleyin:' : 'Use any TOTP app (e.g. Google Authenticator, Microsoft Authenticator, or Authy) and add this secret key:'}</p>
                 <code className="block p-2 rounded-lg bg-white/[0.05] text-emerald-400 text-xs break-all">{twoFAData.secret}</code>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Doğrulama kodu' : 'Verification code'}</label>
@@ -1190,7 +1619,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
 
       {/* Message Toast */}
       {message && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border animate-pulse
+        <div role="status" aria-live={messageType === 'success' ? 'polite' : 'assertive'} aria-atomic="true" className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border animate-pulse
           ${messageType === 'success' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}`}>
           {messageType === 'success' ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />}
           <span className="text-sm font-medium">{message}</span>

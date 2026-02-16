@@ -84,7 +84,7 @@ const Home = ({ language }) => {
               </p>
 
               <div className="flex flex-wrap gap-4 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-                <button onClick={() => navigate('/test')} className="btn-primary text-base px-9 py-4">
+                <button onClick={() => navigate('/test')} className="btn-primary text-base px-9 py-4" data-tour="cta-assessment">
                   {t.cta1} <ArrowRight className="w-5 h-5" />
                 </button>
                 <button onClick={() => navigate('/chat')} className="btn-secondary text-base px-9 py-4">

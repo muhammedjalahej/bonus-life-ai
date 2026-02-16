@@ -61,6 +61,10 @@ async def root():
             "admin_stats": "/api/v1/admin/stats",
             "admin_delete_user": "/api/v1/admin/users/{user_id} (DELETE)",
             "admin_update_user": "/api/v1/admin/users/{user_id} (PATCH)",
+            "nearby_hospitals": "/api/v1/nearby-hospitals",
+            "meal_photo_analyze": "/api/v1/meal-photo/analyze",
+            "meal_photo_log": "/api/v1/meal-photo/log",
+            "workout_videos": "/api/v1/workout-videos",
         },
     }
 

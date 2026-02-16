@@ -1,8 +1,8 @@
 // Bonus Life AI - Central Configuration
 // Authors: Muhammed Jalahej, Yazen Emino
 
-// API Base URL - uses env variable in production, localhost in development
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+// API Base URL - in dev use '' so Vite proxy forwards /api to backend; otherwise env or 8001
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? '' : 'http://localhost:8000');
 
 /** Full URL for avatar image (handles relative paths from backend uploads). */
 export function getAvatarUrl(avatarUrl) {
@@ -24,10 +24,15 @@ export const ROUTES = {
   VOICE_CHAT: '/voice-chat',
   DIET_PLAN: '/diet-plan',
   EMERGENCY: '/emergency',
+  HOSPITALS: '/hospitals',
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
   DASHBOARD: '/dashboard',
   ADMIN: '/admin',
+  STUDIO: '/studio',
+  VERIFY: '/verify',
+  MEAL_PHOTO: '/meal-photo',
+  SPORT: '/sport',
 };

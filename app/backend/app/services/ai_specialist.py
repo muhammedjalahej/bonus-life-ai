@@ -3,6 +3,7 @@
 Authors: Muhammed Jalahej, Yazen Emino
 """
 
+import asyncio
 import os
 import logging
 from datetime import datetime
@@ -28,7 +29,7 @@ class AIDiabetesSpecialist:
             groq_api_key = os.getenv("GROQ_API_KEY")
             if groq_api_key and groq_api_key.startswith("gsk_"):
                 self.client = Groq(api_key=groq_api_key)
-                model_name = os.getenv("LLM_MODEL_NAME", "openai/gpt-oss-20b")
+                model_name = os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant")
                 logger.info(f"[START] AI Diabetes Specialist LLM initialized with model: {model_name}")
             else:
                 logger.error("[ERROR] Invalid or missing Groq API key")
@@ -90,8 +91,10 @@ class AIDiabetesSpecialist:
             for msg in history[-3:]:
                 messages.insert(1, {"role": msg["role"], "content": msg["content"]})
 
-            response = self.client.chat.completions.create(
-                model=os.getenv("LLM_MODEL_NAME", "openai/gpt-oss-20b"),
+            model_name = os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant")
+            response = await asyncio.to_thread(
+                self.client.chat.completions.create,
+                model=model_name,
                 messages=messages,
                 temperature=0.7,
                 max_tokens=1500,
@@ -102,19 +105,24 @@ class AIDiabetesSpecialist:
             self.add_to_conversation(user_id, "assistant", llm_response)
             self.update_user_profile(user_id, message, llm_response)
 
-            return {"success": True, "response": llm_response, "model": os.getenv("LLM_MODEL_NAME", "openai/gpt-oss-20b")}
+            return {"success": True, "response": llm_response, "model": model_name}
         except Exception as e:
-            logger.error(f"LLM generation error: {e}")
+            logger.exception("LLM generation error (chat/assessment): %s", e)
+            err_msg = str(e)
+            is_dev = os.getenv("ENVIRONMENT", "").lower() == "development" or os.getenv("DEBUG", "").lower() in ("true", "1", "yes")
+            extra = {"error_detail": err_msg} if is_dev else {}
             if language == "turkish":
                 return {
                     "success": False,
                     "response": "Teknik bir sorun yaşanıyor. Lütfen kısa süre sonra tekrar deneyin veya acil tıbbi sorularınız için bir sağlık kuruluşuna başvurun.",
                     "model": "error",
+                    **extra,
                 }
             return {
                 "success": False,
                 "response": "I apologize, but I'm experiencing technical difficulties. Please try again shortly or consult with a healthcare provider for urgent medical questions.",
                 "model": "error",
+                **extra,
             }
 
     # -- user profiles ----------------------------------------------------
@@ -183,7 +191,7 @@ class GPTOSSDiabetesSpecialist:
                 self.client = None
                 return
             self.client = Groq(api_key=groq_api_key)
-            model_name = os.getenv("LLM_MODEL_NAME", "openai/gpt-oss-20b")
+            model_name = os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant")
             test_response = self.client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": "Say 'GPT-OSS-20B Diabetes Specialist Ready'"}],
@@ -225,7 +233,7 @@ class GPTOSSDiabetesSpecialist:
             self.add_to_conversation(user_id, "assistant", fb)
             return {"success": False, "response": fb, "model": "enhanced_fallback", "status": "fallback"}
         try:
-            model_name = os.getenv("LLM_MODEL_NAME", "openai/gpt-oss-20b")
+            model_name = os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant")
             temperature = float(os.getenv("LLM_TEMPERATURE", 0.6))
             msgs = self.create_diabetes_prompt(message, language, {"user_id": user_id})
             response = self.client.chat.completions.create(

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.db_models import User, Assessment, DietPlanRecord, Notification
-from app.models import UserMeResponse, ProfileUpdateRequest, ChangePasswordRequest
+from app.models import UserMeResponse, ProfileUpdateRequest, ChangePasswordRequest, SaveDietPlanRequest
 from app.auth import get_current_user, hash_password
 
 logger = logging.getLogger(__name__)
@@ -170,6 +170,29 @@ async def my_diet_plans(
         }
         for r in rows
     ]
+
+
+@router.post("/users/me/diet-plans")
+async def save_diet_plan(
+    body: SaveDietPlanRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Save a diet plan to the current user's account (e.g. from mobile)."""
+    overview = (body.overview or (body.payload.get("overview") if body.payload else ""))[:4096]
+    goal = (body.goal or (body.payload.get("goals") if isinstance(body.payload, dict) else "")) or ""
+    if isinstance(goal, str):
+        goal = goal[:128]
+    rec = DietPlanRecord(
+        user_id=user.id,
+        goal=goal,
+        overview=overview,
+        payload=json.dumps(body.payload) if body.payload else None,
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return {"id": rec.id, "message": "saved"}
 
 
 # ---- Export my data (feature f11) ----

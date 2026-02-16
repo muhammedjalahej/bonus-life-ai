@@ -5,14 +5,17 @@ import { useAuth } from '../context/AuthContext';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../services/api';
 import {
   HeartPulse, Menu, X, ChevronDown, Bell, Check,
-  Home, Activity, MessageSquare, Mic, Salad, AlertTriangle, Globe, LayoutDashboard, Shield, LogIn, UserPlus, LogOut,
-  Users, FileText, BarChart3,
+  Home, Activity, MessageSquare, Mic, AlertTriangle, MapPin, Globe, LayoutDashboard, Shield, LogIn, UserPlus, LogOut,
+  Users, BarChart3, Settings, Compass,
 } from 'lucide-react';
+import { useUXSettings } from '../context/UXSettingsContext';
+import { useTour } from '../tour/TourContext';
 
 const Header = ({ language, setLanguage }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading, isAdmin, logout, allowSignups } = useAuth();
+  const { setUxModalOpen } = useUXSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -59,24 +62,25 @@ const Header = ({ language, setLanguage }) => {
   };
 
   const userLinks = [
-    { path: ROUTES.HOME, label: language === 'turkish' ? 'Ana Sayfa' : 'Home', icon: Home },
-    { path: ROUTES.TEST, label: language === 'turkish' ? 'Değerlendirme' : 'Assessment', icon: Activity },
-    { path: ROUTES.CHAT, label: language === 'turkish' ? 'Yapay Zeka Sohbet' : 'AI Chat', icon: MessageSquare },
-    { path: ROUTES.VOICE_CHAT, label: language === 'turkish' ? 'Ses' : 'Voice', icon: Mic },
-    { path: ROUTES.DIET_PLAN, label: language === 'turkish' ? 'Diyet' : 'Diet', icon: Salad },
-    { path: ROUTES.EMERGENCY, label: language === 'turkish' ? 'Acil' : 'Emergency', icon: AlertTriangle },
+    { path: ROUTES.HOME, label: language === 'turkish' ? 'Ana Sayfa' : 'Home', icon: Home, dataTour: 'nav-home' },
+    { path: ROUTES.TEST, label: language === 'turkish' ? 'Değerlendirme' : 'Assessment', icon: Activity, dataTour: 'nav-assessment' },
+    { path: ROUTES.CHAT, label: language === 'turkish' ? 'Yapay Zeka Sohbet' : 'AI Chat', icon: MessageSquare, dataTour: 'nav-chat' },
+    { path: ROUTES.VOICE_CHAT, label: language === 'turkish' ? 'Ses' : 'Voice', icon: Mic, dataTour: 'nav-voice' },
+    { path: ROUTES.EMERGENCY, label: language === 'turkish' ? 'Acil' : 'Emergency', icon: AlertTriangle, dataTour: 'nav-emergency' },
+    { path: ROUTES.HOSPITALS, label: language === 'turkish' ? 'Hastaneler' : 'Hospitals', icon: MapPin, dataTour: 'nav-hospitals' },
   ];
 
   let links;
   if (user && isAdmin) {
-    // Admin sees no nav links — the admin panel has its own tabs
     links = [];
   } else {
     links = [...userLinks];
     if (user) {
-      links.push({ path: ROUTES.DASHBOARD, label: language === 'turkish' ? 'Panel' : 'Dashboard', icon: LayoutDashboard });
+      links.push({ path: ROUTES.DASHBOARD, label: language === 'turkish' ? 'Panel' : 'Dashboard', icon: LayoutDashboard, dataTour: 'nav-dashboard' });
     }
   }
+
+  const { start: startTour, restart: restartTour, completed: tourCompleted } = useTour();
 
   const languages = [
     { value: 'english', label: 'EN' },
@@ -153,8 +157,8 @@ const Header = ({ language, setLanguage }) => {
                                   </div>
                                 ) : (
                                   notifications.slice(0, 10).map(n => (
-                                    <div key={n.id} onClick={() => { if (!n.is_read) handleMarkRead(n.id); }}
-                                      className={`px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer transition ${!n.is_read ? 'bg-emerald-500/[0.03]' : ''}`}>
+                                    <button key={n.id} type="button" onClick={() => { if (!n.is_read) handleMarkRead(n.id); }}
+                                      className={`w-full text-left px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer transition ${!n.is_read ? 'bg-emerald-500/[0.03]' : ''}`}>
                                       <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
                                           <p className={`text-sm font-medium ${!n.is_read ? 'text-white' : 'text-gray-400'}`}>{n.title}</p>
@@ -163,7 +167,7 @@ const Header = ({ language, setLanguage }) => {
                                         </div>
                                         {!n.is_read && <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 mt-1.5" />}
                                       </div>
-                                    </div>
+                                    </button>
                                   ))
                                 )}
                               </div>
@@ -216,7 +220,17 @@ const Header = ({ language, setLanguage }) => {
                             </button>
                           )}
                           <div className="border-t border-white/[0.06] my-1"></div>
-                          <button onClick={() => { logout(); setUserMenuOpen(false); handleNav(ROUTES.HOME); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10">
+                          {!isAdmin && (
+                            <button type="button" onClick={() => { (tourCompleted ? restartTour : startTour)(); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
+                              <Compass className="w-4 h-4" /> {tourCompleted ? (language === 'turkish' ? 'Turu Tekrarla' : 'Restart Tour') : (language === 'turkish' ? 'Turu Başlat' : 'Start Tour')}
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button type="button" onClick={() => { setUxModalOpen(true); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
+                              <Settings className="w-4 h-4" /> {language === 'turkish' ? 'UX Ayarları' : 'UX Settings'}
+                            </button>
+                          )}
+                          <button type="button" onClick={() => { logout(); setUserMenuOpen(false); handleNav(ROUTES.HOME); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10">
                             <LogOut className="w-4 h-4" /> {language === 'turkish' ? 'Çıkış' : 'Logout'}
                           </button>
                         </div>
@@ -228,7 +242,12 @@ const Header = ({ language, setLanguage }) => {
               </>
             )}
 
-            {/* Language */}
+            {/* UX Settings (admin only) + Language */}
+            {isAdmin && (
+              <button type="button" onClick={() => setUxModalOpen(true)} className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.05] transition-all focus:outline-none" aria-label="UX Settings">
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
             <div className="relative">
               <button onClick={() => setLangOpen(!langOpen)}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-gray-500 bg-white/[0.03] border border-white/[0.06]
@@ -266,11 +285,12 @@ const Header = ({ language, setLanguage }) => {
         {/* Row 2: Full-width nav (desktop only) — hidden on auth pages */}
         {!isAuthPage && links.length > 0 && (
           <nav className="hidden lg:flex items-center gap-2 py-3 border-t border-white/[0.05]">
-            {links.map(({ path, label, icon: Icon }) => {
+            {links.map(({ path, label, icon: Icon, dataTour }) => {
               const active = location.pathname === path;
               return (
                 <button
                   key={path}
+                  data-tour={dataTour}
                   onClick={() => handleNav(path)}
                   className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap
                     ${active
@@ -291,10 +311,10 @@ const Header = ({ language, setLanguage }) => {
       {mobileOpen && (
         <div className="lg:hidden bg-[#060611]/95 backdrop-blur-2xl border-t border-white/[0.04]">
           <nav className="max-w-7xl mx-auto px-6 py-4 space-y-1">
-            {(isAuthPage ? [{ path: ROUTES.HOME, label: language === 'turkish' ? 'Ana Sayfa' : 'Home', icon: Home }] : links).map(({ path, label, icon: Icon }) => {
+            {(isAuthPage ? [{ path: ROUTES.HOME, label: language === 'turkish' ? 'Ana Sayfa' : 'Home', icon: Home, dataTour: 'nav-home' }] : links).map(({ path, label, icon: Icon, dataTour }) => {
               const active = location.pathname === path;
               return (
-                <button key={path} onClick={() => handleNav(path)}
+                <button key={path} data-tour={dataTour} onClick={() => handleNav(path)}
                   className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all
                     ${active ? 'bg-emerald-500/10 text-emerald-400' : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'}`}>
                   <Icon className="w-5 h-5" />

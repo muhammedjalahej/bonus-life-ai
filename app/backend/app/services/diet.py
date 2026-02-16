@@ -18,7 +18,7 @@ class GroqLLMService:
 
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
-        self.model_name = os.getenv("LLM_MODEL_NAME", "openai/gpt-oss-20b")
+        self.model_name = os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant")
         self.temperature = float(os.getenv("LLM_TEMPERATURE", 0.6))
         self.available = bool(self.api_key and self.api_key.startswith("gsk_"))
         if self.available:

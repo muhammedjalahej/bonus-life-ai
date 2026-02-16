@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expo – Scan to open app</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    p { color: #999; font-size: 0.9rem; margin-top: 1rem; max-width: 280px; text-align: center; }
+    a { color: #0ea5e9; }
+    input { width: 100%; max-width: 320px; padding: 8px 12px; margin: 12px 0; font-size: 14px; border-radius: 8px; border: 1px solid #333; background: #222; color: #eee; }
+    img { border-radius: 12px; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Scan with Expo Go</h1>
+  <input type="text" id="url" value="exp://192.168.1.58:8083" placeholder="exp://YOUR_IP:PORT" />
+  <img id="qr" src="" alt="QR Code" width="260" height="260" />
+  <p>Open <strong>Expo Go</strong> on your phone and scan this QR code. Phone and PC must be on the same Wi‑Fi. If the port changed, edit the URL above (e.g. 8083).</p>
+  <script>
+    const input = document.getElementById('url');
+    const img = document.getElementById('qr');
+    const base = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=';
+    function update() {
+      const url = input.value.trim();
+      img.src = url ? base + encodeURIComponent(url) : '';
+      img.alt = url ? 'QR for ' + url : 'Enter exp:// URL';
+    }
+    input.addEventListener('input', update);
+    input.addEventListener('change', update);
+    update();
+  </script>
+</body>
+</html>

@@ -15,6 +15,36 @@
     />
   </head>
   <body>
+    <script>
+      (function() {
+        try {
+          var s = localStorage.getItem('bonuslife_ux_settings');
+          if (s) {
+            var o = JSON.parse(s);
+            var r = document.documentElement;
+            r.setAttribute('data-theme', o.theme || 'default');
+            r.setAttribute('data-motion', o.motion || 'auto');
+            r.setAttribute('data-contrast', o.contrast || 'off');
+            r.setAttribute('data-text', o.textSize === 'lg' ? 'lg' : 'normal');
+          }
+        } catch (e) {}
+      })();
+      (function() {
+        try {
+          var s = localStorage.getItem('bonuslife_studio');
+          if (!s) return;
+          var o = JSON.parse(s);
+          if (!o.enabled) return;
+          var r = document.documentElement;
+          r.setAttribute('data-studio', 'on');
+          r.style.setProperty('--studio-duration', (o.duration != null ? o.duration : 250) + 'ms');
+          var eases = { ease: 'ease', 'ease-out': 'ease-out', 'ease-in': 'ease-in', 'ease-in-out': 'ease-in-out', linear: 'linear', snap: 'cubic-bezier(0, 1, 0.5, 1)' };
+          r.style.setProperty('--studio-ease', eases[o.ease] || 'ease-out');
+          r.style.setProperty('--studio-hover-scale', String(o.hoverScale != null ? o.hoverScale : 0.98));
+          r.style.setProperty('--studio-card-lift', (o.cardLift != null ? o.cardLift : 2) + 'px');
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

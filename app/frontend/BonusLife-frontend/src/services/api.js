@@ -117,6 +117,12 @@ export async function getChatTopics() {
   return apiRequest('/api/v1/health-topics');
 }
 
+export async function getWorkoutVideos(goal = 'beginner', refreshKey = null) {
+  const params = new URLSearchParams({ goal: goal.trim().toLowerCase().replace(/\s+/g, '_') });
+  if (refreshKey != null && refreshKey !== '') params.set('refresh_key', String(refreshKey));
+  return apiRequest(`/api/v1/workout-videos?${params}`);
+}
+
 export async function clearChatHistory() {
   return apiRequest('/api/v1/chat/clear', {
     method: 'POST',
@@ -174,6 +180,63 @@ export async function resetPassword(token, new_password) {
     method: 'POST',
     body: JSON.stringify({ token, new_password }),
   });
+}
+
+// ---- Passkey (WebAuthn) ----
+export async function webauthnRegisterOptions() {
+  return apiRequest('/api/v1/webauthn/register/options');
+}
+
+export async function webauthnRegisterComplete(stateKey, credential) {
+  return apiRequest('/api/v1/webauthn/register/complete', {
+    method: 'POST',
+    body: JSON.stringify({ state_key: stateKey, credential }),
+  });
+}
+
+export async function webauthnLoginOptions() {
+  return apiRequest('/api/v1/webauthn/login/options');
+}
+
+export async function webauthnLoginComplete(stateKey, credential) {
+  return apiRequest('/api/v1/webauthn/login/complete', {
+    method: 'POST',
+    body: JSON.stringify({ state_key: stateKey, credential }),
+  });
+}
+
+export async function webauthnStatus() {
+  return apiRequest('/api/v1/webauthn/status');
+}
+
+// ---- Face login ----
+export async function faceEnroll(embedding) {
+  return apiRequest('/api/v1/face-auth/enroll', {
+    method: 'POST',
+    body: JSON.stringify({ embedding }),
+  });
+}
+
+export async function faceVerify(embedding) {
+  return apiRequest('/api/v1/face-auth/verify', {
+    method: 'POST',
+    body: JSON.stringify({ embedding }),
+  });
+}
+
+export async function faceStatus() {
+  return apiRequest('/api/v1/face-auth/status');
+}
+
+export async function faceToggleEnabled(enabled) {
+  return apiRequest('/api/v1/face-auth/settings', {
+    method: 'PATCH',
+    body: JSON.stringify({ enabled }),
+  });
+}
+
+export async function faceRemoveEnrollment() {
+  return apiRequest('/api/v1/face-auth/enroll', { method: 'DELETE' });
 }
 
 // User-scoped
@@ -320,6 +383,21 @@ export async function exportMyData() {
 }
 
 // ---- Share assessment with doctor (feature f16) ----
+export async function signAssessmentReport(assessmentId) {
+  return apiRequest(`/api/v1/reports/sign-assessment/${assessmentId}`, { method: 'POST' });
+}
+
+export async function verifyReportSignature(payload_hash, signature_b64) {
+  return apiRequest('/api/v1/reports/verify', {
+    method: 'POST',
+    body: JSON.stringify({ payload_hash, signature_b64 }),
+  });
+}
+
+export async function getReportPublicKey() {
+  return apiRequest('/api/v1/reports/public-key');
+}
+
 export async function shareAssessment(assessmentId) {
   return apiRequest(`/api/v1/users/me/assessments/${assessmentId}/share`, { method: 'POST' });
 }
@@ -390,6 +468,22 @@ export async function adminBulkEmail(subject, body, user_ids = null, role_filter
   });
 }
 
+// ---- Meal Photo Analyzer ----
+export async function analyzeMealPhoto(imageBase64, saveToLog = false) {
+  return apiRequest('/api/v1/meal-photo/analyze', {
+    method: 'POST',
+    body: JSON.stringify({ image_base64: imageBase64, save_to_log: saveToLog }),
+  });
+}
+
+export async function getMealLog(limit = 50) {
+  return apiRequest(`/api/v1/meal-photo/log?limit=${limit}`);
+}
+
+export async function clearMealLog() {
+  return apiRequest('/api/v1/meal-photo/log/clear', { method: 'POST', body: '{}' });
+}
+
 const apiService = {
   predictDiabetesRisk,
   chatWithAI,
@@ -429,6 +523,9 @@ const apiService = {
   getActiveAnnouncements,
   checkMaintenanceStatus,
   exportMyData,
+  signAssessmentReport,
+  verifyReportSignature,
+  getReportPublicKey,
   shareAssessment,
   revokeShare,
   deleteAssessment,
@@ -443,6 +540,9 @@ const apiService = {
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  analyzeMealPhoto,
+  getMealLog,
+  clearMealLog,
 };
 
 export default apiService;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Home } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -20,6 +20,7 @@ class ErrorBoundary extends React.Component {
       const title = isTr ? 'Bir şeyler yanlış gitti' : 'Something went wrong';
       const message = isTr ? 'Verdiğimiz rahatsızlık için özür dileriz. Lütfen sayfayı yenileyin.' : "We're sorry for the inconvenience. Please try refreshing.";
       const reload = isTr ? 'Yenile' : 'Reload';
+      const goHome = isTr ? 'Ana Sayfa' : 'Go to Home';
       return (
         <div className="min-h-screen flex items-center justify-center px-4">
           <div className="card p-10 max-w-md text-center space-y-6">
@@ -28,9 +29,14 @@ class ErrorBoundary extends React.Component {
             </div>
             <h2 className="text-xl font-bold text-white">{title}</h2>
             <p className="text-gray-500 text-sm">{message}</p>
-            <button onClick={() => window.location.reload()} className="btn-primary mx-auto">
-              <RotateCcw className="w-4 h-4" /> {reload}
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a href="/" className="btn-secondary">
+                <Home className="w-4 h-4" /> {goHome}
+              </a>
+              <button onClick={() => window.location.reload()} className="btn-primary">
+                <RotateCcw className="w-4 h-4" /> {reload}
+              </button>
+            </div>
           </div>
         </div>
       );

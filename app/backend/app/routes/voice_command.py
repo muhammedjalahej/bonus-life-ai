@@ -39,6 +39,7 @@ NAVIGATE_KEYWORDS = [
     ("/voice-chat", ["voice chat", "voice"]),
     ("/diet-plan", ["diet", "diet plan", "meal plan"]),
     ("/emergency", ["emergency", "emergency check"]),
+    ("/hospitals", ["hospitals", "hospital", "find hospital", "nearest hospital", "find nearest hospital"]),
     ("/dashboard", ["dashboard"]),
     ("/admin", ["admin", "admin panel"]),
 ]

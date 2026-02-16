@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import * as apiService from '../services/api';
 import { VOICE_FILL_EVENT, VOICE_CLEAR_FIELD_EVENT, VOICE_FORM_NEXT_EVENT, VOICE_FORM_BACK_EVENT } from '../components/VoiceAgent';
+import { haptic } from '../utils/haptics';
 
 /* Stable field component so number inputs keep focus while typing */
 function FormField({ label, value, onChange, required, hint, placeholder, icon: Icon, error }) {
@@ -174,6 +175,7 @@ const DiabetesTest = ({ language = 'english' }) => {
         language,
       };
       const data = await apiService.predictDiabetesRisk(payload);
+      haptic('success');
       setResult(data);
       setStep(2);
     } catch (err) { setError(err.message); } finally { setLoading(false); }

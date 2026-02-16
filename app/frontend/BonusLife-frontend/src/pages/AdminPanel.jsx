@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useId } from 'react';
+import { Link } from 'react-router-dom';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { haptic } from '../utils/haptics';
 import {
   Users, FileText, UtensilsCrossed, BarChart3, Loader2, ChevronRight, Shield,
   Search, RefreshCw, Download, Trash2, UserCheck, UserX, ShieldCheck, ShieldOff,
   X, AlertTriangle, Check, ChevronDown, ChevronUp, Eye, Plus, Megaphone,
   Settings, Activity, Clock, CheckCircle, XCircle, Server, Mail, StickyNote, Send,
+  Sparkles,
 } from 'lucide-react';
-import { getAvatarUrl } from '../config/constants';
+import { getAvatarUrl, ROUTES } from '../config/constants';
+import { playValueTone, playCategoryTone } from '../utils/sonification';
 import {
   adminGetUsers, adminGetStats, adminGetAssessments, adminDeleteUser, adminUpdateUser,
   adminCreateUser, adminBulkAction, adminGetChartData, adminGetAuditLog, adminClearAuditLog,
@@ -18,26 +23,43 @@ import {
 
 function Toast({ message, type, onClose }) {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
+  useEffect(() => { haptic(type === 'error' ? 'error' : 'success'); }, [type]);
   const colors = { success: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400', error: 'bg-red-500/20 border-red-500/30 text-red-400', info: 'bg-blue-500/20 border-blue-500/30 text-blue-400' };
+  const live = type === 'error' ? 'assertive' : 'polite';
   return (
-    <div className={`fixed bottom-6 right-6 z-[80] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border ${colors[type] || colors.info}`}>
+    <div role="status" aria-live={live} aria-atomic="true" className={`fixed bottom-6 right-6 z-[80] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border ${colors[type] || colors.info}`}>
       {type === 'success' ? <Check className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
       <span className="text-sm font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 hover:opacity-70"><X className="w-4 h-4" /></button>
+      <button type="button" onClick={onClose} className="ml-2 hover:opacity-70 focus:outline-none" aria-label="Close"><X className="w-4 h-4" /></button>
     </div>
   );
 }
 
 function Modal({ isOpen, onClose, title, children, width = 'max-w-md' }) {
+  const titleId = useId();
+  const containerRef = useFocusTrap(isOpen, onClose);
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onClose();
+    }
+    if (isOpen) window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
   if (!isOpen) return null;
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]" onClick={onClose} />
-      <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[80] w-full ${width} max-h-[85vh] overflow-auto`}>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]" onClick={onClose} aria-hidden />
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[80] w-full ${width} max-h-[85vh] overflow-auto`}
+      >
         <div className="bg-[#12121f] border border-white/[0.08] rounded-2xl shadow-2xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
-            <button onClick={onClose} className="p-1 hover:bg-white/[0.05] rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
+            <h3 id={titleId} className="text-lg font-semibold text-white">{title}</h3>
+            <button type="button" onClick={onClose} className="p-1 hover:bg-white/[0.05] rounded-lg focus:outline-none" aria-label="Close"><X className="w-5 h-5 text-gray-400" /></button>
           </div>
           {children}
         </div>
@@ -102,20 +124,24 @@ function Dropdown({ value, onChange, options, className = '' }) {
   );
 }
 
-/* Simple bar chart */
+/* Simple bar chart with optional sonification on hover */
 function MiniBarChart({ data, color = 'emerald', label }) {
   if (!data || data.length === 0) return <p className="text-gray-600 text-sm">No data</p>;
+  const sliced = data.slice(-14);
   const max = Math.max(...data.map(d => d.count), 1);
   return (
     <div>
       <p className="text-xs text-gray-500 mb-2">{label}</p>
       <div className="flex items-end gap-1 h-24">
-        {data.slice(-14).map((d, i) => (
+        {sliced.map((d, i) => (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
             <div
-              className={`w-full rounded-t bg-${color}-500/40 hover:bg-${color}-500/60 transition-all`}
+              role="img"
+              aria-label={`${d.date}: ${d.count}`}
+              className={`w-full rounded-t bg-${color}-500/40 hover:bg-${color}-500/60 transition-all cursor-pointer`}
               style={{ height: `${Math.max((d.count / max) * 100, 4)}%` }}
               title={`${d.date}: ${d.count}`}
+              onMouseEnter={() => playValueTone(d.count, max)}
             />
           </div>
         ))}
@@ -128,7 +154,7 @@ function MiniBarChart({ data, color = 'emerald', label }) {
   );
 }
 
-/* Risk pie-like display */
+/* Risk pie-like display with sonification on hover */
 function RiskDistribution({ data }) {
   if (!data || data.length === 0) return <p className="text-gray-600 text-sm">No data</p>;
   const total = data.reduce((s, d) => s + d.count, 0) || 1;
@@ -137,8 +163,12 @@ function RiskDistribution({ data }) {
   return (
     <div className="space-y-2">
       <p className="text-xs text-gray-500 mb-2">Risk Level Distribution</p>
-      {data.map(d => (
-        <div key={d.level} className="flex items-center gap-3">
+      {data.map((d, idx) => (
+        <div
+          key={d.level}
+          className="flex items-center gap-3 cursor-pointer rounded px-1 -mx-1 hover:bg-white/[0.04] transition-colors"
+          onMouseEnter={() => playCategoryTone(idx, data.length)}
+        >
           <span className={`text-xs font-medium w-16 ${textColors[d.level] || 'text-gray-400'}`}>{d.level}</span>
           <div className="flex-1 h-3 rounded-full bg-white/[0.06] overflow-hidden">
             <div className={`h-full rounded-full ${colors[d.level] || 'bg-gray-500'}`} style={{ width: `${(d.count / total) * 100}%` }} />
@@ -412,9 +442,14 @@ export default function AdminPanel({ language }) {
             <p className="text-gray-500 text-xs">Manage users, data, and platform settings</p>
           </div>
         </div>
-        <button onClick={fetchTab} disabled={loading} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] border border-white/[0.08] transition">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <Link to={ROUTES.STUDIO} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] border border-white/[0.08] transition">
+            <Sparkles className="w-4 h-4" /> Studio
+          </Link>
+          <button onClick={fetchTab} disabled={loading} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] border border-white/[0.08] transition">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

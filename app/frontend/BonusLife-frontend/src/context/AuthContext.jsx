@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getStoredToken, setStoredToken } from '../services/api';
-import apiService, { onMaintenanceMode, checkMaintenanceStatus } from '../services/api';
+import apiService, {
+  onMaintenanceMode,
+  checkMaintenanceStatus,
+  webauthnLoginOptions,
+  webauthnLoginComplete,
+  faceVerify,
+} from '../services/api';
+import { credentialToJson, parseRequestOptions } from '../utils/webauthn';
 
 const AuthContext = createContext(null);
 
@@ -60,6 +67,30 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const loginWithPasskey = useCallback(async () => {
+    const { options, state_key } = await webauthnLoginOptions();
+    const publicKey = parseRequestOptions(options);
+    const credential = await navigator.credentials.get({
+      publicKey,
+      mediation: 'optional',
+    });
+    if (!credential) throw new Error('No credential returned');
+    const credentialJson = credentialToJson(credential);
+    const data = await webauthnLoginComplete(state_key, credentialJson);
+    setStoredToken(data.access_token);
+    setUser(data.user);
+    setMaintenanceMode(false);
+    return data;
+  }, []);
+
+  const loginWithFace = useCallback(async (embedding) => {
+    const data = await faceVerify(embedding);
+    setStoredToken(data.access_token);
+    setUser(data.user);
+    setMaintenanceMode(false);
+    return data;
+  }, []);
+
   const registerUser = useCallback(async (email, password, full_name = '') => {
     const data = await apiService.register(email, password, full_name);
     setStoredToken(data.access_token);
@@ -86,6 +117,8 @@ export function AuthProvider({ children }) {
     user,
     loading,
     login,
+    loginWithPasskey,
+    loginWithFace,
     register: registerUser,
     logout,
     refreshUser,

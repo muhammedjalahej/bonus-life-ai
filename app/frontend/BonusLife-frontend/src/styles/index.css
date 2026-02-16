@@ -4,10 +4,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ───────────────── Premium polish: motion tokens (no visual change by default) ───────────────── */
+:root {
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 250ms;
+  --motion-duration-slow: 350ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --focus-ring-color: rgba(16, 185, 129, 0.6);
+  --focus-ring-offset: 2px;
+  /* Micro-interaction Studio (applied when data-studio="on") */
+  --studio-duration: 250ms;
+  --studio-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --studio-hover-scale: 0.98;
+  --studio-card-lift: 2px;
+}
+
+/* Respect prefers-reduced-motion (applied when data-motion="reduced" or OS setting) */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) {
+    --motion-duration-fast: 0ms;
+    --motion-duration-normal: 0ms;
+    --motion-duration-slow: 0ms;
+  }
+}
+html[data-motion="reduced"] {
+  --motion-duration-fast: 0ms;
+  --motion-duration-normal: 0ms;
+  --motion-duration-slow: 0ms;
+}
+
 /* ───────────────── Base ───────────────── */
 @layer base {
   html { @apply scroll-smooth; }
   body { @apply bg-[#060611] text-gray-100 font-sans antialiased; }
+
+  /* Focus visible: keyboard-only focus ring (existing theme color), no change to default appearance */
+  :focus { outline: none; }
+  :focus:not(:focus-visible) { outline: none; }
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--focus-ring-offset) #060611, 0 0 0 calc(var(--focus-ring-offset) + 2px) var(--focus-ring-color);
+  }
+  button:focus-visible,
+  a:focus-visible,
+  [tabindex="0"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--focus-ring-offset) #060611, 0 0 0 calc(var(--focus-ring-offset) + 2px) var(--focus-ring-color);
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--focus-ring-color);
+  }
 }
 
 /* ───────────────── Component Classes ───────────────── */
@@ -89,6 +139,27 @@
   }
   .select-field option { @apply bg-[#12121f] text-white; }
 
+  /* UX Settings (gear) modal: clean form styling, no visible white line under dropdown */
+  .ux-settings-modal .select-field {
+    @apply border-t border-l border-r border-white/[0.08] bg-white/[0.04] text-gray-100;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    accent-color: rgba(16, 185, 129, 0.5);
+  }
+  .ux-settings-modal .select-field:hover {
+    @apply border-white/[0.12] bg-white/[0.06];
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+  .ux-settings-modal .select-field:focus,
+  .ux-settings-modal .select-field:focus-visible {
+    @apply border-white/25 bg-white/[0.07] outline-none;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+  .ux-settings-modal .select-field option {
+    @apply bg-[#12121f] text-gray-100;
+  }
+
   /* ── Badges ── */
   .badge {
     @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
@@ -105,6 +176,42 @@
   .gradient-text {
     @apply bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent;
   }
+}
+
+/* Micro-interaction Studio: site-wide overrides when enabled */
+html[data-studio="on"] .btn-primary,
+html[data-studio="on"] .btn-secondary,
+html[data-studio="on"] .btn-danger {
+  transition-duration: var(--studio-duration);
+  transition-timing-function: var(--studio-ease);
+}
+html[data-studio="on"] .btn-primary:active,
+html[data-studio="on"] .btn-secondary:active,
+html[data-studio="on"] .btn-danger:active {
+  transform: scale(var(--studio-hover-scale));
+}
+html[data-studio="on"] .card-hover:hover {
+  transform: translateY(calc(-1 * var(--studio-card-lift)));
+  transition-duration: var(--studio-duration);
+  transition-timing-function: var(--studio-ease);
+}
+
+/* Live preview in Micro-interaction Studio: always uses current studio vars */
+[data-studio-preview] .btn-primary,
+[data-studio-preview] .btn-secondary,
+[data-studio-preview] .btn-danger {
+  transition-duration: var(--studio-duration);
+  transition-timing-function: var(--studio-ease);
+}
+[data-studio-preview] .btn-primary:active,
+[data-studio-preview] .btn-secondary:active,
+[data-studio-preview] .btn-danger:active {
+  transform: scale(var(--studio-hover-scale));
+}
+[data-studio-preview] .card-hover:hover {
+  transform: translateY(calc(-1 * var(--studio-card-lift)));
+  transition-duration: var(--studio-duration);
+  transition-timing-function: var(--studio-ease);
 }
 
 /* ───────────────── Animated gradient border ───────────────── */
@@ -294,3 +401,43 @@
   animation: voice-visualizer-spin 3s linear infinite, voice-visualizer-pulse 1.5s ease-in-out infinite;
   flex-shrink: 0;
 }
+
+/* ───────────────── Premium polish: reduced motion (no layout change) ───────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"]) .btn-primary:hover,
+  html:not([data-motion="full"]) .btn-secondary:hover,
+  html:not([data-motion="full"]) .btn-danger:hover { transform: none; }
+  html:not([data-motion="full"]) .btn-primary:active,
+  html:not([data-motion="full"]) .btn-secondary:active,
+  html:not([data-motion="full"]) .btn-danger:active { transform: none; }
+  html:not([data-motion="full"]) .card-hover:hover { transform: none; }
+  html:not([data-motion="full"]) .voice-agent-visualizer { animation: none; }
+  html:not([data-motion="full"]) .voice-listening-glow { animation: none; }
+}
+html[data-motion="reduced"] .btn-primary:hover,
+html[data-motion="reduced"] .btn-secondary:hover,
+html[data-motion="reduced"] .btn-danger:hover { transform: none; }
+html[data-motion="reduced"] .btn-primary:active,
+html[data-motion="reduced"] .btn-secondary:active,
+html[data-motion="reduced"] .btn-danger:active { transform: none; }
+html[data-motion="reduced"] .card-hover:hover { transform: none; }
+html[data-motion="reduced"] .voice-agent-visualizer { animation: none; }
+html[data-motion="reduced"] .voice-listening-glow { animation: none; }
+
+/* ───────────────── Theming scaffolding (default = current look; no visual change) ───────────────── */
+html[data-theme="default"],
+html:not([data-theme]) { /* current look */ }
+:root { --text-scale: 1; }
+html[data-text="lg"] { --text-scale: 1.1; }
+
+/* Skeleton loader (existing colors, no layout change) */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.2s ease-in-out infinite;
+}
+@keyframes skeleton-shine {
+  to { background-position: 200% 0; }
+}
+html[data-motion="reduced"] .skeleton,
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="full"]) .skeleton { animation: none; background: rgba(255,255,255,0.06); } }

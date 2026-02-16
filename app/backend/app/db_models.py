@@ -74,6 +74,9 @@ class User(Base):
 
     assessments = relationship("Assessment", back_populates="user")
     diet_plans = relationship("DietPlanRecord", back_populates="user")
+    meal_logs = relationship("MealLog", back_populates="user")
+    passkey_credentials = relationship("PasskeyCredential", back_populates="user", cascade="all, delete-orphan")
+    face_enrollment = relationship("FaceEnrollment", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
 
 class Notification(Base):
@@ -115,3 +118,46 @@ class DietPlanRecord(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="diet_plans")
+
+
+class MealLog(Base):
+    """AI Meal Photo Analyzer: one entry per analyzed meal (saved to user's log)."""
+    __tablename__ = "meal_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    meal_name = Column(String(255), nullable=False)
+    carb_level = Column(String(32), nullable=False)  # low | medium | high
+    healthier_swaps = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="meal_logs")
+
+
+# ---- Passkey (WebAuthn) ----
+class PasskeyCredential(Base):
+    """Stored WebAuthn passkey credential for passwordless / Face ID login."""
+    __tablename__ = "passkey_credentials"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    credential_id = Column(String(512), nullable=False, unique=True)  # base64url
+    public_key = Column(Text, nullable=False)  # base64url
+    sign_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="passkey_credentials")
+
+
+# ---- Face login (app-level face enrollment) ----
+class FaceEnrollment(Base):
+    """One face embedding per user for 'Sign in with your face' (Option 2)."""
+    __tablename__ = "face_enrollments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    embedding = Column(Text, nullable=False)  # JSON array of 128 floats (from face-api.js or similar)
+    enabled = Column(Boolean, default=True, nullable=False)  # user can turn face login on/off
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="face_enrollment")

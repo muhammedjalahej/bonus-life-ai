@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import {
   Send, Bot, User, Trash2, RefreshCw, AlertTriangle,
   Loader2, Wifi, WifiOff, Sparkles,
@@ -109,10 +110,16 @@ const ChatBot = ({ language = 'english' }) => {
       const data = await response.json();
       if (!data || (!data.response && !data.message)) throw new Error('Empty response');
       const llmResponse = data.response || data.message || data;
+      const showErrorDetail = data.error_detail && (llmResponse || '').toLowerCase().includes('technical difficulties');
 
       setMessages(prev => [...prev, {
-        text: llmResponse, sender: 'bot', timestamp: new Date(), id: Date.now() + 1,
-        isLLMResponse: true, suggestions: data.suggestions || generateSuggestions(language, llmResponse),
+        text: showErrorDetail ? `${llmResponse}\n\n[Debug: ${data.error_detail}]` : llmResponse,
+        sender: 'bot',
+        timestamp: new Date(),
+        id: Date.now() + 1,
+        isLLMResponse: true,
+        isError: showErrorDetail,
+        suggestions: data.suggestions || generateSuggestions(language, llmResponse),
       }]);
       setBackendStatus('connected');
       setRetryCount(0);
@@ -216,7 +223,19 @@ const ChatBot = ({ language = 'english' }) => {
                     ? 'bg-red-500/[0.06] border border-red-500/15 rounded-tl-md'
                     : 'bg-white/[0.02] border border-white/[0.05] rounded-tl-md'
                 }`}>
-                  <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                  <div className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed chat-message-content">
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold text-gray-100">{children}</strong>,
+                        ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+                        li: ({ children }) => <li className="ml-1">{children}</li>,
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
+                  </div>
 
                   {msg.suggestions?.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-white/[0.04] flex flex-wrap gap-1.5">

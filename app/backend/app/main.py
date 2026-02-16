@@ -231,6 +231,7 @@ try:
             "ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0",
             "ALTER TABLE users ADD COLUMN onboarding_completed INTEGER DEFAULT 0",
             "ALTER TABLE assessments ADD COLUMN share_token VARCHAR(64)",
+            "ALTER TABLE face_enrollments ADD COLUMN enabled INTEGER DEFAULT 1",
         ]:
             try:
                 conn.execute(text(col_sql))
@@ -300,9 +301,12 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
     _ALLOWED_PREFIXES = (
         "/docs", "/redoc", "/openapi.json",
         "/api/v1/auth/",
+        "/api/v1/webauthn/",
+        "/api/v1/face-auth/",
         "/api/v1/admin/",
         "/api/v1/announcements/",
         "/api/v1/shared/",
+        "/api/v1/reports/",
         "/uploads/",
         "/health", "/",
     )
@@ -344,7 +348,7 @@ app.add_middleware(MaintenanceModeMiddleware)
 # ---------------------------------------------------------------------------
 # Wire up routes
 # ---------------------------------------------------------------------------
-from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, voice_command, tts, language, auth, me_routes, admin_routes
+from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, voice_command, tts, hospitals, language, auth, me_routes, admin_routes, reports, meal_photo, webauthn_routes, face_routes, workout_videos
 
 # Inject service instances into route modules
 chat.init(ai_specialist)
@@ -365,11 +369,17 @@ app.include_router(user.router, prefix="/api/v1")          # /api/v1/user/*
 app.include_router(voice_chat.router, prefix="/api/v1")    # /api/v1/voice-chat
 app.include_router(voice_command.router, prefix="/api/v1") # /api/v1/voice-command
 app.include_router(tts.router, prefix="/api/v1")           # /api/v1/tts
+app.include_router(hospitals.router, prefix="/api/v1")    # /api/v1/nearby-hospitals
 app.include_router(language.router, prefix="/api/v1")      # /api/v1/detect-language
 app.include_router(auth.router, prefix="/api/v1")          # /api/v1/auth/*
 app.include_router(me_routes.router, prefix="/api/v1")     # /api/v1/users/me/*
 app.include_router(admin_routes.router, prefix="/api/v1")  # /api/v1/admin/*
 app.include_router(admin_routes.public_router, prefix="/api/v1")  # /api/v1/announcements/active
+app.include_router(reports.router, prefix="/api/v1")  # /api/v1/reports/*
+app.include_router(meal_photo.router, prefix="/api/v1")  # /api/v1/meal-photo/*
+app.include_router(webauthn_routes.router, prefix="/api/v1")  # /api/v1/webauthn/*
+app.include_router(face_routes.router, prefix="/api/v1")  # /api/v1/face-auth/*
+app.include_router(workout_videos.router, prefix="/api/v1/workout-videos")  # GET /api/v1/workout-videos
 
 # Serve uploaded avatars at /uploads/avatars/
 _static_uploads = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
