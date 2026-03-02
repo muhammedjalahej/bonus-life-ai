@@ -119,11 +119,15 @@ function AppContent({ language, setLanguage }) {
 
                 {/* User-only pages: admin gets redirected to /admin */}
                 <Route path={ROUTES.TEST} element={<BlockIfAdmin><DiabetesTest language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.HEART_TEST} element={<BlockIfAdmin><HeartTest language={language} /></BlockIfAdmin>} />
                 <Route path={ROUTES.CHAT} element={<BlockIfAdmin><ChatBot language={language} /></BlockIfAdmin>} />
                 <Route path={ROUTES.VOICE_CHAT} element={<BlockIfAdmin><VoiceChat language={language} /></BlockIfAdmin>} />
                 <Route path={ROUTES.DIET_PLAN} element={<BlockIfAdmin><DietPlan language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.EMERGENCY} element={<BlockIfAdmin><EmergencyCheck language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.SYMPTOM_CHECKER} element={<BlockIfAdmin><SymptomChecker language={language} /></BlockIfAdmin>} />
                 <Route path={ROUTES.HOSPITALS} element={<BlockIfAdmin><FindHospitals language={language} /></BlockIfAdmin>} />
+                <Route path={`${ROUTES.DASHBOARD_ASSESSMENT}/:id`} element={<BlockIfAdmin><ProtectedRoute><AssessmentReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
+                <Route path={`${ROUTES.DASHBOARD_HEART_ASSESSMENT}/:id`} element={<BlockIfAdmin><ProtectedRoute><HeartReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
+                <Route path={`${ROUTES.DASHBOARD_DIET_PLAN}/:id`} element={<BlockIfAdmin><ProtectedRoute><DietPlanReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
                 <Route path={ROUTES.DASHBOARD} element={<BlockIfAdmin><ProtectedRoute><Dashboard language={language} /></ProtectedRoute></BlockIfAdmin>} />
 
                 {/* Admin-only pages */}
@@ -134,8 +138,11 @@ function AppContent({ language, setLanguage }) {
                 <Route path={ROUTES.VERIFY} element={<VerifyReport language={language} />} />
                 <Route path={ROUTES.MEAL_PHOTO} element={<BlockIfAdmin><MealPhotoAnalyzer language={language} /></BlockIfAdmin>} />
                 <Route path={ROUTES.SPORT} element={<BlockIfAdmin><WorkoutVideos language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.LOCAL_AI} element={<BlockIfAdmin><LocalAI language={language} /></BlockIfAdmin>} />
+                <Route path={ROUTES.PRICING} element={<Pricing language={language} />} />
 
-                {/* Public shared assessment view */}
+                {/* Public shared assessment views */}
+                <Route path="/shared/heart/:token" element={<SharedHeart language={language} />} />
                 <Route path="/shared/:token" element={<SharedAssessment language={language} />} />
 
                 <Route path="*" element={<NotFoundPage language={language} />} />
@@ -160,22 +167,29 @@ const Header = lazy(() => import('./layout/Header'));
 const Footer = lazy(() => import('./layout/Footer'));
 const Home = lazy(() => import('./pages/Home'));
 const DiabetesTest = lazy(() => import('./pages/DiabetesTest'));
+const HeartTest = lazy(() => import('./pages/HeartTest'));
 const ChatBot = lazy(() => import('./pages/ChatBot'));
 const VoiceChat = lazy(() => import('./pages/VoiceChat'));
 const DietPlan = lazy(() => import('./pages/DietPlan'));
-const EmergencyCheck = lazy(() => import('./pages/EmergencyCheck'));
+const SymptomChecker = lazy(() => import('./pages/SymptomChecker'));
 const FindHospitals = lazy(() => import('./pages/FindHospitals'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const AssessmentReportPage = lazy(() => import('./pages/AssessmentReportPage'));
+const HeartReportPage = lazy(() => import('./pages/HeartReportPage'));
+const DietPlanReportPage = lazy(() => import('./pages/DietPlanReportPage'));
+const SharedHeart = lazy(() => import('./pages/SharedHeart'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const MicroInteractionStudio = lazy(() => import('./pages/MicroInteractionStudio'));
 const SharedAssessment = lazy(() => import('./pages/SharedAssessment'));
 const VerifyReport = lazy(() => import('./pages/VerifyReport'));
 const MealPhotoAnalyzer = lazy(() => import('./pages/MealPhotoAnalyzer'));
 const WorkoutVideos = lazy(() => import('./pages/WorkoutVideos'));
+const LocalAI = lazy(() => import('./pages/LocalAI'));
+const Pricing = lazy(() => import('./pages/Pricing'));
 
 function App() {
   const [language, setLanguage] = useState('english');

@@ -22,6 +22,7 @@ const Home = ({ language }) => {
       getStarted: 'Get Started',
       explore: 'Explore',
       poweredBy: 'Powered By',
+      whyBonusLife: 'Why Bonus Life',
       badgeHero: 'AI-Powered Health Platform',
     },
     turkish: {
@@ -36,23 +37,24 @@ const Home = ({ language }) => {
       getStarted: 'Başlayın',
       explore: 'Keşfet',
       poweredBy: 'Teknolojiler',
+      whyBonusLife: 'Neden Bonus Life',
       badgeHero: 'Yapay Zeka Destekli Sağlık Platformu',
     },
-  }[lang] || { hero1: 'Your health,', hero2: 'redefined by AI.', sub: '', cta1: 'Get Started', cta2: 'Talk to AI', platformLabel: 'Platform', platformTitle: 'Everything you need,', platformTitle2: 'in one platform.', platformSub: '', getStarted: 'Get Started', explore: 'Explore', poweredBy: 'Powered By', badgeHero: 'AI-Powered Health Platform' };
+  }[lang] || { hero1: 'Your health,', hero2: 'redefined by AI.', sub: '', cta1: 'Get Started', cta2: 'Talk to AI', platformLabel: 'Platform', platformTitle: 'Everything you need,', platformTitle2: 'in one platform.', platformSub: '', getStarted: 'Get Started', explore: 'Explore', poweredBy: 'Powered By', whyBonusLife: 'Why Bonus Life', badgeHero: 'AI-Powered Health Platform' };
 
   const featuresEn = [
     { icon: Activity, title: 'Risk Assessment', desc: 'ML-powered diabetes prediction with SHAP explainability and comprehensive health metrics analysis.', path: '/test', gradient: 'from-blue-500 to-indigo-600', glowClass: 'glow-blue', iconBg: 'bg-blue-500/10', iconColor: 'text-blue-400', accentColor: 'text-blue-400', featured: true },
     { icon: MessageSquare, title: 'AI Chat', desc: 'Real-time medical conversations powered by Groq LLM for personalized diabetes guidance.', path: '/chat', gradient: 'from-emerald-500 to-teal-600', glowClass: 'glow-emerald', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400', accentColor: 'text-emerald-400', featured: true },
     { icon: Mic, title: 'Voice Assistant', desc: 'Natural speech interaction in multiple languages.', path: '/voice-chat', gradient: 'from-violet-500 to-purple-600', glowClass: 'glow-violet', iconBg: 'bg-violet-500/10', iconColor: 'text-violet-400', accentColor: 'text-violet-400' },
     { icon: Salad, title: 'Diet Planner', desc: 'Personalized meal plans tailored for glucose management.', path: '/diet-plan', gradient: 'from-amber-500 to-orange-600', glowClass: 'glow-amber', iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400', accentColor: 'text-amber-400' },
-    { icon: AlertTriangle, title: 'Symptom Checker', desc: 'Emergency symptom assessment with urgency scoring.', path: '/emergency', gradient: 'from-red-500 to-rose-600', glowClass: 'glow-red', iconBg: 'bg-red-500/10', iconColor: 'text-red-400', accentColor: 'text-red-400' },
+    { icon: AlertTriangle, title: 'Symptom Checker', desc: 'See possible condition groups based on your symptoms and profile.', path: '/symptom-checker', gradient: 'from-red-500 to-rose-600', glowClass: 'glow-red', iconBg: 'bg-red-500/10', iconColor: 'text-red-400', accentColor: 'text-red-400' },
   ];
   const featuresTr = [
     { icon: Activity, title: 'Risk Değerlendirmesi', desc: 'SHAP açıklanabilirliği ve kapsamlı sağlık metrikleriyle makine öğrenimi destekli diyabet tahmini.', path: '/test', gradient: 'from-blue-500 to-indigo-600', glowClass: 'glow-blue', iconBg: 'bg-blue-500/10', iconColor: 'text-blue-400', accentColor: 'text-blue-400', featured: true },
     { icon: MessageSquare, title: 'Yapay Zeka Sohbet', desc: 'Kişiselleştirilmiş diyabet rehberliği için Groq LLM ile gerçek zamanlı tıbbi görüşmeler.', path: '/chat', gradient: 'from-emerald-500 to-teal-600', glowClass: 'glow-emerald', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400', accentColor: 'text-emerald-400', featured: true },
     { icon: Mic, title: 'Sesli Asistan', desc: 'Birden fazla dilde doğal konuşma etkileşimi.', path: '/voice-chat', gradient: 'from-violet-500 to-purple-600', glowClass: 'glow-violet', iconBg: 'bg-violet-500/10', iconColor: 'text-violet-400', accentColor: 'text-violet-400' },
     { icon: Salad, title: 'Diyet Planı', desc: 'Kan şekeri yönetimi için kişiselleştirilmiş öğün planları.', path: '/diet-plan', gradient: 'from-amber-500 to-orange-600', glowClass: 'glow-amber', iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400', accentColor: 'text-amber-400' },
-    { icon: AlertTriangle, title: 'Belirti Kontrolü', desc: 'Aciliyet skorlamalı acil belirti değerlendirmesi.', path: '/emergency', gradient: 'from-red-500 to-rose-600', glowClass: 'glow-red', iconBg: 'bg-red-500/10', iconColor: 'text-red-400', accentColor: 'text-red-400' },
+    { icon: AlertTriangle, title: 'Belirti Kontrolü', desc: 'Belirti ve profil bilgilerinize göre olası durum gruplarını görün.', path: '/symptom-checker', gradient: 'from-red-500 to-rose-600', glowClass: 'glow-red', iconBg: 'bg-red-500/10', iconColor: 'text-red-400', accentColor: 'text-red-400' },
   ];
   const features = lang === 'turkish' ? featuresTr : featuresEn;
 
@@ -181,15 +183,15 @@ const Home = ({ language }) => {
         </div>
       </section>
 
-      {/* ════════════════ TECH STACK ════════════════ */}
+      {/* ════════════════ WHY BONUS LIFE (benefits, no tech) ════════════════ */}
       <section className="border-t border-white/[0.04]">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 py-24">
-          <p className="text-sm font-extrabold text-gray-500 uppercase tracking-[0.2em] mb-12 text-center">{t.poweredBy}</p>
+          <p className="text-sm font-extrabold text-gray-500 uppercase tracking-[0.2em] mb-12 text-center">{t.whyBonusLife}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {[
-              { icon: Brain, title: 'Groq LLM', desc: lang === 'turkish' ? 'Akıllı, gerçek zamanlı tıbbi sohbetler için son teknoloji dil modeli.' : 'State-of-the-art language model for intelligent, real-time medical conversations.', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { icon: BarChart3, title: 'XGBoost + SHAP', desc: lang === 'turkish' ? 'Tam model açıklanabilirliği ve özellik önemi ile doğru diyabet tahmini.' : 'Accurate diabetes prediction with full model explainability and feature importance.', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-              { icon: Globe, title: lang === 'turkish' ? 'Çok Dilli' : 'Multi-language', desc: lang === 'turkish' ? 'Kapsayıcı sağlık hizmeti için İngilizce ve Türkçe erişim.' : 'Accessible in English and Turkish for inclusive healthcare.', color: 'text-violet-400', bg: 'bg-violet-500/10' },
+              { icon: Brain, title: lang === 'turkish' ? 'Kişisel rehberlik' : 'Personalized guidance', desc: lang === 'turkish' ? 'Sağlık profilinize uygun yanıtlar ve öneriler.' : 'Answers and advice tailored to your health profile.', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+              { icon: BarChart3, title: lang === 'turkish' ? 'Net sonuçlar' : 'Clear insights', desc: lang === 'turkish' ? 'Riskinizi anlaşılır sonuçlar ve açıklamalarla takip edin.' : 'Understand your risk with easy-to-read results and explanations.', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+              { icon: Globe, title: lang === 'turkish' ? 'Dilinizde' : 'In your language', desc: lang === 'turkish' ? 'İngilizce ve Türkçe ile kapsayıcı sağlık hizmeti.' : 'Available in English and Turkish so you can use the platform in your preferred language.', color: 'text-violet-400', bg: 'bg-violet-500/10' },
             ].map((item, i) => (
               <div key={i} className="flex gap-5 group">
                 <div className={`w-14 h-14 rounded-2xl ${item.bg} border border-white/5 flex items-center justify-center shrink-0

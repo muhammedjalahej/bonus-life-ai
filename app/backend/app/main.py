@@ -24,10 +24,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load .env from backend root so Stripe keys etc. are correct regardless of cwd
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(_env_path)
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -50,7 +52,7 @@ class DiabetesMLModel:
     """Load and run the trained diabetes model from a bundled .pkl artifact.
 
     The bundle is a dict: {"model": <sklearn model>, "scaler": <StandardScaler>, "feature_names": [...]}
-    Saved by scripts/train_model.py.
+    Saved by training/scripts/train_model.py.
     """
 
     FEATURE_MAP = {
@@ -183,6 +185,85 @@ class DiabetesMLModel:
         return risk_label, probability, {"Glucose": 0.3, "BMI": 0.25, "Age": 0.2, "BloodPressure": 0.25}
 
 
+class HeartMLModel:
+    """Load and run the trained heart disease model (UCI Cleveland). Bundle: model, scaler, feature_names (lowercase)."""
+
+    FEATURE_NAMES = [
+        "age", "sex", "cp", "trestbps", "chol", "fbs", "restecg",
+        "thalach", "exang", "oldpeak", "slope", "ca", "thal",
+    ]
+
+    def __init__(self):
+        self.model = None
+        self.scaler = None
+        self.feature_names = list(self.FEATURE_NAMES)
+        self.load_model()
+
+    def load_model(self):
+        model_path = os.getenv("HEART_MODEL_PATH", "data/Heart.pkl")
+        try:
+            if not os.path.exists(model_path):
+                logger.warning(f"Heart model not found at {model_path}, using rule-based fallback")
+                return
+            with open(model_path, "rb") as f:
+                artifact = pickle.load(f)
+            if isinstance(artifact, dict) and "model" in artifact:
+                self.model = artifact["model"]
+                self.scaler = artifact.get("scaler")
+                if artifact.get("feature_names"):
+                    self.feature_names = list(artifact["feature_names"])
+                logger.info(f"Heart model loaded from {model_path}")
+            else:
+                self.model = artifact
+                logger.info(f"Heart model (legacy) loaded from {model_path}")
+        except Exception as e:
+            logger.error(f"Heart model loading failed: {e}")
+            self.model = None
+
+    def predict(self, features: Dict[str, Any]) -> tuple:
+        feature_values = [features.get(fn, 0) for fn in self.feature_names]
+        if self.model and hasattr(self.model, "predict_proba"):
+            try:
+                X = np.array([feature_values])
+                if self.scaler is not None:
+                    X = self.scaler.transform(X)
+                probability = float(self.model.predict_proba(X)[0][1])
+                if probability >= 0.6:
+                    risk_label = "High Risk"
+                elif probability >= 0.35:
+                    risk_label = "Moderate Risk"
+                elif probability >= 0.15:
+                    risk_label = "Low Risk"
+                else:
+                    risk_label = "Very Low Risk"
+                if hasattr(self.model, "feature_importances_"):
+                    fi = dict(zip(self.feature_names, self.model.feature_importances_))
+                else:
+                    fi = {fn: round(1.0 / len(self.feature_names), 3) for fn in self.feature_names}
+                logger.info(f"Heart prediction: {risk_label} (probability: {probability:.3f})")
+                return risk_label, probability, fi
+            except Exception as e:
+                logger.error(f"Heart prediction error: {e}")
+        return self._rule_based_risk(features)
+
+    def _rule_based_risk(self, features: Dict[str, Any]) -> tuple:
+        age = features.get("age", 55)
+        chol = features.get("chol", 240)
+        trestbps = features.get("trestbps", 130)
+        thalach = features.get("thalach", 150)
+        score = 0.0
+        if age >= 55: score += 0.3
+        elif age >= 45: score += 0.2
+        if chol >= 240: score += 0.25
+        if trestbps >= 140: score += 0.25
+        if thalach < 120: score += 0.2
+        probability = min(0.9, score)
+        if probability >= 0.6: risk_label = "High Risk"
+        elif probability >= 0.35: risk_label = "Moderate Risk"
+        else: risk_label = "Low Risk"
+        return risk_label, probability, {fn: 0.08 for fn in self.feature_names}
+
+
 # ---------------------------------------------------------------------------
 # Service instantiation
 # ---------------------------------------------------------------------------
@@ -193,6 +274,7 @@ from app.services.voice_chat import VoiceChatService
 ai_specialist = AIDiabetesSpecialist()
 gpt_oss_specialist = GPTOSSDiabetesSpecialist()
 diabetes_model = DiabetesMLModel()
+heart_model = HeartMLModel()
 llm_service = GroqLLMService()
 meal_service = ProductionMealPlanningService(llm_service)
 voice_service = VoiceChatService()
@@ -232,6 +314,12 @@ try:
             "ALTER TABLE users ADD COLUMN onboarding_completed INTEGER DEFAULT 0",
             "ALTER TABLE assessments ADD COLUMN share_token VARCHAR(64)",
             "ALTER TABLE face_enrollments ADD COLUMN enabled INTEGER DEFAULT 1",
+            # Subscription (Stripe)
+            "ALTER TABLE users ADD COLUMN stripe_customer_id VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN stripe_subscription_id VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN subscription_tier VARCHAR(50) DEFAULT 'free'",
+            "ALTER TABLE users ADD COLUMN subscription_status VARCHAR(50) DEFAULT ''",
+            "ALTER TABLE users ADD COLUMN current_period_end DATETIME",
         ]:
             try:
                 conn.execute(text(col_sql))
@@ -241,12 +329,17 @@ try:
 except Exception as e:
     logger.warning(f"Optional DB migration skipped: {e}")
 
-# Fix old avatar URLs: strip any http://host:port prefix, keep only /uploads/...
+# Fix old avatar URLs: normalize /uploads/avatars/ -> /avatars/, then strip http prefix
 try:
     with engine.connect() as conn:
         conn.execute(text(
-            "UPDATE users SET avatar_url = substr(avatar_url, instr(avatar_url, '/uploads')) "
-            "WHERE avatar_url IS NOT NULL AND avatar_url LIKE 'http%/uploads/%'"
+            "UPDATE users SET avatar_url = replace(avatar_url, '/uploads/avatars/', '/avatars/') "
+            "WHERE avatar_url IS NOT NULL AND avatar_url LIKE '%/uploads/avatars/%'"
+        ))
+        conn.commit()
+        conn.execute(text(
+            "UPDATE users SET avatar_url = substr(avatar_url, instr(avatar_url, '/avatars')) "
+            "WHERE avatar_url IS NOT NULL AND avatar_url LIKE 'http%' AND avatar_url LIKE '%/avatars/%'"
         ))
         conn.commit()
 except Exception:
@@ -307,7 +400,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         "/api/v1/announcements/",
         "/api/v1/shared/",
         "/api/v1/reports/",
-        "/uploads/",
+        "/avatars/",
         "/health", "/",
     )
     # Exact paths allowed (not prefix-matched)
@@ -348,11 +441,26 @@ app.add_middleware(MaintenanceModeMiddleware)
 # ---------------------------------------------------------------------------
 # Wire up routes
 # ---------------------------------------------------------------------------
-from app.routes import chat, assessment, diet, emergency, health, topics, user, voice_chat, voice_command, tts, hospitals, language, auth, me_routes, admin_routes, reports, meal_photo, webauthn_routes, face_routes, workout_videos
+# Register TTS routes on the app first so they are never shadowed (fixes 404 → robot voice)
+from app.routes import tts as _tts_routes
+
+@app.get("/api/v1/voices", tags=["tts"])
+@app.get("/api/v1/tts/voices", tags=["tts"])
+def list_voices_endpoint():
+    """List ElevenLabs voices. Use a voice_id in .env as ELEVENLABS_VOICE_ID."""
+    return _tts_routes.list_voices()
+
+@app.post("/api/v1/tts", tags=["tts"])
+def post_tts_endpoint(body: _tts_routes.TTSRequest):
+    """Synthesize speech via ElevenLabs. Requires ELEVENLABS_API_KEY in .env."""
+    return _tts_routes.post_tts(body)
+
+from app.routes import chat, assessment, diet, health, topics, user, voice_chat, voice_command, tts, hospitals, language, auth, me_routes, admin_routes, reports, meal_photo, webauthn_routes, face_routes, workout_videos, local_ai_routes, stripe_webhook, heart, symptom_checker
 
 # Inject service instances into route modules
 chat.init(ai_specialist)
 assessment.init(ai_specialist, diabetes_model)
+heart.init(ai_specialist, heart_model)
 diet.init(meal_service)
 health.init(ai_specialist, llm_service, diabetes_model, app_start_time)
 user.init(ai_specialist)
@@ -362,8 +470,9 @@ voice_chat.init(voice_service, gpt_oss_specialist)
 app.include_router(health.router)                          # /, /health, /api/v1/*
 app.include_router(chat.router, prefix="/api/v1")          # /api/v1/chat
 app.include_router(assessment.router, prefix="/api/v1")    # /api/v1/diabetes-assessment
-app.include_router(diet.router, prefix="/api/v1")          # /api/v1/diet-plan/generate
-app.include_router(emergency.router, prefix="/api/v1")     # /api/v1/emergency-assessment
+app.include_router(heart.router, prefix="/api/v1")         # /api/v1/heart-assessment
+app.include_router(diet.router, prefix="/api/v1")           # /api/v1/diet-plan/generate
+app.include_router(symptom_checker.router, prefix="/api/v1")  # /api/v1/symptom-checker/predict
 app.include_router(topics.router, prefix="/api/v1")        # /api/v1/health-topics
 app.include_router(user.router, prefix="/api/v1")          # /api/v1/user/*
 app.include_router(voice_chat.router, prefix="/api/v1")    # /api/v1/voice-chat
@@ -380,12 +489,15 @@ app.include_router(meal_photo.router, prefix="/api/v1")  # /api/v1/meal-photo/*
 app.include_router(webauthn_routes.router, prefix="/api/v1")  # /api/v1/webauthn/*
 app.include_router(face_routes.router, prefix="/api/v1")  # /api/v1/face-auth/*
 app.include_router(workout_videos.router, prefix="/api/v1/workout-videos")  # GET /api/v1/workout-videos
+app.include_router(local_ai_routes.router, prefix="/api/v1/local-ai")  # Local LLM: term, health-tip, scenario
+app.include_router(stripe_webhook.router, prefix="/api/v1")    # POST /api/v1/webhooks/stripe
 
-# Serve uploaded avatars at /uploads/avatars/
-_static_uploads = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
-os.makedirs(os.path.join(_static_uploads, "avatars"), exist_ok=True)
-if os.path.isdir(_static_uploads):
-    app.mount("/uploads", StaticFiles(directory=_static_uploads), name="uploads")
+# Serve uploaded avatars at /avatars/
+_static_avatars = os.path.join(os.path.dirname(__file__), "..", "static", "avatars")
+os.makedirs(_static_avatars, exist_ok=True)
+if os.path.isdir(_static_avatars):
+    app.mount("/avatars", StaticFiles(directory=_static_avatars), name="avatars")
+
 
 # ---------------------------------------------------------------------------
 # Error handler
@@ -410,7 +522,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
         host=os.getenv("HOST", "0.0.0.0"),
-        port=int(os.getenv("PORT", 8000)),
+        port=int(os.getenv("PORT", 8001)),
         reload=os.getenv("RELOAD", "True").lower() == "true",
         log_level="info",
     )

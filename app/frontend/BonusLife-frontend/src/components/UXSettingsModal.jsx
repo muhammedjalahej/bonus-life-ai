@@ -1,10 +1,24 @@
-import React, { useEffect } from 'react';
-import { X, Palette, Move, Type, Zap, Volume2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Palette, Move, Type, Zap, Volume2, Mic } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useUXSettings } from '../context/UXSettingsContext';
+import { API_BASE_URL } from '../config/constants';
+
+const TTS_VOICE_STORAGE_KEY = 'bonuslife_tts_voice_id';
+
+function getVoiceApiBase() {
+  if (API_BASE_URL && API_BASE_URL.startsWith('http')) return API_BASE_URL.replace(/\/$/, '');
+  if (typeof window !== 'undefined' && window.location?.hostname) return `http://${window.location.hostname}:8001`;
+  return 'http://127.0.0.1:8001';
+}
 
 export default function UXSettingsModal({ isOpen, onClose }) {
   const containerRef = useFocusTrap(isOpen, onClose);
+  const [ttsVoices, setTtsVoices] = useState([]);
+  const [ttsVoiceLoading, setTtsVoiceLoading] = useState(false);
+  const [ttsVoiceId, setTtsVoiceIdState] = useState(() => {
+    try { return localStorage.getItem(TTS_VOICE_STORAGE_KEY) || ''; } catch { return ''; }
+  });
   const {
     theme,
     motion,
@@ -27,6 +41,23 @@ export default function UXSettingsModal({ isOpen, onClose }) {
     if (isOpen) window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    try { setTtsVoiceIdState(localStorage.getItem(TTS_VOICE_STORAGE_KEY) || ''); } catch {}
+    setTtsVoiceLoading(true);
+    const base = getVoiceApiBase();
+    fetch(`${base}/api/v1/voices`)
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error(res.statusText)))
+      .then((data) => setTtsVoices(data.voices || []))
+      .catch(() => setTtsVoices([]))
+      .finally(() => setTtsVoiceLoading(false));
+  }, [isOpen]);
+
+  const setTtsVoiceId = (voiceId) => {
+    try { localStorage.setItem(TTS_VOICE_STORAGE_KEY, voiceId || ''); } catch {}
+    setTtsVoiceIdState(voiceId || '');
+  };
 
   if (!isOpen) return null;
 
@@ -161,6 +192,27 @@ export default function UXSettingsModal({ isOpen, onClose }) {
                   <option value="on">On</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Hover chart bars to hear data as sound</p>
+              </div>
+            </div>
+
+            {/* TTS Voice (voice agent) */}
+            <div className="flex items-center gap-3">
+              <Mic className="w-5 h-5 text-gray-500 shrink-0" />
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Voice assistant voice</label>
+                <select
+                  value={ttsVoiceId}
+                  onChange={(e) => setTtsVoiceId(e.target.value)}
+                  className="select-field py-2.5"
+                  aria-label="TTS voice"
+                  disabled={ttsVoiceLoading}
+                >
+                  <option value="">Default (backend)</option>
+                  {ttsVoices.map((v) => (
+                    <option key={v.voice_id} value={v.voice_id}>{v.name || v.voice_id}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">ElevenLabs voice for the voice agent</p>
               </div>
             </div>
           </div>

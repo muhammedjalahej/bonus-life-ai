@@ -37,7 +37,7 @@ def _model_loaded() -> bool:
 
 @router.get("/")
 async def root():
-    return {
+    out = {
         "message": "Bonus Life AI - Type 2 Diabetes Early Detection Platform",
         "status": "operational",
         "version": APP_VERSION,
@@ -47,8 +47,9 @@ async def root():
         "endpoints": {
             "chat": "/api/v1/chat",
             "assessment": "/api/v1/diabetes-assessment",
+            "heart_assessment": "/api/v1/heart-assessment",
             "diet_plan": "/api/v1/diet-plan/generate",
-            "emergency": "/api/v1/emergency-assessment",
+            "symptom_checker": "/api/v1/symptom-checker/predict",
             "topics": "/api/v1/health-topics",
             "voice_chat": "/api/v1/voice-chat",
             "auth_register": "/api/v1/auth/register",
@@ -67,6 +68,16 @@ async def root():
             "workout_videos": "/api/v1/workout-videos",
         },
     }
+    try:
+        from app.routes.tts import list_voices
+        out["tts_voices"] = list_voices()
+    except Exception as e:
+        out["tts_voices_error"] = str(e)
+    return out
+
+
+def _llm_provider() -> str:
+    return "Groq"
 
 
 @router.get("/health")
@@ -77,6 +88,7 @@ async def health_check():
         "timestamp": datetime.utcnow().isoformat(),
         "services": {
             "llm_service": "connected" if _llm_connected() else "disconnected",
+            "llm_provider": _llm_provider(),
             "ml_model": "loaded" if _model_loaded() else "not loaded",
             "scaler": "available" if (_diabetes_model and _diabetes_model.scaler) else "none",
             "api": "operational",
@@ -96,10 +108,11 @@ async def system_status():
         model_info["scaler"] = "StandardScaler" if _diabetes_model.scaler else "none"
         model_info["features"] = len(_diabetes_model.feature_names)
 
+    provider = "Groq"
     return {
         "llm": {
             "status": "connected" if _llm_connected() else "disconnected",
-            "provider": "Groq",
+            "provider": provider,
         },
         "ml_model": model_info,
         "memory": {
@@ -124,3 +137,5 @@ async def api_health():
         "llm_available": _llm_service.available if _llm_service else False,
         "ml_model_loaded": _model_loaded(),
     }
+
+

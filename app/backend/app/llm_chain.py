@@ -19,7 +19,6 @@ class MoreLifeAILLM:
         self.prediction_chain = None
         self.chat_chain = None
         self.diet_chain = None
-        self.emergency_chain = None
         self.voice_chain = None
         self.chat_memory = ConversationBufferMemory(
             memory_key="chat_history",

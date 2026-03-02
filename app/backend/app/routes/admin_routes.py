@@ -3,7 +3,7 @@
 import json
 import secrets
 import logging
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query, HTTPException, status
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
-from app.db_models import User, Assessment, DietPlanRecord, AuditLog, Announcement, SiteSetting
+from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, AuditLog, Announcement, SiteSetting
 from app.auth import require_admin, hash_password
 from app.services.notification_service import create_notification
 from app.models import (
@@ -216,6 +216,63 @@ async def admin_chart_data(admin: User = Depends(require_admin), db: Session = D
 
 
 # ---------------------------------------------------------------------------
+# Subscription management (admin only)
+# ---------------------------------------------------------------------------
+@router.get("/subscriptions/stats")
+async def admin_subscription_stats(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+) -> dict:
+    """Aggregate subscription counts by tier and status."""
+    total = db.query(func.count(User.id)).scalar() or 0
+    free = db.query(func.count(User.id)).filter(
+        (User.subscription_tier == "free") | (User.subscription_tier == None)
+    ).scalar() or 0
+    pro_monthly = db.query(func.count(User.id)).filter(User.subscription_tier == "pro_monthly").scalar() or 0
+    pro_yearly = db.query(func.count(User.id)).filter(User.subscription_tier == "pro_yearly").scalar() or 0
+    active = db.query(func.count(User.id)).filter(
+        User.subscription_status == "active",
+        User.subscription_tier != "free",
+    ).scalar() or 0
+    return {
+        "total_users": total,
+        "free": free,
+        "pro_monthly": pro_monthly,
+        "pro_yearly": pro_yearly,
+        "active_subscriptions": active,
+    }
+
+
+@router.get("/subscriptions")
+async def admin_list_subscriptions(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+    status: Optional[str] = Query(None, description="Filter by subscription_status"),
+    tier: Optional[str] = Query(None, description="Filter by subscription_tier"),
+    skip: int = 0, limit: int = 500,
+) -> List[dict]:
+    """List users with subscription data for admin management."""
+    q = db.query(User).filter(User.role == "user")
+    if status:
+        q = q.filter(User.subscription_status == status)
+    if tier:
+        q = q.filter(User.subscription_tier == tier)
+    rows = q.order_by(User.updated_at.desc()).offset(skip).limit(limit).all()
+    return [
+        {
+            "id": u.id,
+            "email": u.email,
+            "full_name": u.full_name or "",
+            "subscription_tier": u.subscription_tier or "free",
+            "subscription_status": u.subscription_status or "",
+            "current_period_end": u.current_period_end.isoformat() if u.current_period_end else None,
+            "stripe_customer_id": u.stripe_customer_id,
+            "stripe_subscription_id": u.stripe_subscription_id,
+            "updated_at": u.updated_at.isoformat() if u.updated_at else None,
+        }
+        for u in rows
+    ]
+
+
+# ---------------------------------------------------------------------------
 # Assessments
 # ---------------------------------------------------------------------------
 @router.get("/assessments")
@@ -373,7 +430,7 @@ async def admin_system_health(admin: User = Depends(require_admin), db: Session 
     except Exception:
         db_ok = False
 
-    # LLM check
+    # LLM check (Gemini or Groq)
     llm_ok = False
     try:
         from app.services.ai_specialist import ai_specialist
@@ -533,6 +590,23 @@ async def get_shared_assessment(token: str, db: Session = Depends(get_db)) -> di
     a = db.query(Assessment).filter(Assessment.share_token == token).first()
     if not a:
         raise HTTPException(status_code=404, detail="Shared assessment not found or link expired.")
+    user = db.query(User).filter(User.id == a.user_id).first()
+    payload = json.loads(a.payload) if a.payload else None
+    return {
+        "risk_level": a.risk_level,
+        "probability": a.probability,
+        "executive_summary": a.executive_summary,
+        "payload": payload,
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+        "user_name": user.full_name if user else "Unknown",
+    }
+
+
+@public_router.get("/shared/heart/{token}")
+async def get_shared_heart_assessment(token: str, db: Session = Depends(get_db)) -> dict:
+    a = db.query(HeartAssessment).filter(HeartAssessment.share_token == token).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Shared heart assessment not found or link expired.")
     user = db.query(User).filter(User.id == a.user_id).first()
     payload = json.loads(a.payload) if a.payload else None
     return {

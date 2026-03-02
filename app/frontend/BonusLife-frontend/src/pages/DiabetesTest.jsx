@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import {
   AlertTriangle, CheckCircle, Loader2, ArrowRight, ArrowLeft, RotateCcw,
   Heart, Activity, Apple, Dumbbell, Leaf, Calendar, Stethoscope, Target,
@@ -309,7 +310,19 @@ const DiabetesTest = ({ language = 'english' }) => {
                           </div>
                           <div>
                             <h3 className="font-bold text-white mb-2 text-lg">{t.execSummary}</h3>
-                            <p className="text-sm text-gray-400 leading-relaxed">{result.executive_summary}</p>
+                            <div className="text-sm text-gray-400 leading-relaxed">
+                              <ReactMarkdown
+                                components={{
+                                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                  strong: ({ children }) => <strong className="font-semibold text-gray-200">{children}</strong>,
+                                  ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+                                  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+                                  li: ({ children }) => <li className="ml-1">{children}</li>,
+                                }}
+                              >
+                                {result.executive_summary}
+                              </ReactMarkdown>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -14,8 +14,8 @@ Dataset: Pima Indians Diabetes Database (NIDDK)
 
 Output:
     - Trained model saved to: app/backend/data/best_model.pkl
-    - Trained model copy to: Models/best_model.pkl
-    - Training results and plots saved to: Models/results/
+    - Trained model copy to: training/models/best_model.pkl
+    - Training results and plots saved to: training/models/results/
 """
 
 import os
@@ -49,12 +49,12 @@ RANDOM_STATE = 42
 TEST_SIZE = 0.2
 N_SPLITS_CV = 5
 
-# Output paths
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Output paths (script lives in training/scripts/, so three dirnames to get project root)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODEL_OUTPUT_PATH = os.path.join(PROJECT_ROOT, "app", "backend", "data", "best_model.pkl")
-MODEL_COPY_PATH = os.path.join(PROJECT_ROOT, "Models", "best_model.pkl")
-RESULTS_DIR = os.path.join(PROJECT_ROOT, "Models", "results")
-DATA_DIR = os.path.join(PROJECT_ROOT, "Data")
+MODEL_COPY_PATH = os.path.join(PROJECT_ROOT, "training", "models", "best_model.pkl")
+RESULTS_DIR = os.path.join(PROJECT_ROOT, "training", "models", "results")
+DATA_DIR = os.path.join(PROJECT_ROOT, "training", "data")
 
 # Feature names (must match backend ml_model.py)
 FEATURE_NAMES = [
@@ -347,7 +347,7 @@ def save_model(model, scaler, best_name, results):
     print(f"\n  Model bundle saved to: {MODEL_OUTPUT_PATH}")
     print(f"    Contains: model ({type(model).__name__}), scaler (StandardScaler), feature_names ({len(FEATURE_NAMES)})")
 
-    # Save copy to Models directory
+    # Save copy to training/models directory
     os.makedirs(os.path.dirname(MODEL_COPY_PATH), exist_ok=True)
     with open(MODEL_COPY_PATH, "wb") as f:
         pickle.dump(bundle, f)

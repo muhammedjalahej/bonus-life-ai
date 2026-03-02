@@ -3,9 +3,15 @@ import {
   Mic, MicOff, Bot, Globe, Keyboard, Loader2, AlertTriangle,
   Clock, X, Send, RotateCcw, Sparkles,
 } from 'lucide-react';
-import { API_BASE_URL } from '../config/constants';
+import { useAuth } from '../context/AuthContext';
+import apiService from '../services/api';
+
+const SpeechRecognitionAPI = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
 const VoiceChat = ({ language = 'english' }) => {
+  const { user } = useAuth();
+  const voiceUserId = user?.id ? String(user.id) : 'voice-user';
+  const textUserId = user?.id ? String(user.id) : 'text-user';
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState(null);
@@ -14,6 +20,8 @@ const VoiceChat = ({ language = 'english' }) => {
   const [showTextDialog, setShowTextDialog] = useState(false);
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
+  const speechRecognitionRef = useRef(null);
+  const speechTranscriptRef = useRef('');
 
   const t = language === 'turkish' ? {
     title: 'Sesli Asistan', sub: 'Diyabet hakkında kendi dilinizde doğal bir şekilde konuşun', start: 'Kayıt Başlat', stop: 'Durdur',
@@ -27,37 +35,54 @@ const VoiceChat = ({ language = 'english' }) => {
 
   const startRecording = async () => {
     try {
-      setError(''); setResult(null); audioChunks.current = [];
+      setError(''); setResult(null); audioChunks.current = []; speechTranscriptRef.current = '';
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 } });
       mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
       mediaRecorder.current.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.current.push(e.data); };
       mediaRecorder.current.onstop = processRecording;
       mediaRecorder.current.start(1000);
+      if (SpeechRecognitionAPI) {
+        const recognition = new SpeechRecognitionAPI();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = language === 'turkish' ? 'tr-TR' : 'en-US';
+        recognition.onresult = (e) => {
+          const full = Array.from(e.results).map((r) => r[0].transcript).join(' ').trim();
+          if (full) speechTranscriptRef.current = full;
+        };
+        recognition.start();
+        speechRecognitionRef.current = recognition;
+      }
       setIsRecording(true);
     } catch { setError('Microphone access denied.'); }
   };
 
   const stopRecording = () => {
     if (mediaRecorder.current && isRecording) {
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+        speechRecognitionRef.current = null;
+      }
       mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach(t => t.stop());
+      mediaRecorder.current.stream.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
     }
   };
 
   const processRecording = async () => {
-    if (!audioChunks.current.length) { setError('No audio recorded.'); return; }
+    const transcript = (speechTranscriptRef.current || '').trim();
+    if (!transcript && !audioChunks.current.length) {
+      setError('No speech detected. Try again or type your question.');
+      return;
+    }
     setIsProcessing(true);
     try {
-      const testText = language === 'turkish'
-        ? 'Ailemde diyabet risk faktörleri konusunda endişeliyim.'
-        : "I'm concerned about diabetes risk factors in my family";
-      const r = await fetch(`${API_BASE_URL}/api/v1/voice-chat/test`, {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ text: testText, language, user_id: 'voice-user' }),
-      });
-      if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
-      setResult(await r.json());
+      if (transcript) {
+        const data = await apiService.voiceChat(transcript, language, voiceUserId, true);
+        setResult(data);
+      } else {
+        setError('Could not understand. Try typing your question or speak again.');
+      }
     } catch (err) { setError(err.message); } finally { setIsProcessing(false); }
   };
 
@@ -65,12 +90,9 @@ const VoiceChat = ({ language = 'english' }) => {
     if (!textInput.trim()) { setError('Enter a question'); return; }
     setIsProcessing(true); setShowTextDialog(false);
     try {
-      const r = await fetch(`${API_BASE_URL}/api/v1/voice-chat/test`, {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ text: textInput, language, user_id: 'text-user' }),
-      });
-      if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
-      setResult(await r.json()); setTextInput('');
+      const data = await apiService.voiceChat(textInput, language, textUserId, true);
+      setResult(data);
+      setTextInput('');
     } catch (err) { setError(err.message); } finally { setIsProcessing(false); }
   };
 
@@ -166,7 +188,7 @@ const VoiceChat = ({ language = 'english' }) => {
 
               <div className="card p-6 border border-emerald-500/10 bg-emerald-500/[0.03]">
                 <p className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-[0.15em] mb-3">{t.response}</p>
-                <p className="text-[15px] text-gray-300 leading-relaxed">{result.ai_response}</p>
+                <p className="text-[15px] text-gray-300 leading-relaxed whitespace-pre-wrap">{result.ai_response?.replace(/\*\*/g, '')}</p>
                 <div className="flex gap-2 mt-4">
                   <span className="badge bg-white/[0.04] text-gray-400 border border-white/[0.08]">
                     <Globe className="w-3 h-3" /> {result.language}

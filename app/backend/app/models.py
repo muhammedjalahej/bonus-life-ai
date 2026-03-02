@@ -4,7 +4,7 @@ Authors: Muhammed Jalahej, Yazen Emino
 """
 
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 from datetime import datetime
 
 
@@ -48,6 +48,34 @@ class AssessmentResponse(BaseModel):
     executive_summary: str
     risk_analysis: Dict[str, Any]
     health_metrics: Dict[str, Any]
+    recommendations: Dict[str, Any]
+
+
+# ---------------------------------------------------------------
+# Heart Disease Risk Assessment (UCI Cleveland-style features)
+# ---------------------------------------------------------------
+class HeartAssessmentRequest(BaseModel):
+    age: int = Field(..., ge=1, le=120, description="Age in years")
+    sex: int = Field(..., ge=0, le=1, description="Sex (0=female, 1=male)")
+    cp: int = Field(..., ge=0, le=4, description="Chest pain type (0-4)")
+    trestbps: int = Field(..., ge=80, le=250, description="Resting blood pressure (mmHg)")
+    chol: int = Field(..., ge=100, le=600, description="Serum cholesterol (mg/dL)")
+    fbs: int = Field(0, ge=0, le=1, description="Fasting blood sugar >120 (0/1)")
+    restecg: int = Field(0, ge=0, le=2, description="Resting ECG (0=normal, 1=ST-T, 2=LVH)")
+    thalach: int = Field(..., ge=60, le=220, description="Max heart rate achieved")
+    exang: int = Field(0, ge=0, le=1, description="Exercise induced angina (0/1)")
+    oldpeak: float = Field(0.0, ge=0.0, le=10.0, description="ST depression (exercise)")
+    slope: int = Field(1, ge=1, le=3, description="Peak exercise ST slope (1-3)")
+    ca: int = Field(0, ge=0, le=4, description="Number of major vessels (0-4)")
+    thal: int = Field(3, ge=0, le=7, description="Thalassemia (3=normal, 6=fixed, 7=reversible)")
+    language: Optional[str] = Field("english", description="Response language")
+
+
+class HeartAssessmentResponse(BaseModel):
+    assessment_id: str
+    timestamp: str
+    executive_summary: str
+    risk_analysis: Dict[str, Any]
     recommendations: Dict[str, Any]
 
 
@@ -102,27 +130,28 @@ class MealPhotoAnalyzeResponse(BaseModel):
 
 
 # ---------------------------------------------------------------
-# Emergency Assessment
+# Symptom Checker (ML disease prediction from symptoms + profile)
 # ---------------------------------------------------------------
-class EmergencyAssessmentRequest(BaseModel):
-    symptoms: List[str]
-    age: Optional[int] = None
-    weight: Optional[float] = None
-    height: Optional[float] = None
-    existing_conditions: List[str] = []
-    current_medications: List[str] = []
-    last_meal_time: Optional[str] = None
-    language: str = "english"
+class SymptomCheckerRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    fever: int = Field(..., ge=0, le=1, description="Fever (0=No, 1=Yes)")
+    cough: int = Field(..., ge=0, le=1, description="Cough (0=No, 1=Yes)")
+    fatigue: int = Field(..., ge=0, le=1, description="Fatigue (0=No, 1=Yes)")
+    difficulty_breathing: int = Field(..., ge=0, le=1, description="Difficulty breathing (0=No, 1=Yes)", alias="difficultyBreathing")
+    age: float = Field(..., ge=0, le=120, description="Age in years")
+    gender: int = Field(..., ge=0, le=1, description="Gender (0=Female, 1=Male)")
+    blood_pressure: int = Field(..., ge=0, le=1, description="Blood pressure (0=Normal/Low, 1=High)", alias="bloodPressure")
+    cholesterol: int = Field(..., ge=0, le=1, description="Cholesterol (0=Normal/Low, 1=High)")
 
 
-class EmergencyAssessmentResponse(BaseModel):
-    assessment: str
-    personalized_analysis: str
-    recommendations: List[str]
-    urgency_level: str
-    risk_factors: List[str]
-    next_steps: List[str]
-    timestamp: str
+class SymptomPredictionItem(BaseModel):
+    disease: str
+    probability: float
+    disease_examples: List[str] = []
+
+
+class SymptomCheckerResponse(BaseModel):
+    predictions: List[SymptomPredictionItem]
 
 
 # ---------------------------------------------------------------
@@ -259,6 +288,10 @@ class UserMeResponse(BaseModel):
     totp_enabled: bool = False
     # Onboarding
     onboarding_completed: bool = False
+    # Subscription (no feature gating – all tools free; Pro = early access to future features)
+    subscription_tier: str = "free"
+    subscription_status: str = ""
+    current_period_end: Optional[datetime] = None
 
 
 class ProfileUpdateRequest(BaseModel):

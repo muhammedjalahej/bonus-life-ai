@@ -1,0 +1,111 @@
+"""Gemini API helper – used when GEMINI_API_KEY is set instead of Groq for chat, diet, meal photo."""
+
+import os
+import base64
+import logging
+from typing import List, Dict
+
+logger = logging.getLogger(__name__)
+
+_genai = None
+_model = None
+_model_name = ""
+
+
+def _configure():
+    global _genai, _model, _model_name
+    if _genai is not None:
+        return
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
+        return
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=key)
+        _genai = genai
+        _model_name = (os.getenv("GEMINI_MODEL") or "gemini-2.5-pro").strip()
+        _model = genai.GenerativeModel(_model_name)
+        logger.info("[OK] Gemini initialized with model: %s", _model_name)
+    except Exception as e:
+        logger.warning("Gemini init failed: %s", e)
+        _genai = None
+        _model = None
+
+
+def is_available() -> bool:
+    _configure()
+    return _model is not None
+
+
+def get_model_name() -> str:
+    _configure()
+    return _model_name or (os.getenv("GEMINI_MODEL") or "gemini-2.5-pro").strip()
+
+
+def generate_chat(messages: List[Dict[str, str]]) -> str:
+    """Generate a response from messages. roles: system, user, assistant. Builds one prompt for compatibility."""
+    _configure()
+    if not _model:
+        raise RuntimeError("Gemini not configured")
+    prompt_parts = []
+    for m in messages:
+        role = (m.get("role") or "user").lower()
+        content = (m.get("content") or "").strip()
+        if not content:
+            continue
+        if role == "system":
+            prompt_parts.append(f"[System instructions]\n{content}\n")
+        elif role == "user":
+            prompt_parts.append(f"User: {content}\n")
+        elif role == "assistant":
+            prompt_parts.append(f"Assistant: {content}\n")
+    prompt_parts.append("Assistant:")
+    full_prompt = "\n".join(prompt_parts)
+    try:
+        response = _model.generate_content(
+            full_prompt,
+            generation_config=_genai.types.GenerationConfig(
+                temperature=0.7,
+                max_output_tokens=1500,
+            ) if hasattr(_genai, "types") else None,
+        )
+        return (response.text or "").strip()
+    except Exception as e:
+        logger.exception("Gemini generate_chat failed: %s", e)
+        raise
+
+
+def generate_text(prompt: str, temperature: float = 0.7) -> str:
+    """Single prompt, no history."""
+    _configure()
+    if not _model:
+        raise RuntimeError("Gemini not configured")
+    try:
+        config = None
+        if hasattr(_genai, "types") and hasattr(_genai.types, "GenerationConfig"):
+            config = _genai.types.GenerationConfig(temperature=temperature, max_output_tokens=1500)
+        response = _model.generate_content(prompt, generation_config=config)
+        return (response.text or "").strip()
+    except Exception as e:
+        logger.exception("Gemini generate_text failed: %s", e)
+        raise
+
+
+def generate_vision(image_base64: str, prompt: str) -> str:
+    """Analyze an image with a text prompt. image_base64: raw base64 string."""
+    _configure()
+    if not _model:
+        raise RuntimeError("Gemini not configured")
+    try:
+        image_bytes = base64.b64decode(image_base64)
+        # Prefer SDK Part type; fallback to inline_data dict (data as bytes)
+        image_part = None
+        if hasattr(_genai, "types") and hasattr(_genai.types, "Part"):
+            image_part = _genai.types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+        if image_part is None:
+            image_part = {"inline_data": {"mime_type": "image/jpeg", "data": image_bytes}}
+        response = _model.generate_content([prompt, image_part])
+        return (response.text or "").strip()
+    except Exception as e:
+        logger.exception("Gemini generate_vision failed: %s", e)
+        raise

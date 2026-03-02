@@ -40,6 +40,7 @@ export async function setStoredToken(token) {
 }
 
 const REQUEST_TIMEOUT_MS = 15000;
+const LOCAL_AI_TIMEOUT_MS = 95000; // backend Ollama can take up to 90s
 
 async function apiRequest(endpoint, options = {}) {
   const token = await getStoredToken();
@@ -49,8 +50,9 @@ async function apiRequest(endpoint, options = {}) {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
+  const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -123,6 +125,10 @@ export async function getMyAssessments(limit = 50) {
   return apiRequest(`/api/v1/users/me/assessments?limit=${limit}`);
 }
 
+export async function getMyHeartAssessments(limit = 50) {
+  return apiRequest(`/api/v1/users/me/heart-assessments?limit=${limit}`);
+}
+
 export async function getMyDietPlans(limit = 50) {
   return apiRequest(`/api/v1/users/me/diet-plans?limit=${limit}`);
 }
@@ -142,6 +148,14 @@ export async function chat(message, language = 'english', user_id = 'default', u
 // Diabetes assessment
 export async function runDiabetesAssessment(body) {
   return apiRequest('/api/v1/diabetes-assessment', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+// Heart disease risk assessment
+export async function runHeartAssessment(body) {
+  return apiRequest('/api/v1/heart-assessment', {
     method: 'POST',
     body: JSON.stringify(body),
   });
@@ -172,11 +186,11 @@ export async function deleteDietPlan(dietPlanId) {
   return apiRequest(`/api/v1/users/me/diet-plans/${dietPlanId}`, { method: 'DELETE' });
 }
 
-// Emergency assessment
-export async function runEmergencyAssessment(body) {
-  return apiRequest('/api/v1/emergency-assessment', {
+// Symptom Checker (ML condition groups)
+export async function symptomCheckerPredict(payload) {
+  return apiRequest('/api/v1/symptom-checker/predict', {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -251,5 +265,20 @@ export async function verifyReportSignature(payload_hash, signature_b64) {
   return apiRequest('/api/v1/reports/verify', {
     method: 'POST',
     body: JSON.stringify({ payload_hash, signature_b64 }),
+  });
+}
+
+// Local AI (one module, no external API - health tip, scenario; allow long timeout for Ollama)
+export async function localAIGetHealthTip(language = 'english') {
+  return apiRequest(`/api/v1/local-ai/health-tip?language=${encodeURIComponent(language)}`, {
+    timeoutMs: LOCAL_AI_TIMEOUT_MS,
+  });
+}
+
+export async function localAIAnswerScenario(scenario, assessment = null, language = 'english') {
+  return apiRequest('/api/v1/local-ai/scenario?language=' + encodeURIComponent(language), {
+    method: 'POST',
+    body: JSON.stringify({ scenario, assessment }),
+    timeoutMs: LOCAL_AI_TIMEOUT_MS,
   });
 }

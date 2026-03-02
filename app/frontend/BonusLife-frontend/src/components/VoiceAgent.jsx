@@ -8,10 +8,21 @@ import { Mic, MicOff, MessageCircle, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/constants';
 
+// Backend URL for voice/TTS. Use same host as page (localhost vs 127.0.0.1) to avoid CORS issues.
+function getVoiceApiBase() {
+  if (API_BASE_URL && API_BASE_URL.startsWith('http')) return API_BASE_URL.replace(/\/$/, '');
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `http://${window.location.hostname}:8001`;
+  }
+  return 'http://127.0.0.1:8001';
+}
+
 const VOICE_FILL_EVENT = 'bonuslife-voice-fill';
 const VOICE_CLEAR_FIELD_EVENT = 'bonuslife-voice-clear-field';
 const VOICE_FORM_NEXT_EVENT = 'bonuslife-voice-form-next';
 const VOICE_FORM_BACK_EVENT = 'bonuslife-voice-form-back';
+/** Dispatch this on /hospitals page to trigger "find nearest hospital" (geolocation + fetch). */
+export const VOICE_FIND_NEAREST_HOSPITAL = 'bonuslife-voice-find-nearest-hospital';
 
 const FILLER_WORDS = new Set(['um', 'uh', 'the', 'a', 'an', 'and', 'oh', 'so', 'like', 'yeah', 'hmm']);
 const MIN_UTTERANCE_LENGTH = 3;
@@ -55,6 +66,81 @@ function matchStopPhrase(text) {
   });
 }
 
+// Hardcoded commands: match first, run immediately (no backend call) for lower latency and offline nav
+const HARDCODED_NAV = [
+  { phrases: ['home', 'main page', 'go home', 'open home'], action: 'navigate', payload: { path: '/' }, reply: 'Opening home.' },
+  { phrases: ['login', 'sign in', 'log in', 'open login'], action: 'navigate', payload: { path: '/login' }, reply: 'Opening login.' },
+  { phrases: ['register', 'sign up', 'open register'], action: 'navigate', payload: { path: '/register' }, reply: 'Opening register.' },
+  { phrases: ['test', 'risk assessment', 'risk test', 'diabetes test', 'open test', 'go to test', 'assessment', 'open assessment'], action: 'navigate', payload: { path: '/test' }, reply: 'Opening diabetes test.' },
+  { phrases: ['heart test', 'heart risk', 'heart assessment', 'open heart test'], action: 'navigate', payload: { path: '/heart-test' }, reply: 'Opening heart test.' },
+  { phrases: ['chat', 'chatbot', 'open chat', 'go to chat'], action: 'navigate', payload: { path: '/chat' }, reply: 'Opening chat.' },
+  { phrases: ['voice chat', 'voice', 'open voice chat'], action: 'navigate', payload: { path: '/voice-chat' }, reply: 'Opening voice chat.' },
+  { phrases: ['diet', 'diet plan', 'meal plan', 'open diet'], action: 'navigate', payload: { path: '/diet-plan' }, reply: 'Opening diet plan.' },
+  { phrases: ['symptom checker', 'symptoms', 'symptom check', 'open symptom checker'], action: 'navigate', payload: { path: '/symptom-checker' }, reply: 'Opening symptom checker.' },
+  { phrases: ['hospitals', 'hospital', 'open hospitals', 'open hospital'], action: 'navigate', payload: { path: '/hospitals' }, reply: 'Opening hospitals.' },
+  { phrases: ['find nearest hospital', 'nearest hospital', 'search for nearest hospital', 'find hospital near me', 'hospital near me', 'nearest hospitals'], action: 'find_nearest_hospital', payload: {}, reply: 'Finding your nearest hospitals.' },
+  { phrases: ['dashboard', 'my assessments', 'past results', 'assessments', 'open dashboard'], action: 'navigate', payload: { path: '/dashboard' }, reply: 'Opening dashboard.' },
+  { phrases: ['admin', 'admin panel', 'open admin'], action: 'navigate', payload: { path: '/admin' }, reply: 'Opening admin.' },
+  { phrases: ['studio', 'micro interaction', 'open studio'], action: 'navigate', payload: { path: '/studio' }, reply: 'Opening studio.' },
+  { phrases: ['verify', 'verify report', 'report verification', 'open verify'], action: 'navigate', payload: { path: '/verify' }, reply: 'Opening verify report.' },
+  { phrases: ['meal photo', 'meal analyzer', 'photo analyzer', 'analyze meal', 'open meal photo'], action: 'navigate', payload: { path: '/meal-photo' }, reply: 'Opening meal photo analyzer.' },
+  { phrases: ['sport', 'workout', 'workout videos', 'exercise', 'open sport', 'open workout'], action: 'navigate', payload: { path: '/sport' }, reply: 'Opening workout videos.' },
+  { phrases: ['what if', 'open what if', 'what if scenario', 'open the what if', 'scenario'], action: 'navigate', payload: { path: '/local-ai?section=scenario' }, reply: 'Opening what if.' },
+  { phrases: ['local ai', 'local ai tip', 'health tip', 'open local ai'], action: 'navigate', payload: { path: '/local-ai' }, reply: 'Opening local AI.' },
+  { phrases: ['pricing', 'plans', 'subscription', 'open pricing'], action: 'navigate', payload: { path: '/pricing' }, reply: 'Opening pricing.' },
+];
+const HARDCODED_ACTIONS = [
+  { phrases: ['refresh', 'reload'], action: 'refresh', payload: {}, reply: 'Refreshing.' },
+  { phrases: ['scroll down'], action: 'scroll_down', payload: {}, reply: '' },
+  { phrases: ['scroll up'], action: 'scroll_up', payload: {}, reply: '' },
+  { phrases: ['help', 'what can you do', 'commands'], action: 'help', payload: { message: 'You can say: Open home, Open test, Open chat, Open diet, Open hospitals, Find nearest hospital, Fill age 35, Continue or Back, Print, Refresh, Log out, or Thank you to stop.' }, reply: null },
+  { phrases: ['log out', 'logout', 'sign out'], action: 'logout', payload: {}, reply: 'Are you sure you want to log out?' },
+  { phrases: ['print'], action: 'print', payload: {}, reply: 'Printing.' },
+  { phrases: ['continue', 'next', 'next step'], action: 'form_next', payload: {}, reply: 'Continuing.' },
+  { phrases: ['back', 'previous', 'go back'], action: 'form_back', payload: {}, reply: 'Going back.' },
+];
+// Fill patterns: (regex, field name for payload). Match anywhere in phrase.
+// Diabetes: age, weight, glucose, blood_pressure, pregnancies, height, insulin, skin_thickness
+// Heart: age, trestbps, chol, thalach, oldpeak, ca
+const FILL_PATTERNS = [
+  [/(?:fill|set)\s+age\s+(\d+(?:\.\d+)?)/i, 'age'],
+  [/(?:fill|set)\s+weight\s+(\d+(?:\.\d+)?)/i, 'weight'],
+  [/(?:fill|set)\s+glucose\s+(\d+(?:\.\d+)?)/i, 'glucose'],
+  [/(?:fill|set)\s+blood\s*pressure\s+(\d+)/i, 'blood_pressure'],
+  [/(?:fill|set)\s+pregnancies\s+(\d+)/i, 'pregnancies'],
+  [/(?:fill|set)\s+height\s+(\d+(?:\.\d+)?)/i, 'height'],
+  [/(?:fill|set)\s+insulin\s+(\d+)/i, 'insulin'],
+  [/(?:fill|set)\s+skin\s*thickness\s+(\d+)/i, 'skin_thickness'],
+  [/(?:fill|set)\s+(?:resting\s*)?(?:bp|pressure|blood\s*pressure)\s+(\d+)/i, 'trestbps'],
+  [/(?:fill|set)\s+(?:resting\s*)?trestbps\s+(\d+)/i, 'trestbps'],
+  [/(?:fill|set)\s+cholesterol\s+(\d+)/i, 'chol'],
+  [/(?:fill|set)\s+chol\s+(\d+)/i, 'chol'],
+  [/(?:fill|set)\s+(?:max\s*)?(?:heart\s*rate|thalach)\s+(\d+)/i, 'thalach'],
+  [/(?:fill|set)\s+oldpeak\s+(\d+(?:\.\d+)?)/i, 'oldpeak'],
+  [/(?:fill|set)\s+(?:st\s*depression|depression)\s+(\d+(?:\.\d+)?)/i, 'oldpeak'],
+  [/(?:fill|set)\s+(?:vessels|major\s*vessels|ca)\s+(\d+)/i, 'ca'],
+];
+
+function tryHardcodedCommand(transcript) {
+  const t = (transcript || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!t) return null;
+  for (const entry of HARDCODED_NAV) {
+    if (entry.phrases.some((p) => t === p || t.includes(p) || t.includes(p.replace(/\s+/g, ' ')))) {
+      return { action: entry.action, payload: entry.payload, reply: entry.reply };
+    }
+  }
+  for (const entry of HARDCODED_ACTIONS) {
+    if (entry.phrases.some((p) => t === p || t.includes(p))) {
+      return { action: entry.action, payload: entry.payload, reply: entry.reply };
+    }
+  }
+  for (const [regex, field] of FILL_PATTERNS) {
+    const m = t.match(regex);
+    if (m) return { action: 'fill_field', payload: { field, value: m[1] }, reply: 'Done.' };
+  }
+  return null;
+}
+
 let preferredVoiceCache = null;
 function getPreferredVoice() {
   const voices = window.speechSynthesis?.getVoices() || [];
@@ -70,23 +156,72 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = () => { preferredVoiceCache = null; getPreferredVoice(); };
 }
 
+const getTtsUrl = () => `${getVoiceApiBase()}/api/v1/tts`;
+
 function speak(text) {
-  if (!text || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(String(text));
-  u.lang = 'en-US';
-  u.rate = 0.92;
-  u.pitch = 1.0;
-  u.volume = 1.0;
-  try {
-    const voice = getPreferredVoice();
-    if (voice) u.voice = voice;
-  } catch (_) {}
-  try {
-    window.speechSynthesis.speak(u);
-  } catch (e) {
-    console.warn('SpeechSynthesis.speak failed', e);
-  }
+  if (!text || typeof text !== 'string') return;
+  const str = String(text).trim();
+  if (!str) return;
+  window.speechSynthesis?.cancel();
+
+  const fallbackSpeak = () => {
+    if (!window.speechSynthesis) return;
+    const u = new SpeechSynthesisUtterance(str);
+    u.lang = 'en-US';
+    u.rate = 0.92;
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    try {
+      const voice = getPreferredVoice();
+      if (voice) u.voice = voice;
+    } catch (_) {}
+    try {
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      console.warn('SpeechSynthesis.speak failed', e);
+    }
+  };
+
+  const ttsUrl = getTtsUrl();
+  // Always use backend default voice (no voice_id sent) so .env / DEFAULT_VOICE_ID in tts.py is used.
+  const body = { text: str };
+  fetch(ttsUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        let detail = '';
+        try {
+          const j = await res.json().catch(() => ({}));
+          detail = j.detail || '';
+        } catch (_) {}
+        if (typeof console !== 'undefined') {
+          console.warn('[Voice] TTS failed:', res.status, res.statusText, detail ? '- ' + detail : '', 'URL:', ttsUrl);
+          if (res.status === 503) console.warn('[Voice] Add ELEVENLABS_API_KEY to app/backend/.env');
+          if (res.status === 502 && detail) console.warn('[Voice] ElevenLabs config: open http://localhost:8001/api/v1/tts/voices to see valid voice_id for your account, then set ELEVENLABS_VOICE_ID in .env');
+        }
+        throw new Error('TTS failed');
+      }
+      return res.blob();
+    })
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        fallbackSpeak();
+      };
+      audio.play().catch(() => fallbackSpeak());
+    })
+    .catch((err) => {
+      if (typeof console !== 'undefined') {
+        console.warn('[Voice] TTS request error:', err?.message || err, '- using browser voice. Is backend running on port 8001?');
+      }
+      fallbackSpeak();
+    });
 }
 
 function playBeep(kind = 'start') {
@@ -105,8 +240,6 @@ function playBeep(kind = 'start') {
     o.stop(ctx.currentTime + 0.08);
   } catch (_) {}
 }
-
-const SESSION_GREETING = 'Listening. How can I help you?';
 
 function VoiceAgent() {
   const navigate = useNavigate();
@@ -131,6 +264,7 @@ function VoiceAgent() {
   const stopListeningRef = useRef(null);
   const startingRef = useRef(false);
   const listeningRef = useRef(false);
+  const justActivatedByWakeRef = useRef(false);
 
   const announce = useCallback((text) => {
     if (ariaLiveRef.current) {
@@ -163,6 +297,17 @@ function VoiceAgent() {
     } else if (action === 'logout') {
       authLogout();
       navigate('/');
+    } else if (action === 'refresh') {
+      if (typeof window !== 'undefined') window.location.reload();
+    } else if (action === 'scroll_down') {
+      if (typeof window !== 'undefined') window.scrollBy({ top: 300, behavior: 'smooth' });
+    } else if (action === 'scroll_up') {
+      if (typeof window !== 'undefined') window.scrollBy({ top: -300, behavior: 'smooth' });
+    } else if (action === 'find_nearest_hospital') {
+      navigate('/hospitals');
+      if (typeof window !== 'undefined') {
+        setTimeout(() => window.dispatchEvent(new CustomEvent(VOICE_FIND_NEAREST_HOSPITAL)), 100);
+      }
     }
   }, [navigate, authLogout, announce]);
 
@@ -193,11 +338,29 @@ function VoiceAgent() {
       return;
     }
 
+    const hardcoded = tryHardcodedCommand(raw);
+    if (hardcoded) {
+      setTranscript(raw);
+      if (hardcoded.action === 'logout') {
+        pendingConfirmRef.current = { action: 'logout', payload: {}, reply: 'Logging out.' };
+        speak('Are you sure you want to log out?');
+        announce('Are you sure you want to log out?');
+        return;
+      }
+      if (hardcoded.reply && hardcoded.action === 'help') {
+        speak(hardcoded.reply);
+        announce(hardcoded.reply);
+      }
+      executeCommand(hardcoded.action, hardcoded.payload || {}).then(() => playBeep('command'));
+      setTimeout(() => { setTranscript(''); setError(''); }, 1800);
+      return;
+    }
+
     setTranscript(raw);
     setLoading(true);
     setError('');
     setPermissionDenied(false);
-    const url = import.meta.env.DEV ? '/api/v1/voice-command' : `${API_BASE_URL}/api/v1/voice-command`;
+    const url = `${getVoiceApiBase()}/api/v1/voice-command`;
     try {
       const res = await fetch(url, {
         method: 'POST',
@@ -220,7 +383,7 @@ function VoiceAgent() {
           announce('Are you sure you want to log out?');
           return;
         }
-        if (reply) {
+        if (reply && action === 'help') {
           speak(reply);
           announce(reply);
           await new Promise((r) => setTimeout(r, 600));
@@ -241,7 +404,7 @@ function VoiceAgent() {
             setLoading(false);
             return;
           }
-          if (r) {
+          if (r && a === 'help') {
             speak(r);
             announce(r);
             await new Promise((r) => setTimeout(r, 600));
@@ -254,7 +417,7 @@ function VoiceAgent() {
         const payload = data.payload || {};
         const reply = data.reply;
         if (action === 'unknown') {
-          speak("I didn't quite get that. Try saying something like \"open assessment\" or \"help\" for ideas.");
+          speak('Thank you.');
           clearBubbleTimeoutRef.current = setTimeout(() => {
             setTranscript('');
             setError('');
@@ -320,9 +483,9 @@ function VoiceAgent() {
         const toMatch = recent.length >= 10 ? recent : full;
         if (toMatch && matchWakePhrase(toMatch)) {
           sessionActiveRef.current = true;
+          justActivatedByWakeRef.current = true;
           setTimeout(() => setListening(true), 0);
           playBeep('start');
-          speak(SESSION_GREETING);
           announce('Listening. Say a command or say thank you to stop.');
         }
         return;
@@ -331,11 +494,16 @@ function VoiceAgent() {
       if (!lastResult || !lastResult.isFinal || !t) return;
       if (sessionActiveRef.current) {
         if (matchStopPhrase(t)) {
-          speak("You're welcome. I've stopped listening.");
-          announce('Stopped listening.');
+          speak("You're welcome.");
+          announce('You\'re welcome.');
           stopListeningRef.current?.();
           return;
         }
+        if (justActivatedByWakeRef.current && matchWakePhrase(t)) {
+          justActivatedByWakeRef.current = false;
+          return;
+        }
+        justActivatedByWakeRef.current = false;
         processTranscript(t);
       }
     };
@@ -409,10 +577,8 @@ function VoiceAgent() {
         let recognition = recognitionRef.current;
         if (recognition) {
           sessionActiveRef.current = true;
-          setTimeout(() => {
-            playBeep('start');
-            speak(SESSION_GREETING);
-          }, 200);
+          justActivatedByWakeRef.current = false;
+          setTimeout(() => playBeep('start'), 200);
           return;
         }
 
@@ -432,10 +598,8 @@ function VoiceAgent() {
           setError(err?.message || 'Could not start microphone. Allow mic access and try again.');
           return;
         }
-        setTimeout(() => {
-          playBeep('start');
-          speak(SESSION_GREETING);
-        }, 200);
+        justActivatedByWakeRef.current = false;
+        setTimeout(() => playBeep('start'), 200);
       } finally {
         startingRef.current = false;
       }

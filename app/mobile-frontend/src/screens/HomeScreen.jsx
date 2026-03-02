@@ -20,15 +20,17 @@ const CARD_WIDTH = (width - PADDING * 2 - GAP) / 2;
 
 const QUICK_FEATURES = [
   { key: 'Assessment', labelKey: 'home.riskAssessment', descKey: 'home.riskAssessmentDesc', color: '#2563eb' },
+  { key: 'Heart', labelKey: 'home.heartRisk', descKey: 'home.heartRiskDesc', color: '#ec4899' },
   { key: 'Chat', labelKey: 'home.aiChat', descKey: 'home.aiChatDesc', color: '#059669' },
   { key: 'DietPlan', labelKey: 'home.dietPlan', descKey: 'home.dietPlanDesc', color: '#d97706' },
   { key: 'Hospitals', labelKey: 'home.nearbyHospitals', descKey: 'home.nearbyHospitalsDesc', color: '#4f46e5' },
 ];
 
 const MORE_FEATURES = [
+  { key: 'LocalAI', labelKey: 'home.localAI', descKey: 'home.localAIDesc', color: '#0ea5e9' },
   { key: 'MealPhoto', labelKey: 'home.mealAnalyzer', descKey: 'home.mealAnalyzerDesc', color: '#0891b2' },
   { key: 'WorkoutVideos', labelKey: 'home.workoutVideos', descKey: 'home.workoutVideosDesc', color: '#db2777' },
-  { key: 'Emergency', labelKey: 'home.emergencyCheck', descKey: 'home.emergencyCheckDesc', color: '#dc2626' },
+  { key: 'SymptomChecker', labelKey: 'home.symptomChecker', descKey: 'home.symptomCheckerDesc', color: '#10b981' },
   { key: 'Dashboard', labelKey: 'home.myAssessments', descKey: 'home.myAssessmentsDesc', color: '#7c3aed' },
   { key: 'VerifyReport', labelKey: 'home.verifyReport', descKey: 'home.verifyReportDesc', color: '#64748b' },
 ];

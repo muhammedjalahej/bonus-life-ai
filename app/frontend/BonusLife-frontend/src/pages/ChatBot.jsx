@@ -14,14 +14,16 @@ const ChatBot = ({ language = 'english' }) => {
   const [conversationId, setConversationId] = useState(null);
   const [error, setError] = useState('');
   const [backendStatus, setBackendStatus] = useState('checking');
+  const [llmProvider, setLlmProvider] = useState('Groq');
   const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [latestAssessment, setLatestAssessment] = useState(null);
 
   const isTr = language === 'turkish';
   const t = isTr ? {
     badge: 'Canlı Yapay Zeka Sohbeti', title: 'Yapay Zeka Diyabet Uzmanı', subtitle: 'Diyabet önleme, yönetim ve tedavi hakkında uzman yanıtlar alın.',
-    online: 'Çevrimiçi -- Groq LLM', connecting: 'Bağlanıyor...', offline: 'Çevrimdışı',
+    online: `Çevrimiçi -- ${llmProvider} LLM`, connecting: 'Bağlanıyor...', offline: 'Çevrimdışı',
     placeholder: 'Diyabet hakkında soru sorun...', placeholderWaiting: 'Bağlantı bekleniyor...',
     thinking: 'Düşünüyor...', you: 'Siz', ai: 'Yapay Zeka', error: 'Hata', live: 'Canlı',
     close: 'Kapat', connectionError: 'Bağlantı hatası. Lütfen sunucunun çalıştığından emin olun.',
@@ -29,7 +31,7 @@ const ChatBot = ({ language = 'english' }) => {
     unavailable: 'Yapay zeka uzmanı şu an kullanılamıyor. Lütfen daha sonra tekrar deneyin veya acil tıbbi konularda bir sağlık kuruluşuna başvurun.',
   } : {
     badge: 'Live AI Chat', title: 'AI Diabetes Specialist', subtitle: 'Get expert answers about diabetes prevention, management, and treatment.',
-    online: 'Online -- Groq LLM', connecting: 'Connecting...', offline: 'Offline',
+    online: `Online -- ${llmProvider} LLM`, connecting: 'Connecting...', offline: 'Offline',
     placeholder: 'Ask about diabetes...', placeholderWaiting: 'Waiting for connection...',
     thinking: 'Thinking...', you: 'You', ai: 'AI', error: 'Error', live: 'Live',
     close: 'Close', connectionError: 'Connection failed. Please check if the backend is running.',
@@ -55,13 +57,21 @@ const ChatBot = ({ language = 'english' }) => {
   }, []);
 
   useEffect(() => { initializeConversation(); checkBackendConnection(); }, [language]);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  // Scroll only the messages container to bottom so the page doesn't jump to the footer
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages]);
 
   const checkBackendConnection = async () => {
     try {
       const r = await fetch(`${API_BASE_URL}/health`);
-      if (r.ok) { setBackendStatus('connected'); setError(''); }
-      else throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      setBackendStatus('connected');
+      setError('');
+      const provider = data?.services?.llm_provider;
+      if (provider) setLlmProvider(provider);
     } catch (err) { setBackendStatus('disconnected'); setError(isTr ? 'Bağlantı başarısız.' : `Connection failed: ${err.message}`); }
   };
 
@@ -155,21 +165,21 @@ const ChatBot = ({ language = 'english' }) => {
     : ['Diabetes pathophysiology', 'Treatment advancements', 'Diet recommendations', 'Exercise benefits', 'Complications', 'Mental health impact'];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
-      {/* Page header */}
-      <div className="text-center mb-10 animate-fade-in-up">
-        <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-5 py-2 mb-5">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-[0.15em]">{t.badge}</span>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-36 pb-8 min-h-[calc(100vh-10rem)] flex flex-col">
+      {/* Page header - compact */}
+      <div className="text-center mb-4 shrink-0 animate-fade-in-up">
+        <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-3">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-[0.15em]">{t.badge}</span>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
-        <p className="text-gray-500 max-w-md mx-auto">{t.subtitle}</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight">{t.title}</h1>
+        <p className="text-gray-500 text-sm max-w-md mx-auto">{t.subtitle}</p>
       </div>
 
-      <div className="gradient-border animate-fade-in-up">
-        <div className="card overflow-hidden rounded-[1.25rem]">
+      <div className="gradient-border animate-fade-in-up flex-1 flex flex-col min-h-0">
+        <div className="card overflow-hidden rounded-[1.25rem] flex-1 flex flex-col min-h-0">
           {/* Chat header */}
-          <div className="p-6 border-b border-white/[0.05]">
+          <div className="p-4 sm:p-5 border-b border-white/[0.05] shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="relative">
@@ -193,7 +203,7 @@ const ChatBot = ({ language = 'english' }) => {
             </div>
 
             {/* Quick questions */}
-            <div className="flex flex-wrap gap-2 mt-5">
+            <div className="flex flex-wrap gap-2 mt-3">
               {quickQuestions.map((q, i) => (
                 <button key={i} onClick={() => handleQuick(q)} disabled={!connected || loading}
                   className="badge bg-white/[0.03] border border-white/[0.07] text-gray-500 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20 transition-all cursor-pointer disabled:opacity-30">
@@ -203,8 +213,8 @@ const ChatBot = ({ language = 'english' }) => {
             </div>
           </div>
 
-          {/* Messages */}
-          <div className="h-[500px] overflow-y-auto p-6 space-y-6">
+          {/* Messages - fills remaining space, scrolls internally */}
+          <div ref={messagesContainerRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-4 sm:space-y-6">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''} animate-fade-in-up`}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
@@ -278,7 +288,7 @@ const ChatBot = ({ language = 'english' }) => {
           </div>
 
           {/* Input */}
-          <div className="p-5 border-t border-white/[0.04]">
+          <div className="p-4 sm:p-5 border-t border-white/[0.04] shrink-0">
             <div className="flex gap-3">
               <textarea value={input} onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && connected) { e.preventDefault(); handleSend(); } }}

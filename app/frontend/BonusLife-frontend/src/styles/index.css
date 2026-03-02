@@ -118,26 +118,31 @@ html[data-motion="reduced"] {
 
   /* ── Inputs ── */
   .input-field {
-    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-sm
+    @apply w-full rounded-xl border-0 bg-white/[0.06] backdrop-blur-sm
            px-4 py-3.5 text-sm text-white
            placeholder:text-gray-600
            transition-all duration-300
-           focus:border-emerald-500/50 focus:bg-white/[0.07]
-           focus:outline-none focus:ring-2 focus:ring-emerald-500/20
+           focus:bg-white/[0.08]
+           focus:outline-none focus:ring-2 focus:ring-emerald-500/30
            focus:shadow-lg focus:shadow-emerald-500/5;
   }
 
   .select-field {
-    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-sm
+    @apply w-full rounded-xl border-0 bg-white/[0.06] backdrop-blur-sm
            px-4 py-3.5 text-sm text-white
            appearance-none cursor-pointer
            transition-all duration-300
-           focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20;
+           focus:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-emerald-500/30;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
   }
-  .select-field option { @apply bg-[#12121f] text-white; }
+  .select-field option {
+    @apply bg-[#12121f] text-white;
+    border: none;
+    outline: none;
+  }
+  .select-field { color-scheme: dark; }
 
   /* UX Settings (gear) modal: clean form styling, no visible white line under dropdown */
   .ux-settings-modal .select-field {
@@ -233,6 +238,10 @@ html[data-studio="on"] .card-hover:hover {
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* Heart form: no visible borders on card or wrapper */
+.heart-form-card::before { opacity: 0; }
+.heart-form-inner { border: none !important; }
 
 /* ───────────────── Glow card on hover ───────────────── */
 .glow-card {

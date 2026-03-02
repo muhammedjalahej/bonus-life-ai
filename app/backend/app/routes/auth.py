@@ -125,6 +125,9 @@ async def me(user: User = Depends(get_current_user)):
         calorie_goal=getattr(user, "calorie_goal", None),
         totp_enabled=bool(getattr(user, "totp_enabled", False)),
         onboarding_completed=bool(getattr(user, "onboarding_completed", False)),
+        subscription_tier=getattr(user, "subscription_tier", None) or "free",
+        subscription_status=getattr(user, "subscription_status", None) or "",
+        current_period_end=getattr(user, "current_period_end", None),
     )
 
 

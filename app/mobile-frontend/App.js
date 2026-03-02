@@ -11,14 +11,16 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import AssessmentScreen from './src/screens/AssessmentScreen';
+import HeartScreen from './src/screens/HeartScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import DietPlanScreen from './src/screens/DietPlanScreen';
-import EmergencyScreen from './src/screens/EmergencyScreen';
+import SymptomCheckerScreen from './src/screens/SymptomCheckerScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import HospitalsScreen from './src/screens/HospitalsScreen';
 import WorkoutVideosScreen from './src/screens/WorkoutVideosScreen';
 import MealPhotoScreen from './src/screens/MealPhotoScreen';
 import VerifyReportScreen from './src/screens/VerifyReportScreen';
+import LocalAIFeaturesScreen from './src/screens/LocalAIFeaturesScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import HeaderGear from './src/components/HeaderGear';
@@ -52,12 +54,14 @@ function MainStack() {
       <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('nav.aiChat') }} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} options={{ title: t('nav.myAssessments') }} />
       <Stack.Screen name="Assessment" component={AssessmentScreen} options={{ title: t('nav.riskAssessment') }} />
+      <Stack.Screen name="Heart" component={HeartScreen} options={{ title: t('nav.heartRisk') }} />
       <Stack.Screen name="DietPlan" component={DietPlanScreen} options={{ title: t('nav.dietPlan') }} />
-      <Stack.Screen name="Emergency" component={EmergencyScreen} options={{ title: t('nav.emergencyCheck') }} />
+      <Stack.Screen name="SymptomChecker" component={SymptomCheckerScreen} options={{ title: t('nav.symptomChecker') }} />
       <Stack.Screen name="Hospitals" component={HospitalsScreen} options={{ title: t('nav.nearbyHospitals') }} />
       <Stack.Screen name="WorkoutVideos" component={WorkoutVideosScreen} options={{ title: t('nav.workoutVideos') }} />
       <Stack.Screen name="MealPhoto" component={MealPhotoScreen} options={{ title: t('nav.mealAnalyzer') }} />
       <Stack.Screen name="VerifyReport" component={VerifyReportScreen} options={{ title: t('nav.verifyReport') }} />
+      <Stack.Screen name="LocalAI" component={LocalAIFeaturesScreen} options={{ title: t('nav.localAI') }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t('nav.settings') }} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t('changePassword.title') }} />
     </Stack.Navigator>

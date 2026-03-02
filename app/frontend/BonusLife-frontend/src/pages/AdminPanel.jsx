@@ -7,7 +7,7 @@ import {
   Search, RefreshCw, Download, Trash2, UserCheck, UserX, ShieldCheck, ShieldOff,
   X, AlertTriangle, Check, ChevronDown, ChevronUp, Eye, Plus, Megaphone,
   Settings, Activity, Clock, CheckCircle, XCircle, Server, Mail, StickyNote, Send,
-  Sparkles,
+  Sparkles, CreditCard,
 } from 'lucide-react';
 import { getAvatarUrl, ROUTES } from '../config/constants';
 import { playValueTone, playCategoryTone } from '../utils/sonification';
@@ -16,6 +16,7 @@ import {
   adminCreateUser, adminBulkAction, adminGetChartData, adminGetAuditLog, adminClearAuditLog,
   adminGetAnnouncements, adminCreateAnnouncement, adminUpdateAnnouncement, adminDeleteAnnouncement,
   adminGetSettings, adminUpdateSetting, adminGetSystemHealth,
+  adminGetSubscriptionStats, adminGetSubscriptions,
   adminUpdateUserNotes, adminSendEmail, adminBulkEmail,
 } from '../services/api';
 
@@ -201,6 +202,8 @@ export default function AdminPanel({ language }) {
   const [auditLogs, setAuditLogs] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [siteSettings, setSiteSettings] = useState({});
+  const [subscriptionStats, setSubscriptionStats] = useState(null);
+  const [subscriptionList, setSubscriptionList] = useState([]);
 
   // ---------- UI STATE ----------
   const [searchTerm, setSearchTerm] = useState('');
@@ -253,6 +256,10 @@ export default function AdminPanel({ language }) {
         const [d, h] = await Promise.all([adminGetSettings(), adminGetSystemHealth()]);
         setSiteSettings(d || {});
         setSystemHealth(h);
+      } else if (activeTab === 'subscriptions') {
+        const [stats, list] = await Promise.all([adminGetSubscriptionStats(), adminGetSubscriptions({ limit: 500 })]);
+        setSubscriptionStats(stats || null);
+        setSubscriptionList(Array.isArray(list) ? list : []);
       }
     } catch (err) {
       showToast(err.message || 'Load failed', 'error');
@@ -426,6 +433,7 @@ export default function AdminPanel({ language }) {
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'assessments', label: 'Assessments', icon: FileText },
+    { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
     { id: 'audit', label: 'Audit Log', icon: Clock },
     { id: 'announcements', label: 'Announcements', icon: Megaphone },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -692,6 +700,67 @@ export default function AdminPanel({ language }) {
             </ul>
           )}
           <p className="text-xs text-gray-600">{filteredAssessments.length} assessments</p>
+        </section>
+      )}
+
+      {/* ==================== SUBSCRIPTIONS ==================== */}
+      {activeTab === 'subscriptions' && (
+        <section className="space-y-4">
+          {loading ? (
+            <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>
+          ) : (
+            <>
+              {subscriptionStats && (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {[
+                    { l: 'Total users', v: subscriptionStats.total_users, c: 'gray' },
+                    { l: 'Free', v: subscriptionStats.free, c: 'gray' },
+                    { l: 'Pro monthly', v: subscriptionStats.pro_monthly, c: 'emerald' },
+                    { l: 'Pro yearly', v: subscriptionStats.pro_yearly, c: 'emerald' },
+                    { l: 'Active subs', v: subscriptionStats.active_subscriptions, c: 'amber' },
+                  ].map((s, i) => (
+                    <div key={i} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                      <span className="text-gray-500 text-xs">{s.l}</span>
+                      <p className="text-xl font-bold text-white mt-1">{s.v ?? 0}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="rounded-xl border border-white/[0.06] overflow-x-auto">
+                <table className="w-full text-left min-w-[640px]">
+                  <thead className="bg-white/[0.04] border-b border-white/[0.06]">
+                    <tr>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase">Email</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase">Name</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase">Tier</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase">Status</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase hidden sm:table-cell">Stripe customer</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {subscriptionList.length === 0 ? (
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No users (role=user) or no subscription data</td></tr>
+                    ) : (
+                      subscriptionList.map(u => (
+                        <tr key={u.id} className="hover:bg-white/[0.03]">
+                          <td className="px-4 py-3 text-sm text-white">{u.email}</td>
+                          <td className="px-4 py-3 text-sm text-gray-400">{u.full_name || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${(u.subscription_tier === 'pro_monthly' || u.subscription_tier === 'pro_yearly') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/[0.08] text-gray-400'}`}>
+                              {u.subscription_tier === 'pro_monthly' ? 'Pro Monthly' : u.subscription_tier === 'pro_yearly' ? 'Pro Yearly' : 'Free'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-400">{u.subscription_status || '—'}</td>
+                          <td className="px-4 py-3 text-xs text-gray-600 hidden sm:table-cell font-mono truncate max-w-[140px]" title={u.stripe_customer_id || ''}>{u.stripe_customer_id || '—'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-gray-600">{subscriptionList.length} users</p>
+            </>
+          )}
         </section>
       )}
 

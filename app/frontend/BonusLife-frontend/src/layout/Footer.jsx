@@ -12,7 +12,7 @@ const Footer = ({ language }) => {
     { label: language === 'turkish' ? 'Sesli Sohbet' : 'Voice Chat', path: ROUTES.VOICE_CHAT },
     { label: language === 'turkish' ? 'Diyet Planı' : 'Diet Plan', path: ROUTES.DIET_PLAN },
     { label: language === 'turkish' ? 'Antrenman Videoları' : 'Workout Videos', path: ROUTES.SPORT },
-    { label: language === 'turkish' ? 'Acil' : 'Emergency', path: ROUTES.EMERGENCY },
+    { label: language === 'turkish' ? 'Belirti Kontrolü' : 'Symptom Checker', path: ROUTES.SYMPTOM_CHECKER },
     { label: language === 'turkish' ? 'Rapor Doğrula' : 'Verify Report', path: ROUTES.VERIFY, dataTour: 'footer-verify' },
   ];
 

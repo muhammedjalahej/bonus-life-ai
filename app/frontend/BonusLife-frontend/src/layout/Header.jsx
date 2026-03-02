@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES, getAvatarUrl } from '../config/constants';
 import { useAuth } from '../context/AuthContext';
-import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../services/api';
+import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification } from '../services/api';
 import {
   HeartPulse, Menu, X, ChevronDown, Bell, Check,
   Home, Activity, MessageSquare, Mic, AlertTriangle, MapPin, Globe, LayoutDashboard, Shield, LogIn, UserPlus, LogOut,
-  Users, BarChart3, Settings, Compass,
+  Users, BarChart3, Settings, Compass, Trash2, ExternalLink,
 } from 'lucide-react';
 import { useUXSettings } from '../context/UXSettingsContext';
 import { useTour } from '../tour/TourContext';
@@ -61,12 +61,20 @@ const Header = ({ language, setLanguage }) => {
     } catch {}
   };
 
+  const handleDeleteNotification = async (e, id) => {
+    e.stopPropagation();
+    try {
+      await deleteNotification(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch {}
+  };
+
   const userLinks = [
     { path: ROUTES.HOME, label: language === 'turkish' ? 'Ana Sayfa' : 'Home', icon: Home, dataTour: 'nav-home' },
     { path: ROUTES.TEST, label: language === 'turkish' ? 'Değerlendirme' : 'Assessment', icon: Activity, dataTour: 'nav-assessment' },
     { path: ROUTES.CHAT, label: language === 'turkish' ? 'Yapay Zeka Sohbet' : 'AI Chat', icon: MessageSquare, dataTour: 'nav-chat' },
     { path: ROUTES.VOICE_CHAT, label: language === 'turkish' ? 'Ses' : 'Voice', icon: Mic, dataTour: 'nav-voice' },
-    { path: ROUTES.EMERGENCY, label: language === 'turkish' ? 'Acil' : 'Emergency', icon: AlertTriangle, dataTour: 'nav-emergency' },
+    { path: ROUTES.SYMPTOM_CHECKER, label: language === 'turkish' ? 'Belirti Kontrolü' : 'Symptom Checker', icon: AlertTriangle, dataTour: 'nav-symptom-checker' },
     { path: ROUTES.HOSPITALS, label: language === 'turkish' ? 'Hastaneler' : 'Hospitals', icon: MapPin, dataTour: 'nav-hospitals' },
   ];
 
@@ -157,17 +165,28 @@ const Header = ({ language, setLanguage }) => {
                                   </div>
                                 ) : (
                                   notifications.slice(0, 10).map(n => (
-                                    <button key={n.id} type="button" onClick={() => { if (!n.is_read) handleMarkRead(n.id); }}
-                                      className={`w-full text-left px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer transition ${!n.is_read ? 'bg-emerald-500/[0.03]' : ''}`}>
+                                    <div key={n.id}
+                                      className={`w-full text-left px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.03] transition ${!n.is_read ? 'bg-emerald-500/[0.03]' : ''}`}>
                                       <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0">
+                                        <button type="button" onClick={() => { if (!n.is_read) handleMarkRead(n.id); }} className="min-w-0 flex-1 text-left cursor-pointer">
                                           <p className={`text-sm font-medium ${!n.is_read ? 'text-white' : 'text-gray-400'}`}>{n.title}</p>
                                           <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
                                           <p className="text-[10px] text-gray-600 mt-1">{n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}</p>
+                                        </button>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                          {!n.is_read && <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1.5" />}
+                                          <button
+                                            type="button"
+                                            onClick={(e) => handleDeleteNotification(e, n.id)}
+                                            className="p-1.5 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                            title={language === 'turkish' ? 'Sil' : 'Delete'}
+                                            aria-label={language === 'turkish' ? 'Sil' : 'Delete'}
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
                                         </div>
-                                        {!n.is_read && <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 mt-1.5" />}
                                       </div>
-                                    </button>
+                                    </div>
                                   ))
                                 )}
                               </div>
@@ -228,6 +247,11 @@ const Header = ({ language, setLanguage }) => {
                           {isAdmin && (
                             <button type="button" onClick={() => { setUxModalOpen(true); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
                               <Settings className="w-4 h-4" /> {language === 'turkish' ? 'UX Ayarları' : 'UX Settings'}
+                            </button>
+                          )}
+                          {!isAdmin && (
+                            <button type="button" onClick={() => { handleNav(ROUTES.PRICING); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
+                              <ExternalLink className="w-4 h-4" /> {language === 'turkish' ? 'Fiyatlandırma' : 'Pricing'}
                             </button>
                           )}
                           <button type="button" onClick={() => { logout(); setUserMenuOpen(false); handleNav(ROUTES.HOME); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10">

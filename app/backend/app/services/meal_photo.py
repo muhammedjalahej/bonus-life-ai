@@ -1,10 +1,11 @@
 """AI Meal Photo Analyzer: vision-based meal identification and carb estimation.
 
-Uses Groq LLaVA or similar vision model when GROQ_API_KEY is set.
+Uses Groq when GROQ_API_KEY is set.
 Authors: Muhammed Jalahej, Yazen Emino
 """
 
 import os
+import asyncio
 import logging
 from typing import Dict, Any, Optional
 
@@ -80,9 +81,16 @@ async def analyze_meal_image(image_base64: str) -> Dict[str, Any]:
             "healthier_swaps": "Please upload or take a photo of your meal.",
         }
 
+    prompt = (
+        "Look at this meal photo. Reply in exactly this format:\n"
+        "Meal: [short meal name]\n"
+        "Carb level: [low / medium / high]\n"
+        "Healthier swaps: [2-3 short suggestions for diabetes-friendly alternatives]"
+    )
+
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key or not api_key.startswith("gsk_"):
-        logger.warning("GROQ_API_KEY not set; returning placeholder meal analysis")
+        logger.warning("No vision API (GROQ_API_KEY); returning placeholder")
         return {
             "meal_name": "Sample meal (add GROQ_API_KEY for real analysis)",
             "carb_level": "medium",
@@ -91,14 +99,7 @@ async def analyze_meal_image(image_base64: str) -> Dict[str, Any]:
 
     try:
         import httpx
-
         data_uri = f"data:image/jpeg;base64,{image_base64}"
-        prompt = (
-            "Look at this meal photo. Reply in exactly this format:\n"
-            "Meal: [short meal name]\n"
-            "Carb level: [low / medium / high]\n"
-            "Healthier swaps: [2-3 short suggestions for diabetes-friendly alternatives]"
-        )
         payload = {
             "model": VISION_MODEL,
             "messages": [
@@ -124,7 +125,7 @@ async def analyze_meal_image(image_base64: str) -> Dict[str, Any]:
                 json=payload,
             )
             if r.status_code != 200:
-                logger.error(f"Groq vision API error: {r.status_code} {r.text}")
+                logger.error("Groq vision API error: %s %s", r.status_code, r.text)
                 return {
                     "meal_name": "Analysis unavailable",
                     "carb_level": "medium",
@@ -132,10 +133,9 @@ async def analyze_meal_image(image_base64: str) -> Dict[str, Any]:
                 }
             data = r.json()
             text = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
-            out = _parse_analysis_response(text)
-            return out
+            return _parse_analysis_response(text)
     except Exception as e:
-        logger.exception(f"Meal photo analysis failed: {e}")
+        logger.exception("Meal photo analysis failed: %s", e)
         return {
             "meal_name": "Analysis failed",
             "carb_level": "medium",

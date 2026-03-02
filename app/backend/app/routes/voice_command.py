@@ -1,6 +1,7 @@
 """
 Voice command intent parsing for Bonus Life AI.
 User speaks -> frontend sends transcript -> this endpoint returns structured command (navigate, fill_field, print).
+Routes and keywords are loaded from voice_routes_config (single source of truth).
 Works without Groq API key using rule-based fallback.
 """
 
@@ -12,6 +13,13 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+from app.voice_routes_config import (
+    get_nav_keywords_list,
+    get_routes_for_llm,
+    get_help_intro,
+    get_routes_for_api,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,28 +37,17 @@ class VoiceCommandResponse(BaseModel):
     actions: Optional[List[dict]] = None  # when set, run these in order (each: action, payload, reply)
 
 
-# --- Rule-based fallback (no API key required) ---
-NAVIGATE_KEYWORDS = [
-    ("/", ["home", "main page", "go home"]),
-    ("/login", ["login", "sign in", "log in"]),
-    ("/register", ["register", "sign up", "register page"]),
-    ("/test", ["test", "risk assessment", "risk test", "diabetes test", "open test", "go to test", "assessment"]),
-    ("/chat", ["chat", "chatbot", "open chat", "go to chat"]),
-    ("/voice-chat", ["voice chat", "voice"]),
-    ("/diet-plan", ["diet", "diet plan", "meal plan"]),
-    ("/emergency", ["emergency", "emergency check"]),
-    ("/hospitals", ["hospitals", "hospital", "find hospital", "nearest hospital", "find nearest hospital"]),
-    ("/dashboard", ["dashboard"]),
-    ("/admin", ["admin", "admin panel"]),
-]
+# --- Rule-based fallback: routes from config (no hardcoding) ---
+def _nav_keywords():
+    return get_nav_keywords_list()
 
 FILL_FIELD_PATTERN = re.compile(
-    r"(?:fill|set|enter|type)\s+(?:my\s+)?(age|weight|height|pregnancies|glucose|blood\s*pressure|skin\s*thickness|insulin|pedigree|diabetes\s*pedigree)\s*(?:to\s+)?(\d+(?:\.\d+)?)",
+    r"(?:fill|set|enter|type)\s+(?:my\s+)?(age|weight|height|pregnancies|glucose|blood\s*pressure|skin\s*thickness|insulin|pedigree|diabetes\s*pedigree|trestbps|resting\s*bp|cholesterol|chol|heart\s*rate|thalach|oldpeak|st\s*depression|vessels|ca|major\s*vessels)\s*(?:to\s+)?(\d+(?:\.\d+)?)",
     re.I,
 )
-# Also: "age 35", "weight 70" (number after field name)
+# Also: "age 35", "weight 70" (number after field name); heart: "cholesterol 240", "thalach 150"
 FILL_FIELD_SHORT = re.compile(
-    r"\b(age|weight|height|pregnancies|glucose|blood\s*pressure|skin\s*thickness|insulin|pedigree|diabetes\s*pedigree)\s+(\d+(?:\.\d+)?)\b",
+    r"\b(age|weight|height|pregnancies|glucose|blood\s*pressure|skin\s*thickness|insulin|pedigree|diabetes\s*pedigree|trestbps|cholesterol|chol|thalach|oldpeak|ca)\s+(\d+(?:\.\d+)?)\b",
     re.I,
 )
 # Natural speech: "number of pregnancy one", "pregnancies one", "set the number of pregnancies to one"
@@ -71,7 +68,7 @@ WORD_NUMBERS = {
 
 def _normalize_field(f: str) -> str:
     f = f.lower().replace(" ", "_")
-    if f in ("blood_pressure",):  # already correct
+    if f in ("blood_pressure",):
         return "blood_pressure"
     if "pedigree" in f or f == "diabetes_pedigree":
         return "diabetes_pedigree_function"
@@ -79,6 +76,16 @@ def _normalize_field(f: str) -> str:
         return "skin_thickness"
     if f == "pregnancy":
         return "pregnancies"
+    if f in ("resting_bp", "trestbps"):
+        return "trestbps"
+    if f in ("cholesterol", "chol"):
+        return "chol"
+    if f in ("heart_rate", "thalach"):
+        return "thalach"
+    if f in ("st_depression", "oldpeak"):
+        return "oldpeak"
+    if f in ("vessels", "major_vessels", "ca"):
+        return "ca"
     return f
 
 
@@ -103,6 +110,11 @@ FIELD_LABELS = {
     "height": "height",
     "glucose": "glucose",
     "insulin": "insulin",
+    "trestbps": "resting blood pressure",
+    "chol": "cholesterol",
+    "thalach": "max heart rate",
+    "oldpeak": "ST depression",
+    "ca": "major vessels",
 }
 
 
@@ -116,14 +128,9 @@ def _parse_voice_command_rules(text: str) -> dict:
     if not t:
         return {"action": "unknown", "payload": {}, "reply": None}
 
-    # Help
+    # Help (message from config so new features are included)
     if re.search(r"\b(what can I say|help|commands|voice help)\b", t):
-        reply = (
-            "Here are some things you can say: Go home, Open assessment, Open chat, or Open diet. "
-            "You can fill in values like Fill age 35 or Set weight 70, or clear a field like Clear blood pressure. "
-            "Say Continue or Back on forms, Print, Log out, Refresh, or Scroll down and Scroll up. "
-            "Say Thank you when you're done to stop listening."
-        )
+        reply = get_help_intro()
         return {"action": "help", "payload": {"message": reply}, "reply": reply}
 
     # App actions: logout, refresh, scroll
@@ -136,9 +143,9 @@ def _parse_voice_command_rules(text: str) -> dict:
     if re.search(r"\b(scroll up|scroll up page)\b", t):
         return {"action": "scroll_up", "payload": {}, "reply": "Scrolling up."}
 
-    # Clear field: "clear blood pressure", "delete age", "reset weight"
+    # Clear field: "clear blood pressure", "delete age", "reset weight"; heart: "clear cholesterol"
     clear_pat = re.compile(
-        r"\b(?:clear|delete|reset|remove)\s+(?:the\s+)?(age|weight|height|pregnancies|glucose|blood\s*pressure|skin\s*thickness|insulin|pedigree|diabetes\s*pedigree)\b",
+        r"\b(?:clear|delete|reset|remove)\s+(?:the\s+)?(age|weight|height|pregnancies|glucose|blood\s*pressure|skin\s*thickness|insulin|pedigree|diabetes\s*pedigree|trestbps|cholesterol|chol|thalach|oldpeak|ca)\b",
         re.I,
     )
     m = clear_pat.search(t)
@@ -157,7 +164,7 @@ def _parse_voice_command_rules(text: str) -> dict:
         return {"action": "form_back", "payload": {}, "reply": "Going back a step."}
 
     # Navigate: "open X", "go to X", "X page", or just "X"
-    for path, keywords in NAVIGATE_KEYWORDS:
+    for path, keywords in _nav_keywords():
         for kw in keywords:
             if kw in t or f"open {kw}" in t or f"go to {kw}" in t or f"go {kw}" in t:
                 label = "home" if path == "/" else path.strip("/").replace("-", " ") or "page"
@@ -209,15 +216,12 @@ def _parse_voice_command_rules(text: str) -> dict:
     return {"action": "unknown", "payload": {}, "reply": None}
 
 
-# Valid app routes and form fields for the LLM (when Groq is used)
-ROUTES_LIST = (
-    "home /, login /login, register /register, test or risk assessment /test, "
-    "chat or chatbot /chat, voice chat /voice-chat, diet plan /diet-plan, "
-    "emergency /emergency, dashboard /dashboard, admin /admin"
-)
+# Valid app routes and form fields for the LLM (built from config)
+ROUTES_LIST = get_routes_for_llm()
 FIELDS_LIST = (
     "age, weight, height, pregnancies, glucose, blood_pressure, skin_thickness, "
-    "insulin, diabetes_pedigree_function (or pedigree)"
+    "insulin, diabetes_pedigree_function (or pedigree); "
+    "heart assessment: trestbps, chol, thalach, oldpeak, ca"
 )
 
 SYSTEM_PROMPT = f"""You are a voice command parser for Bonus Life AI (diabetes health app).
@@ -227,13 +231,18 @@ Allowed actions:
 - "navigate": go to a page. payload: {{ "path": "<path>" }}
 - "fill_field": set one form field on the risk assessment page. payload: {{ "field": "<field>", "value": "<value>" }}
 - "print": trigger print/PDF. payload: {{}}
+- "refresh": reload the page. payload: {{}}
+- "scroll_down": scroll down. payload: {{}}
+- "scroll_up": scroll up. payload: {{}}
+- "help": list voice commands. payload: {{ "message": "<help text>" }} or use reply
+- "logout": sign out. payload: {{}}
 - "unknown": could not understand. payload: {{}}
 
 Valid paths (use exactly these): {ROUTES_LIST}
 Valid fields for fill_field (use exactly these keys): {FIELDS_LIST}
 
 Rules:
-- Map synonyms to the path: "chatbot", "open chat", "go to chat" -> path "/chat". "risk assessment", "diabetes test", "test" -> path "/test".
+- Map synonyms to the path: "chatbot", "open chat" -> "/chat". "risk assessment", "diabetes test", "test" -> "/test". "heart test", "heart risk" -> "/heart-test". "workout", "exercise" -> "/sport". "meal photo", "meal analyzer" -> "/meal-photo". "symptom checker" -> "/symptom-checker". "hospitals" -> "/hospitals". "local ai", "health tip" -> "/local-ai".
 - For numbers, put the value as string in payload.value (e.g. "35", "70").
 - Return only valid JSON: {{ "action": "...", "payload": {{ ... }}, "reply": "short confirmation for TTS or null" }}
 """
@@ -281,6 +290,12 @@ def _parse_voice_command(text: str) -> dict:
     except Exception as e:
         logger.debug(f"Voice command Groq fallback: {e}")
     return rules_result
+
+
+@router.get("/voice-command/routes")
+def get_voice_routes() -> dict:
+    """Return all navigable routes and keywords for the voice agent (no hardcoding)."""
+    return {"routes": get_routes_for_api()}
 
 
 @router.post("/voice-command", response_model=VoiceCommandResponse)

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import BonusLifeLogo from '../components/BonusLifeLogo';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
@@ -28,7 +29,9 @@ export default function LoginScreen({ navigation }) {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <View style={styles.inner}>
-        <Text style={styles.title}>{t('appName')}</Text>
+        <View style={styles.logoWrap}>
+          <BonusLifeLogo size="large" />
+        </View>
         <Text style={styles.subtitle}>{t('auth.signIn')}</Text>
         <TextInput style={styles.input} placeholder={t('auth.email')} placeholderTextColor="#64748b" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
         <TextInput style={styles.input} placeholder={t('auth.password')} placeholderTextColor="#64748b" value={password} onChangeText={setPassword} secureTextEntry />
@@ -49,7 +52,7 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f1419', justifyContent: 'center' },
   inner: { padding: 24 },
-  title: { fontSize: 18, fontWeight: '600', color: '#10b981', textAlign: 'center', marginBottom: 8 },
+  logoWrap: { alignItems: 'center', marginBottom: 16 },
   subtitle: { fontSize: 15, color: '#7d8590', textAlign: 'center', marginBottom: 24 },
   input: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: 14, color: '#e6edf3', marginBottom: 12, fontSize: 16 },
   button: { backgroundColor: '#10b981', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 8 },

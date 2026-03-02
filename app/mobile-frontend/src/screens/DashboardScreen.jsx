@@ -16,6 +16,13 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { SkeletonCard } from '../components/Skeleton';
 import * as api from '../services/api';
+import jsPDF from 'jspdf';
+import QRCode from 'qrcode';
+
+function stripMarkdownAsterisks(s) {
+  if (typeof s !== 'string') return s;
+  return s.replace(/\*\*/g, '');
+}
 
 export default function DashboardScreen({ navigation }) {
   const { user } = useAuth();
@@ -27,23 +34,38 @@ export default function DashboardScreen({ navigation }) {
   const [compareMode, setCompareMode] = useState(false);
   const [compareIds, setCompareIds] = useState([]);
 
-  const toggleCompare = (id) => {
+  const itemKey = (item) => `${item.type || 'diabetes'}-${item.id}`;
+
+  const toggleCompare = (key) => {
     setCompareIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 2) return [prev[1], id];
-      return [...prev, id];
+      if (prev.includes(key)) return prev.filter((x) => x !== key);
+      if (prev.length >= 2) return [prev[1], key];
+      return [...prev, key];
     });
   };
 
   const comparedAssessments = compareIds
-    .map((id) => assessments.find((a) => a.id === id))
+    .map((key) => assessments.find((a) => itemKey(a) === key))
     .filter(Boolean);
 
   const load = async () => {
     try {
-      const raw = await api.getMyAssessments(20);
-      const list = Array.isArray(raw) ? raw : (raw?.assessments ?? []);
-      setAssessments(list);
+      const [rawDiabetes, rawHeart] = await Promise.all([
+        api.getMyAssessments(20),
+        api.getMyHeartAssessments(20),
+      ]);
+      const diabetesList = Array.isArray(rawDiabetes) ? rawDiabetes : (rawDiabetes?.assessments ?? []);
+      const heartList = Array.isArray(rawHeart) ? rawHeart : (rawHeart?.assessments ?? []);
+      const withType = [
+        ...diabetesList.map((a) => ({ ...a, type: 'diabetes' })),
+        ...heartList.map((a) => ({ ...a, type: 'heart' })),
+      ];
+      withType.sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tb - ta;
+      });
+      setAssessments(withType);
     } catch {
       setAssessments([]);
     } finally {
@@ -84,19 +106,19 @@ export default function DashboardScreen({ navigation }) {
 
   const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
-  const buildPdfWithJspdf = async (assessment, fileName, signResult = null) => {
-    const jspdfMod = await import('jspdf');
-    const JSPDF = jspdfMod.default || jspdfMod.jsPDF || jspdfMod;
-    if (typeof JSPDF !== 'function') throw new Error('jspdf did not load.');
-    const doc = new JSPDF();
+  const buildPdfDoc = async (assessment, signResult = null) => {
+    const isHeart = assessment.type === 'heart';
+    const doc = new jsPDF();
     const date = assessment.created_at ? new Date(assessment.created_at).toLocaleString() : 'N/A';
     const patient = user?.full_name || user?.email || 'N/A';
-    const riskLine = `Risk Level: ${assessment.risk_level || 'Unknown'}  |  Probability: ${((assessment.probability || 0) * 100).toFixed(1)}%`;
-    const summary = (assessment.executive_summary || 'No summary available.').slice(0, 800);
+    const riskLevelText = stripMarkdownAsterisks(assessment.risk_level || 'Unknown');
+    const riskLine = `Risk Level: ${riskLevelText}  |  Probability: ${((assessment.probability || 0) * 100).toFixed(1)}%`;
+    const rawSummary = (assessment.executive_summary || 'No summary available.').slice(0, 800);
+    const summary = stripMarkdownAsterisks(rawSummary);
     let y = 20;
     doc.setFontSize(16);
-    doc.setTextColor(0, 120, 80);
-    doc.text('Diabetes Risk Assessment Report', 20, y);
+    doc.setTextColor(isHeart ? 180 : 0, isHeart ? 80 : 120, isHeart ? 120 : 80);
+    doc.text(isHeart ? 'Heart Risk Assessment Report' : 'Diabetes Risk Assessment Report', 20, y);
     y += 10;
     doc.setFontSize(10);
     doc.setTextColor(60, 60, 60);
@@ -111,7 +133,6 @@ export default function DashboardScreen({ navigation }) {
     y += lines.length * 5 + 15;
     if (signResult) {
       try {
-        const QRCode = (await import('qrcode')).default;
         const qrPayload = JSON.stringify({
           report_id: signResult.report_id,
           issued_at: signResult.issued_at,
@@ -127,54 +148,32 @@ export default function DashboardScreen({ navigation }) {
         doc.text('Scan QR to verify signature', 20, y + 44);
       } catch (_) {}
     }
-    const blob = doc.output('arraybuffer');
-    downloadPdfOnWeb(new Uint8Array(blob), fileName);
+    return doc;
   };
 
   const exportSignedAssessmentPDF = async (assessment) => {
     const aid = assessment.id;
-    setPdfLoading(aid);
+    const isHeart = assessment.type === 'heart';
+    const loadingKey = itemKey(assessment);
+    setPdfLoading(loadingKey);
     try {
-      if (isBrowser) {
-        let signResult = null;
+      let signResult = null;
+      if (!isHeart) {
         try {
           signResult = await api.signAssessmentReport(aid);
         } catch (_) {}
-        const fileName = `assessment-${aid}-${signResult ? 'signed' : 'report'}.pdf`;
-        await buildPdfWithJspdf(assessment, fileName, signResult);
+      }
+      const doc = await buildPdfDoc(assessment, signResult);
+      if (isBrowser) {
+        const fileName = isHeart ? `heart-assessment-${aid}-report.pdf` : `assessment-${aid}-${signResult ? 'signed' : 'report'}.pdf`;
+        const blob = doc.output('arraybuffer');
+        downloadPdfOnWeb(new Uint8Array(blob), fileName);
         return;
       }
-      const FileSystem = await import('expo-file-system').then((m) => m.default);
-      const Sharing = await import('expo-sharing').then((m) => m.default);
-      let signResult = null;
-      try {
-        signResult = await api.signAssessmentReport(aid);
-      } catch (_) {}
-      const jspdfMod = await import('jspdf');
-      const JSPDF = jspdfMod.default || jspdfMod.jsPDF || jspdfMod;
-      if (typeof JSPDF !== 'function') throw new Error('jspdf did not load.');
-      const doc = new JSPDF();
-      const date = assessment.created_at ? new Date(assessment.created_at).toLocaleString() : 'N/A';
-      const patient = user?.full_name || user?.email || 'N/A';
-      const riskLine = `Risk Level: ${assessment.risk_level || 'Unknown'}  |  ${((assessment.probability || 0) * 100).toFixed(1)}%`;
-      const summary = (assessment.executive_summary || 'No summary available.').slice(0, 800);
-      let y = 20;
-      doc.setFontSize(16);
-      doc.setTextColor(0, 120, 80);
-      doc.text('Diabetes Risk Assessment Report', 20, y);
-      y += 10;
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      doc.text(`Date: ${date}`, 20, y); y += 7;
-      doc.text(`Patient: ${patient}`, 20, y); y += 7;
-      doc.text(riskLine, 20, y); y += 10;
-      doc.setFont(undefined, 'bold');
-      doc.text('Summary:', 20, y); y += 6;
-      doc.setFont(undefined, 'normal');
-      const lines = doc.splitTextToSize(summary, 170);
-      doc.text(lines, 20, y);
+      const FileSystem = (await import('expo-file-system')).default;
+      const Sharing = (await import('expo-sharing')).default;
       const pdfBase64 = doc.output('datauristring').split(',')[1];
-      const path = `${FileSystem.cacheDirectory}assessment-${aid}-report.pdf`;
+      const path = `${FileSystem.cacheDirectory}${isHeart ? 'heart-' : ''}assessment-${aid}-report.pdf`;
       await FileSystem.writeAsStringAsync(path, pdfBase64, { encoding: FileSystem.EncodingType.Base64 });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(path, { mimeType: 'application/pdf', dialogTitle: 'Save assessment PDF' });
@@ -189,6 +188,8 @@ export default function DashboardScreen({ navigation }) {
       setPdfLoading(null);
     }
   };
+
+  const isPdfLoading = (item) => pdfLoading === itemKey(item);
 
   if (loading) {
     return (
@@ -219,12 +220,12 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.compareHalf}>
             <Text style={styles.compareDate}>{a0.created_at ? new Date(a0.created_at).toLocaleDateString() : 'N/A'}</Text>
             <Text style={styles.compareRisk}>{a0.risk_level} · {((a0.probability ?? 0) * 100).toFixed(1)}%</Text>
-            <Text style={styles.compareSummary} numberOfLines={2}>{a0.executive_summary || '—'}</Text>
+            <Text style={styles.compareSummary} numberOfLines={2}>{stripMarkdownAsterisks(a0.executive_summary) || '—'}</Text>
           </View>
           <View style={styles.compareHalf}>
             <Text style={styles.compareDate}>{a1.created_at ? new Date(a1.created_at).toLocaleDateString() : 'N/A'}</Text>
             <Text style={styles.compareRisk}>{a1.risk_level} · {((a1.probability ?? 0) * 100).toFixed(1)}%</Text>
-            <Text style={styles.compareSummary} numberOfLines={2}>{a1.executive_summary || '—'}</Text>
+            <Text style={styles.compareSummary} numberOfLines={2}>{stripMarkdownAsterisks(a1.executive_summary) || '—'}</Text>
           </View>
         </View>
         <View style={[styles.compareDiff, improved && styles.compareDiffImproved, diff > 0 && !improved && styles.compareDiffWorse]}>
@@ -262,23 +263,25 @@ export default function DashboardScreen({ navigation }) {
       </View>
       <FlatList
         data={assessments}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => itemKey(item)}
         ListHeaderComponent={
           <>
             {renderComparePanel()}
             {renderCompareHint()}
           </>
         }
-        renderItem={({ item }) => (
-          <View style={[styles.card, compareMode && compareIds.includes(item.id) && styles.cardSelected]}>
+        renderItem={({ item }) => {
+          const key = itemKey(item);
+          return (
+          <View style={[styles.card, compareMode && compareIds.includes(key) && styles.cardSelected]}>
             <View style={styles.cardRow}>
               {compareMode && (
                 <TouchableOpacity
-                  style={[styles.compareCheck, compareIds.includes(item.id) && styles.compareCheckSelected]}
-                  onPress={() => toggleCompare(item.id)}
+                  style={[styles.compareCheck, compareIds.includes(key) && styles.compareCheckSelected]}
+                  onPress={() => toggleCompare(key)}
                   activeOpacity={0.8}
                 >
-                  {compareIds.includes(item.id) && <Text style={styles.compareCheckMark}>✓</Text>}
+                  {compareIds.includes(key) && <Text style={styles.compareCheckMark}>✓</Text>}
                 </TouchableOpacity>
               )}
               <View style={styles.cardContent}>
@@ -288,21 +291,22 @@ export default function DashboardScreen({ navigation }) {
                 {item.created_at && (
                   <Text style={styles.cardDate}>
                     {new Date(item.created_at).toLocaleDateString()}
+                    {item.type === 'heart' ? ' · Heart' : ' · Diabetes'}
                   </Text>
                 )}
               </View>
               <Pressable
                 style={({ pressed }) => [styles.pdfBtn, (pressed || pdfLoading === item.id) && styles.pdfBtnDisabled]}
                 onPress={() => {
-                  if (pdfLoading === item.id) return;
+                  if (isPdfLoading(item)) return;
                   exportSignedAssessmentPDF(item);
                 }}
-                disabled={pdfLoading === item.id}
+                disabled={isPdfLoading(item)}
                 android_ripple={null}
                 accessibilityRole="button"
                 accessibilityLabel="Download PDF"
               >
-                {pdfLoading === item.id ? (
+                {isPdfLoading(item) ? (
                   <ActivityIndicator size="small" color="#10b981" />
                 ) : (
                   <Text style={styles.pdfBtnText}>PDF</Text>
@@ -310,7 +314,7 @@ export default function DashboardScreen({ navigation }) {
               </Pressable>
             </View>
           </View>
-        )}
+        ); }}
         contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />

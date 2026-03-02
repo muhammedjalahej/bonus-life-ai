@@ -4,8 +4,9 @@
  * Android emulator: use 10.0.2.2. iOS simulator: use localhost.
  */
 const DEV_API_HOST = '192.168.1.58';
+const DEV_API_PORT = 8001; // backend runs on 8001 (web proxy same)
 const urlFromEnv = process.env.EXPO_PUBLIC_API_URL;
-export const API_BASE_URL = urlFromEnv || `http://${DEV_API_HOST}:8000`;
+export const API_BASE_URL = urlFromEnv || `http://${DEV_API_HOST}:${DEV_API_PORT}`;
 export const APP_NAME = 'Bonus Life AI';
 
 // Mobile theme – restrained, professional

@@ -5,8 +5,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Navigation, Phone, ExternalLink, Loader2 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { API_BASE_URL } from '../config/constants';
+import { VOICE_FIND_NEAREST_HOSPITAL } from '../components/VoiceAgent';
 
-const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8001');
+const API_BASE = (API_BASE_URL || '').replace(/\/$/, '');
 const TURKEY_CENTER = { lat: 39.0, lon: 32.8 };
 
 export default function FindHospitals({ language }) {
@@ -71,6 +73,14 @@ export default function FindHospitals({ language }) {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
   };
+
+  const useMyLocationRef = useRef(useMyLocation);
+  useMyLocationRef.current = useMyLocation;
+  useEffect(() => {
+    const handler = () => useMyLocationRef.current?.();
+    window.addEventListener(VOICE_FIND_NEAREST_HOSPITAL, handler);
+    return () => window.removeEventListener(VOICE_FIND_NEAREST_HOSPITAL, handler);
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current || !L || !L.map) return;

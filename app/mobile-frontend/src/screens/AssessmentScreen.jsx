@@ -35,6 +35,11 @@ const DEFAULT_VALUES = {
   diabetes_pedigree_function: '0.5',
 };
 
+function stripMarkdownAsterisks(s) {
+  if (typeof s !== 'string') return s;
+  return s.replace(/\*\*/g, '');
+}
+
 export default function AssessmentScreen({ navigation }) {
   const [values, setValues] = useState(DEFAULT_VALUES);
   const [result, setResult] = useState(null);
@@ -127,7 +132,7 @@ export default function AssessmentScreen({ navigation }) {
           {executiveSummary ? (
             <View style={styles.card}>
               <Text style={styles.cardLabel}>Executive Summary</Text>
-              <Text style={styles.cardText}>{executiveSummary}</Text>
+              <Text style={styles.cardText}>{stripMarkdownAsterisks(executiveSummary)}</Text>
             </View>
           ) : null}
 
@@ -145,7 +150,7 @@ export default function AssessmentScreen({ navigation }) {
                   <View style={[styles.severityBadge, (f.severity || '').toLowerCase().includes('high') && styles.severityHigh, (f.severity || '').toLowerCase().includes('moderate') && styles.severityMod]}>
                     <Text style={styles.severityText}>{f.severity || 'Info'}</Text>
                   </View>
-                  <Text style={styles.factorText}>{f.factor}</Text>
+                  <Text style={styles.factorText}>{stripMarkdownAsterisks(f.factor)}</Text>
                 </View>
               ))}
             </View>

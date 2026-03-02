@@ -18,6 +18,8 @@ export function onMaintenanceMode(cb) {
 }
 
 const REQUEST_TIMEOUT_MS = 15000;
+/** Local AI (Ollama) can take 30–60s to generate; use longer timeout for /api/v1/local-ai */
+const LOCAL_AI_TIMEOUT_MS = 60000;
 
 async function apiRequest(endpoint, options = {}) {
   const token = getStoredToken();
@@ -27,27 +29,46 @@ async function apiRequest(endpoint, options = {}) {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
+  const timeoutMs = options.timeoutMs ?? (endpoint.startsWith('/api/v1/local-ai') ? LOCAL_AI_TIMEOUT_MS : REQUEST_TIMEOUT_MS);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  const { timeoutMs: _skip, ...fetchOptions } = options;
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       headers,
       signal: controller.signal,
-      ...options,
+      ...fetchOptions,
     });
     clearTimeout(timeoutId);
 
     if (response.status === 503) {
-      // Maintenance mode — notify the app
-      if (_maintenanceCb) _maintenanceCb();
-      throw new Error('HTTP 503: Platform is under maintenance');
+      // Don't treat symptom-checker or local-ai 503 as platform maintenance
+      const isLocalAIUnavailable = endpoint.startsWith('/api/v1/local-ai');
+      const isSymptomCheckerUnavailable = endpoint.includes('symptom-checker');
+      if (!isLocalAIUnavailable && !isSymptomCheckerUnavailable && _maintenanceCb) _maintenanceCb();
+      let message = 'HTTP 503: Platform is under maintenance';
+      if (isLocalAIUnavailable) message = 'Service unavailable run llama3.2:3b';
+      else if (isSymptomCheckerUnavailable) {
+        try {
+          const body = await response.json();
+          message = (body && typeof body.detail === 'string') ? body.detail : 'Symptom checker is temporarily unavailable. Please try again.';
+        } catch (_) {
+          message = 'Symptom checker is temporarily unavailable. Please try again.';
+        }
+      }
+      throw new Error(message);
     }
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      let message = `HTTP ${response.status}: ${errorText}`;
+      try {
+        const body = JSON.parse(errorText);
+        if (body && typeof body.detail === 'string') message = body.detail;
+      } catch (_) {}
+      throw new Error(message);
     }
 
     const data = await response.json();
@@ -56,9 +77,20 @@ async function apiRequest(endpoint, options = {}) {
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      const timeoutError = new Error('Request timed out. Is the backend running at ' + API_BASE_URL + '?');
+      const isLocalAI = endpoint.startsWith('/api/v1/local-ai');
+      const msg = isLocalAI
+        ? 'Local AI is taking too long. Ollama may be slow; try again or use a smaller model.'
+        : 'Request timed out. Is the backend running at ' + (API_BASE_URL || 'the server') + '?';
+      const timeoutError = new Error(msg);
       console.error(`API request failed for ${endpoint}:`, timeoutError);
       throw timeoutError;
+    }
+    // "Failed to fetch" = network error (backend not running, wrong port, or CORS)
+    if (error.message === 'Failed to fetch' || (error.name === 'TypeError' && error.message && error.message.includes('fetch'))) {
+      const backendHint = API_BASE_URL ? API_BASE_URL : 'http://localhost:8001 (via proxy from port 5173)';
+      const friendly = new Error('Cannot reach the server. Make sure the backend is running on port 8001.');
+      console.error(`API request failed for ${endpoint}:`, error);
+      throw friendly;
     }
     console.error(`API request failed for ${endpoint}:`, error);
     throw error;
@@ -68,6 +100,13 @@ async function apiRequest(endpoint, options = {}) {
 // CORRECTED ENDPOINTS - Match your backend
 export async function predictDiabetesRisk(formData) {
   return apiRequest('/api/v1/diabetes-assessment', {
+    method: 'POST',
+    body: JSON.stringify(formData),
+  });
+}
+
+export async function runHeartAssessment(formData) {
+  return apiRequest('/api/v1/heart-assessment', {
     method: 'POST',
     body: JSON.stringify(formData),
   });
@@ -85,17 +124,18 @@ export async function chatWithAI(message, language = 'english', conversation_id 
   });
 }
 
-export async function voiceChat(text, language = 'english') {
+export async function voiceChat(text, language = 'english', userId = 'voice-user', isVoice = true) {
   return apiRequest('/api/v1/voice-chat/test', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      text: text,
-      language: language,
-      user_id: 'voice-user'
-    }),
+      text: String(text),
+      language: String(language),
+      user_id: String(userId),
+      is_voice: isVoice ? '1' : '0',
+    }).toString(),
   });
 }
 
@@ -106,10 +146,11 @@ export async function generateDietPlan(userData, language = 'english') {
   });
 }
 
-export async function assessSymptoms(symptoms, language = 'english') {
-  return apiRequest('/api/v1/emergency-assessment', {
+/** ML symptom checker: 8 inputs -> top-3 condition groups with probabilities */
+export async function symptomCheckerPredict(payload) {
+  return apiRequest('/api/v1/symptom-checker/predict', {
     method: 'POST',
-    body: JSON.stringify({ symptoms, language }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -255,6 +296,43 @@ export async function updateProfile(data) {
   });
 }
 
+// Subscription (Stripe): no feature gating; Pro = early access to new features
+export async function getMySubscription() {
+  return apiRequest('/api/v1/users/me/subscription');
+}
+
+/** plan: "pro_monthly" | "pro_yearly". Returns { url }. Redirect user to url for Stripe Checkout. */
+export async function createCheckout(plan) {
+  return apiRequest('/api/v1/users/me/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ plan }),
+  });
+}
+
+/** Confirm subscription after Stripe redirect. session_id from URL (e.g. cs_xxx). Returns updated subscription. */
+export async function confirmSubscription(sessionId) {
+  return apiRequest('/api/v1/users/me/subscription/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ session_id: sessionId }),
+  });
+}
+
+/** Sync subscription from Stripe (use if you paid but still show Free). Returns updated subscription. */
+export async function syncSubscription() {
+  return apiRequest('/api/v1/users/me/subscription/sync', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+/** Returns { url }. Redirect user to url for Stripe Customer Portal (manage/cancel). */
+export async function createPortalSession() {
+  return apiRequest('/api/v1/users/me/customer-portal', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
 /** Upload profile picture from file. Returns { avatar_url }. Backend also updates user.avatar_url. */
 export async function uploadAvatar(file) {
   const token = getStoredToken();
@@ -373,6 +451,20 @@ export async function adminGetSystemHealth() {
   return apiRequest('/api/v1/admin/system-health');
 }
 
+export async function adminGetSubscriptionStats() {
+  return apiRequest('/api/v1/admin/subscriptions/stats');
+}
+
+export async function adminGetSubscriptions(params = {}) {
+  const { status, tier, skip = 0, limit = 500 } = params;
+  const q = new URLSearchParams();
+  if (status) q.set('status', status);
+  if (tier) q.set('tier', tier);
+  q.set('skip', String(skip));
+  q.set('limit', String(limit));
+  return apiRequest(`/api/v1/admin/subscriptions?${q.toString()}`);
+}
+
 export async function getActiveAnnouncements() {
   return apiRequest('/api/v1/announcements/active');
 }
@@ -418,6 +510,31 @@ export async function getSharedAssessment(token) {
   return apiRequest(`/api/v1/shared/assessment/${token}`);
 }
 
+// ---- Heart assessments (mirror diabetes: list, share, delete, sign) ----
+export async function getMyHeartAssessments(limit = 50) {
+  return apiRequest(`/api/v1/users/me/heart-assessments?limit=${limit}`);
+}
+
+export async function shareHeartAssessment(heartAssessmentId) {
+  return apiRequest(`/api/v1/users/me/heart-assessments/${heartAssessmentId}/share`, { method: 'POST' });
+}
+
+export async function revokeHeartShare(heartAssessmentId) {
+  return apiRequest(`/api/v1/users/me/heart-assessments/${heartAssessmentId}/share`, { method: 'DELETE' });
+}
+
+export async function deleteHeartAssessment(heartAssessmentId) {
+  return apiRequest(`/api/v1/users/me/heart-assessments/${heartAssessmentId}`, { method: 'DELETE' });
+}
+
+export async function signHeartAssessmentReport(heartAssessmentId) {
+  return apiRequest(`/api/v1/reports/sign-heart-assessment/${heartAssessmentId}`, { method: 'POST' });
+}
+
+export async function getSharedHeartAssessment(token) {
+  return apiRequest(`/api/v1/shared/heart/${token}`);
+}
+
 // ---- 2FA (feature f15) ----
 export async function setup2FA() {
   return apiRequest('/api/v1/users/me/2fa/setup', { method: 'POST' });
@@ -442,6 +559,10 @@ export async function markNotificationRead(notifId) {
 
 export async function markAllNotificationsRead() {
   return apiRequest('/api/v1/users/me/notifications/read-all', { method: 'POST' });
+}
+
+export async function deleteNotification(notifId) {
+  return apiRequest(`/api/v1/users/me/notifications/${notifId}`, { method: 'DELETE' });
 }
 
 // ---- Admin: user notes (feature f12) ----
@@ -484,12 +605,23 @@ export async function clearMealLog() {
   return apiRequest('/api/v1/meal-photo/log/clear', { method: 'POST', body: '{}' });
 }
 
+// Local AI (one module, no external API)
+export async function localAIGetHealthTip(language = 'english') {
+  return apiRequest(`/api/v1/local-ai/health-tip?language=${encodeURIComponent(language)}`);
+}
+export async function localAIAnswerScenario(scenario, assessment = null, language = 'english') {
+  return apiRequest(`/api/v1/local-ai/scenario?language=${encodeURIComponent(language)}`, {
+    method: 'POST',
+    body: JSON.stringify({ scenario, assessment }),
+  });
+}
+
 const apiService = {
   predictDiabetesRisk,
   chatWithAI,
   voiceChat,
   generateDietPlan,
-  assessSymptoms,
+  symptomCheckerPredict,
   getChatTopics,
   clearChatHistory,
   healthCheck,
@@ -499,8 +631,14 @@ const apiService = {
   forgotPassword,
   resetPassword,
   getMyAssessments,
+  getMyHeartAssessments,
   getMyDietPlans,
   updateProfile,
+  getMySubscription,
+  createCheckout,
+  confirmSubscription,
+  syncSubscription,
+  createPortalSession,
   uploadAvatar,
   changePassword,
   adminGetUsers,
@@ -520,6 +658,8 @@ const apiService = {
   adminGetSettings,
   adminUpdateSetting,
   adminGetSystemHealth,
+  adminGetSubscriptionStats,
+  adminGetSubscriptions,
   getActiveAnnouncements,
   checkMaintenanceStatus,
   exportMyData,
@@ -529,6 +669,11 @@ const apiService = {
   shareAssessment,
   revokeShare,
   deleteAssessment,
+  shareHeartAssessment,
+  revokeHeartShare,
+  deleteHeartAssessment,
+  signHeartAssessmentReport,
+  getSharedHeartAssessment,
   deleteDietPlan,
   getSharedAssessment,
   setup2FA,

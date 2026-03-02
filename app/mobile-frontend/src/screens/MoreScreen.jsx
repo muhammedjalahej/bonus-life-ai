@@ -12,10 +12,11 @@ import { useLanguage } from '../context/LanguageContext';
 
 const FEATURES = [
   { key: 'Assessment', labelKey: 'nav.riskAssessment', color: '#2563eb' },
+  { key: 'Heart', labelKey: 'nav.heartRisk', color: '#ec4899' },
   { key: 'DietPlan', labelKey: 'nav.dietPlan', color: '#d97706' },
   { key: 'MealPhoto', labelKey: 'nav.mealAnalyzer', color: '#0891b2' },
   { key: 'WorkoutVideos', labelKey: 'nav.workoutVideos', color: '#db2777' },
-  { key: 'Emergency', labelKey: 'nav.emergencyCheck', color: '#dc2626' },
+  { key: 'SymptomChecker', labelKey: 'nav.symptomChecker', color: '#10b981' },
   { key: 'Dashboard', labelKey: 'nav.myAssessments', color: '#7c3aed' },
   { key: 'VerifyReport', labelKey: 'nav.verifyReport', color: '#64748b' },
 ];

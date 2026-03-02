@@ -16,6 +16,8 @@ export default function FluidCard({ children, className = '', style = {}, as: Co
 
   const handlePointerDown = useCallback((e) => {
     if (e.button !== 0) return;
+    // Don't capture pointer when interacting with buttons/links so clicks work
+    if (e.target.closest('button, a, [role="button"]')) return;
     startRef.current = { x: e.clientX - pos.x, y: e.clientY - pos.y, pointerId: e.pointerId };
     didDragRef.current = false;
     setTransition('none');

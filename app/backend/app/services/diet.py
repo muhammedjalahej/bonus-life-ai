@@ -1,4 +1,4 @@
-"""Diet plan generation service using Groq LLM.
+"""Diet plan generation – Groq only.
 
 Authors: Muhammed Jalahej, Yazen Emino
 """
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class GroqLLMService:
-    """Lightweight Groq LLM wrapper for diet-plan generation."""
+    """LLM for diet-plan generation: Groq only."""
 
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
@@ -22,16 +22,15 @@ class GroqLLMService:
         self.temperature = float(os.getenv("LLM_TEMPERATURE", 0.6))
         self.available = bool(self.api_key and self.api_key.startswith("gsk_"))
         if self.available:
-            logger.info(f"[OK] Groq LLM (diet) initialized with model: {self.model_name}")
+            logger.info("[OK] Groq LLM (diet) initialized with model: %s", self.model_name)
         else:
             logger.warning("[WARN] Groq LLM (diet) not available - using templates")
 
     async def generate_response(self, prompt: str) -> str:
         if not self.available:
-            raise Exception("Groq LLM not configured")
+            raise Exception("LLM not configured (set GROQ_API_KEY)")
         try:
             import httpx
-
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
@@ -54,7 +53,7 @@ class GroqLLMService:
                 data = response.json()
                 return data["choices"][0]["message"]["content"]
         except Exception as e:
-            logger.error(f"LLM API error: {e}")
+            logger.error("LLM API error: %s", e)
             raise
 
 

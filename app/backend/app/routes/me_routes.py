@@ -15,15 +15,16 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.db_models import User, Assessment, DietPlanRecord, Notification
+from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, Notification
 from app.models import UserMeResponse, ProfileUpdateRequest, ChangePasswordRequest, SaveDietPlanRequest
 from app.auth import get_current_user, hash_password
+from app.services import stripe_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["users"])
 
 # Directory for avatar uploads (relative to backend app root)
-UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads" / "avatars"
+UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "avatars"
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 MAX_SIZE_MB = 5
 MAX_BYTES = MAX_SIZE_MB * 1024 * 1024
@@ -44,6 +45,9 @@ def _user_response(user: User) -> UserMeResponse:
         calorie_goal=user.calorie_goal,
         totp_enabled=bool(user.totp_enabled),
         onboarding_completed=bool(user.onboarding_completed),
+        subscription_tier=user.subscription_tier or "free",
+        subscription_status=user.subscription_status or "",
+        current_period_end=user.current_period_end,
     )
 
 
@@ -98,7 +102,7 @@ async def upload_avatar(
     with open(filepath, "wb") as f:
         f.write(contents)
     # Store relative path so frontend can prepend its API_BASE_URL and always load from same origin
-    avatar_path = f"/uploads/avatars/{filename}"
+    avatar_path = f"/avatars/{filename}"
     user.avatar_url = avatar_path
     db.commit()
     db.refresh(user)
@@ -130,6 +134,33 @@ async def my_assessments(
         db.query(Assessment)
         .filter(Assessment.user_id == user.id)
         .order_by(Assessment.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "assessment_id": r.assessment_id,
+            "risk_level": r.risk_level,
+            "probability": r.probability,
+            "executive_summary": r.executive_summary,
+            "payload": json.loads(r.payload) if r.payload else None,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.get("/users/me/heart-assessments")
+async def my_heart_assessments(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    limit: int = 50,
+) -> List[dict]:
+    rows = (
+        db.query(HeartAssessment)
+        .filter(HeartAssessment.user_id == user.id)
+        .order_by(HeartAssessment.created_at.desc())
         .limit(limit)
         .all()
     )
@@ -302,6 +333,60 @@ async def delete_assessment(
     return {"message": "Assessment deleted"}
 
 
+# ---- Heart assessment share / delete ----
+@router.post("/users/me/heart-assessments/{heart_assessment_id}/share")
+async def share_heart_assessment(
+    heart_assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create a public share token for a heart assessment."""
+    a = db.query(HeartAssessment).filter(
+        HeartAssessment.id == heart_assessment_id, HeartAssessment.user_id == user.id
+    ).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Heart assessment not found")
+    if not a.share_token:
+        a.share_token = secrets.token_urlsafe(32)
+        db.commit()
+        db.refresh(a)
+    return {"share_token": a.share_token, "assessment_id": a.id}
+
+
+@router.delete("/users/me/heart-assessments/{heart_assessment_id}/share")
+async def revoke_heart_share(
+    heart_assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Revoke a shared heart assessment link."""
+    a = db.query(HeartAssessment).filter(
+        HeartAssessment.id == heart_assessment_id, HeartAssessment.user_id == user.id
+    ).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Heart assessment not found")
+    a.share_token = None
+    db.commit()
+    return {"message": "Share link revoked"}
+
+
+@router.delete("/users/me/heart-assessments/{heart_assessment_id}")
+async def delete_heart_assessment(
+    heart_assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete one of the current user's heart assessments."""
+    a = db.query(HeartAssessment).filter(
+        HeartAssessment.id == heart_assessment_id, HeartAssessment.user_id == user.id
+    ).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Heart assessment not found")
+    db.delete(a)
+    db.commit()
+    return {"message": "Heart assessment deleted"}
+
+
 @router.delete("/users/me/diet-plans/{diet_plan_id}")
 async def delete_diet_plan(
     diet_plan_id: int,
@@ -424,3 +509,158 @@ async def mark_all_read(
     ).update({"is_read": True}, synchronize_session=False)
     db.commit()
     return {"message": "All notifications marked as read"}
+
+
+@router.delete("/users/me/notifications/{notif_id}")
+async def delete_notification(
+    notif_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    n = db.query(Notification).filter(
+        Notification.id == notif_id, Notification.user_id == user.id
+    ).first()
+    if not n:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    db.delete(n)
+    db.commit()
+    return {"message": "Notification deleted"}
+
+
+# ---------------------------------------------------------------------------
+# Subscription (Stripe) – no feature gating; Pro = early access to future features
+# ---------------------------------------------------------------------------
+class CheckoutRequest(BaseModel):
+    plan: str  # "pro_monthly" | "pro_yearly"
+
+
+class ConfirmSubscriptionRequest(BaseModel):
+    session_id: str  # Stripe Checkout Session ID (e.g. cs_xxx)
+
+
+@router.get("/users/me/subscription")
+async def get_my_subscription(
+    user: User = Depends(get_current_user),
+):
+    """Return current user's subscription tier and status."""
+    return {
+        "subscription_tier": user.subscription_tier or "free",
+        "subscription_status": user.subscription_status or "",
+        "current_period_end": user.current_period_end.isoformat() if user.current_period_end else None,
+    }
+
+
+@router.post("/users/me/subscription/confirm")
+async def confirm_subscription(
+    data: ConfirmSubscriptionRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Confirm subscription after Stripe Checkout success using session_id from redirect URL."""
+    if not stripe_service.is_configured():
+        raise HTTPException(status_code=503, detail="Subscription is not configured")
+    result = stripe_service.confirm_checkout_session(data.session_id)
+    if not result:
+        raise HTTPException(status_code=400, detail="Invalid or expired checkout session")
+    tier, status, period_end, sub_id, customer_id, metadata_user_id = result
+    if metadata_user_id and str(user.id) != metadata_user_id:
+        raise HTTPException(status_code=403, detail="Session does not belong to this user")
+    user.subscription_tier = tier
+    user.subscription_status = status or "active"
+    user.current_period_end = period_end
+    if sub_id:
+        user.stripe_subscription_id = sub_id
+    if customer_id:
+        user.stripe_customer_id = customer_id
+    db.commit()
+    db.refresh(user)
+    return {
+        "subscription_tier": user.subscription_tier or "free",
+        "subscription_status": user.subscription_status or "",
+        "current_period_end": user.current_period_end.isoformat() if user.current_period_end else None,
+    }
+
+
+@router.post("/users/me/subscription/sync")
+async def sync_subscription_from_stripe(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Fetch current subscription from Stripe and update user. Use if redirect confirm was missed."""
+    if not stripe_service.is_configured():
+        raise HTTPException(status_code=503, detail="Subscription is not configured")
+    result = stripe_service.fetch_subscription_for_user(
+        getattr(user, "stripe_subscription_id", None),
+        user.stripe_customer_id,
+    )
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="No active subscription found in Stripe. Complete checkout and return to the dashboard, or try again later.",
+        )
+    tier, status, period_end, sub_id = result
+    user.subscription_tier = tier
+    user.subscription_status = status or "active"
+    user.current_period_end = period_end
+    if sub_id:
+        user.stripe_subscription_id = sub_id
+    db.commit()
+    db.refresh(user)
+    return {
+        "subscription_tier": user.subscription_tier or "free",
+        "subscription_status": user.subscription_status or "",
+        "current_period_end": user.current_period_end.isoformat() if user.current_period_end else None,
+    }
+
+
+@router.post("/users/me/checkout")
+async def create_checkout(
+    data: CheckoutRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create Stripe Checkout session; returns { url } to redirect user."""
+    if not stripe_service.is_configured():
+        raise HTTPException(status_code=503, detail="Subscription is not configured")
+    price_id = stripe_service.get_price_id(data.plan)
+    if not price_id:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    import os
+    base = os.getenv("FRONTEND_URL", "http://localhost:5175").rstrip("/")
+    success_url = f"{base}/dashboard?subscription=success&session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{base}/pricing"
+    customer_id = stripe_service.create_or_get_customer(
+        user.email, user.full_name or "", user.stripe_customer_id
+    )
+    if not customer_id:
+        raise HTTPException(status_code=500, detail="Could not create customer")
+    if not user.stripe_customer_id:
+        user.stripe_customer_id = customer_id
+        db.commit()
+    url, stripe_error = stripe_service.create_checkout_session(
+        customer_id, price_id, success_url, cancel_url, user.id
+    )
+    if not url:
+        raise HTTPException(
+            status_code=400,
+            detail=stripe_error or "Could not create checkout session",
+        )
+    return {"url": url}
+
+
+@router.post("/users/me/customer-portal")
+async def create_portal_session(
+    user: User = Depends(get_current_user),
+):
+    """Create Stripe Customer Portal session; returns { url } to manage subscription."""
+    if not stripe_service.is_configured():
+        raise HTTPException(status_code=503, detail="Subscription is not configured")
+    if not user.stripe_customer_id:
+        raise HTTPException(status_code=400, detail="No subscription to manage")
+    import os
+    base = os.getenv("FRONTEND_URL", "http://localhost:5175").rstrip("/")
+    return_url = f"{base}/dashboard"
+    url = stripe_service.create_portal_session(user.stripe_customer_id, return_url)
+    if not url:
+        raise HTTPException(status_code=500, detail="Could not create portal session")
+    return {"url": url}

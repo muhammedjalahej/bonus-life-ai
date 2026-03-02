@@ -71,8 +71,15 @@ class User(Base):
     totp_enabled = Column(Boolean, default=False)
     # Onboarding (feature f2)
     onboarding_completed = Column(Boolean, default=False)
+    # Subscription (Stripe): no feature gating – all tools stay free; Pro = early access to future features
+    stripe_customer_id = Column(String(255), nullable=True, index=True)
+    stripe_subscription_id = Column(String(255), nullable=True, index=True)
+    subscription_tier = Column(String(50), default="free")  # free | pro_monthly | pro_yearly
+    subscription_status = Column(String(50), default="")    # active | canceled | past_due | trialing | ""
+    current_period_end = Column(DateTime, nullable=True)     # when current billing period ends
 
     assessments = relationship("Assessment", back_populates="user")
+    heart_assessments = relationship("HeartAssessment", back_populates="user")
     diet_plans = relationship("DietPlanRecord", back_populates="user")
     meal_logs = relationship("MealLog", back_populates="user")
     passkey_credentials = relationship("PasskeyCredential", back_populates="user", cascade="all, delete-orphan")
@@ -105,6 +112,22 @@ class Assessment(Base):
     share_token = Column(String(64), nullable=True, unique=True, index=True)
 
     user = relationship("User", back_populates="assessments")
+
+
+class HeartAssessment(Base):
+    __tablename__ = "heart_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    assessment_id = Column(String(64), unique=True, index=True)
+    risk_level = Column(String(64))
+    probability = Column(Float)
+    executive_summary = Column(Text, default="")
+    payload = Column(Text)  # JSON string of request/response summary
+    created_at = Column(DateTime, default=datetime.utcnow)
+    share_token = Column(String(64), nullable=True, unique=True, index=True)
+
+    user = relationship("User", back_populates="heart_assessments")
 
 
 class DietPlanRecord(Base):

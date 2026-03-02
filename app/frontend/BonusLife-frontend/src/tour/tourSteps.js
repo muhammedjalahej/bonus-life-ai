@@ -28,10 +28,10 @@ export const tourSteps = [
     body: 'Use voice to interact with the assistant hands-free.',
   },
   {
-    id: 'emergency',
-    selector: '[data-tour="nav-emergency"]',
-    title: 'Emergency',
-    body: 'Quick emergency check and guidance when you need it.',
+    id: 'symptom-checker',
+    selector: '[data-tour="nav-symptom-checker"]',
+    title: 'Symptom Checker',
+    body: 'See possible condition groups based on your symptoms and profile.',
   },
   {
     id: 'hospitals',

@@ -1,4 +1,4 @@
-"""AI Diabetes Specialist services using Groq LLM.
+"""AI Diabetes Specialist – Groq only.
 
 Authors: Muhammed Jalahej, Yazen Emino
 """
@@ -7,7 +7,7 @@ import asyncio
 import os
 import logging
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 from groq import Groq
 
@@ -30,13 +30,13 @@ class AIDiabetesSpecialist:
             if groq_api_key and groq_api_key.startswith("gsk_"):
                 self.client = Groq(api_key=groq_api_key)
                 model_name = os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant")
-                logger.info(f"[START] AI Diabetes Specialist LLM initialized with model: {model_name}")
-            else:
-                logger.error("[ERROR] Invalid or missing Groq API key")
-                self.client = None
+                logger.info("[START] AI Diabetes Specialist LLM initialized with Groq model: %s", model_name)
+                return
         except Exception as e:
-            logger.error(f"[ERROR] Failed to initialize Groq LLM: {e}")
+            logger.error("[ERROR] Failed to initialize Groq LLM: %s", e)
             self.client = None
+        if not self.client:
+            logger.error("[ERROR] Invalid or missing Groq API key")
 
     # -- prompt -----------------------------------------------------------
     def create_medical_prompt(self, message: str, language: str, user_context: Dict = None) -> str:
@@ -204,12 +204,61 @@ class GPTOSSDiabetesSpecialist:
             self.client = None
 
     def create_diabetes_prompt(self, message: str, language: str, context: Dict = None) -> List[Dict]:
+        context = context or {}
+        is_voice = context.get("is_voice", False)
+        assessment_context = context.get("assessment_context")
+        voice_instructions = ""
+        if is_voice:
+            if language == "turkish":
+                voice_instructions = (
+                    " SESLİ MOD: Yanıtları kısa ve net tut; basit sorularda 2-4 cümle yeter. "
+                    "Selamlama (merhaba, günaydın vb.) ise kısa karşılık ver ve bir sağlık sorusu sor. "
+                    "Belirsiz veya çok kısa mesajlarda bağlamı kullan veya kısa bir netleştirme sorusu sor."
+                )
+            else:
+                voice_instructions = (
+                    " VOICE MODE: Keep replies concise; use short sentences. For simple questions, 2-4 sentences. "
+                    "For greetings (hi, hello), give a brief friendly reply and invite a health question. "
+                    "If the message is vague or unclear, use conversation context or ask one short clarifying question."
+                )
+        assessment_block = ""
+        if assessment_context:
+            risk = assessment_context.get("risk_level", "unknown")
+            prob = assessment_context.get("probability")
+            summary = (assessment_context.get("executive_summary") or "").strip()
+            date_str = assessment_context.get("created_at") or ""
+            summary_part = ""
+            if summary:
+                summary_part = f" Özet: {summary[:400]}{'...' if len(summary) > 400 else ''}." if language == "turkish" else f" Summary: {summary[:400]}{'...' if len(summary) > 400 else ''}."
+            if language == "turkish":
+                prob_str = f", olasılık %{int(prob * 100)}" if prob is not None else ""
+                assessment_block = (
+                    "\n\nÖNEMLİ: Bu kullanıcının son diyabet risk değerlendirmesine SAHİPSİN. "
+                    "Değerlendirme, sonuç veya risk sorduğunda AŞAĞIDAKİ VERİYİ KULLANARAK cevap ver. "
+                    "'Erişimim yok' veya 'bilgi saklamıyorum' deme.\n"
+                    f"Son değerlendirme: risk düzeyi = {risk}{prob_str}.{summary_part} Tarih: {date_str}."
+                )
+            else:
+                prob_str = f", probability {prob:.0%}" if prob is not None else ""
+                assessment_block = (
+                    "\n\nIMPORTANT: You HAVE access to this user's last diabetes risk assessment. "
+                    "When they ask about their assessment, results, or risk, ANSWER using the data below. "
+                    "Do NOT say you do not have access or do not retain information.\n"
+                    f"Last assessment: risk level = {risk}{prob_str}.{summary_part} Date: {date_str}."
+                )
+        elif context.get("user_has_no_assessment"):
+            if language == "turkish":
+                assessment_block = "\n\nBu kullanıcının kayıtlı değerlendirmesi yok. Değerlendirme sorarsa Assessment bölümünden bir değerlendirme yapmasını öner."
+            else:
+                assessment_block = "\n\nThe user has no stored assessment on file. If they ask about their assessment, suggest they complete one in the Assessment section."
         if language == "turkish":
             system_content = (
                 "Sen Bonus Life AI'ın diyabet konusunda uzman yapay zeka asistanısın. "
                 "Tüm yanıtlarını Türkçe, tıbben doğru ve anlaşılır biçimde ver. "
                 "Diyabet önleme, belirtiler, tedavi ve yaşam tarzı hakkında ayrıntılı bilgi sun. "
                 "Önemli: Yanıtlarında bir yapay zeka asistanı olduğunu belirt."
+                + voice_instructions
+                + assessment_block
             )
         else:
             system_content = (
@@ -217,16 +266,26 @@ class GPTOSSDiabetesSpecialist:
                 "Provide medically accurate, evidence-based information. "
                 "Give specific, actionable advice. "
                 "Always state that you are an AI assistant."
+                + voice_instructions
+                + assessment_block
             )
         messages = [{"role": "system", "content": system_content}]
         if context and "user_id" in context:
             history = self.get_conversation_history(context["user_id"])
-            for msg in history[-3:]:
+            for msg in history[-6:]:
                 messages.append({"role": msg["role"], "content": msg["content"]})
         messages.append({"role": "user", "content": message})
         return messages
 
-    async def generate_diabetes_response(self, message: str, language: str = "english", user_id: str = "default") -> Dict[str, Any]:
+    async def generate_diabetes_response(
+        self,
+        message: str,
+        language: str = "english",
+        user_id: str = "default",
+        is_voice: bool = False,
+        assessment_context: Optional[Dict] = None,
+        user_has_no_assessment: bool = False,
+    ) -> Dict[str, Any]:
         self.add_to_conversation(user_id, "user", message)
         if not self.client:
             fb = self._get_enhanced_fallback(message, language)
@@ -235,9 +294,13 @@ class GPTOSSDiabetesSpecialist:
         try:
             model_name = os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant")
             temperature = float(os.getenv("LLM_TEMPERATURE", 0.6))
-            msgs = self.create_diabetes_prompt(message, language, {"user_id": user_id})
+            max_tokens = 800 if is_voice else 1500
+            ctx = {"user_id": user_id, "is_voice": is_voice, "user_has_no_assessment": user_has_no_assessment}
+            if assessment_context:
+                ctx["assessment_context"] = assessment_context
+            msgs = self.create_diabetes_prompt(message, language, ctx)
             response = self.client.chat.completions.create(
-                model=model_name, messages=msgs, temperature=temperature, max_tokens=1500
+                model=model_name, messages=msgs, temperature=temperature, max_tokens=max_tokens
             )
             llm_resp = response.choices[0].message.content
             self.add_to_conversation(user_id, "assistant", llm_resp)
