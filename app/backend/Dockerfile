@@ -2,8 +2,6 @@ FROM ghcr.io/muhammedjalahej/bonus-life-ai:base
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir pandas==2.2.3
-
 # Application source
 COPY app/backend/app/ ./app/
 

@@ -52,16 +52,22 @@ class SymptomCheckerService:
             return
         try:
             import sys
+            import csv
             if str(_BACKEND_ROOT) not in sys.path:
                 sys.path.insert(0, str(_BACKEND_ROOT))
-            import pandas as pd
             from scripts.disease_to_group import disease_to_group
             if not os.path.exists(CSV_PATH):
                 return
-            df = pd.read_csv(CSV_PATH)
-            df["Group"] = df["Disease"].astype(str).map(disease_to_group)
-            g = df.groupby("Group")["Disease"].apply(lambda x: sorted(x.unique().astype(str).tolist()))
-            self._group_to_diseases = g.to_dict()
+            mapping: Dict[str, set] = {}
+            with open(CSV_PATH, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    disease = str(row.get("Disease", "")).strip()
+                    if not disease:
+                        continue
+                    group = disease_to_group.get(disease, "Other")
+                    mapping.setdefault(group, set()).add(disease)
+            self._group_to_diseases = {g: sorted(d) for g, d in mapping.items()}
         except Exception as e:
             logger.warning(f"Could not load group->diseases mapping: {e}")
 
@@ -97,12 +103,10 @@ class SymptomCheckerService:
         if not self._load():
             return []
         import numpy as np
-        import pandas as pd
 
         model = self._model_data["model"]
         le = self._model_data["label_encoder"]
         imputer = self._model_data.get("imputer")
-        feature_names = self._model_data.get("feature_names", FEATURE_NAMES)
 
         row = [
             fever, cough, fatigue, difficulty_breathing,
@@ -111,17 +115,16 @@ class SymptomCheckerService:
         X = np.array([row], dtype=np.float64)
         if imputer is not None:
             X = imputer.transform(X)
-        df = pd.DataFrame(X, columns=feature_names)
 
         if not hasattr(model, "predict_proba"):
-            pred = model.predict(df)[0]
+            pred = model.predict(X)[0]
             group_name = le.inverse_transform([pred])[0]
             examples = (self._group_to_diseases.get(group_name) or FALLBACK_GROUP_DISEASES.get(group_name, []))[:MAX_EXAMPLE_DISEASES]
             if not examples:
                 examples = [group_name]
             return [{"disease": group_name, "probability": 1.0, "disease_examples": examples}]
 
-        probs = model.predict_proba(df)[0]
+        probs = model.predict_proba(X)[0]
         top_indices = probs.argsort()[-top_k:][::-1]
         out = []
         for i in top_indices:
