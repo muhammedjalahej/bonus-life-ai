@@ -12,12 +12,9 @@ RUN pip install --no-cache-dir \
     torch torchvision \
     --index-url https://download.pytorch.org/whl/cpu
 
-# --- All other dependencies ---
-# Build context = repo root, so paths are relative to repo root
-COPY app/backend/requirements.txt .
-RUN grep -Ev "^torch|^torchvision" requirements.txt > requirements_notorch.txt \
-    && pip install --no-cache-dir -r requirements_notorch.txt \
-    && rm requirements_notorch.txt
+# --- All other dependencies (prod-only slim list) ---
+COPY app/backend/requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # --- Application source ---
 COPY app/backend/app/ ./app/
