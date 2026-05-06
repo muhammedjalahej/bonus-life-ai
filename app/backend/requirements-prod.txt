@@ -41,7 +41,6 @@ urllib3==2.5.0
 
 # ML / data
 numpy==2.3.5
-pandas==2.2.3
 joblib==1.4.2
 scikit-learn==1.7.2
 # torch + torchvision installed separately in Dockerfile (CPU wheel index)
