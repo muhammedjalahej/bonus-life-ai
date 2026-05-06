@@ -472,8 +472,30 @@ async def lifespan(app: FastAPI):
     logger.info("[START] Starting Bonus Life AI Platform")
     logger.info(f"   LLM Status: {'Connected' if ai_specialist.client else 'Disconnected'}")
     logger.info(f"   ML Model:   {'Loaded' if diabetes_model.model else 'Rule-based fallback'}")
-    # Pre-initialize image analysis models
     brain_mri_service.initialize()
+    # One-time admin seed: set ADMIN_SEED_EMAIL + ADMIN_SEED_PASSWORD env vars on Railway
+    _seed_email = os.getenv("ADMIN_SEED_EMAIL", "").strip().lower()
+    _seed_pass  = os.getenv("ADMIN_SEED_PASSWORD", "").strip()
+    if _seed_email and _seed_pass:
+        from app.database import SessionLocal
+        from app.db_models import User as _User
+        from app.auth import hash_password as _hp
+        _db = SessionLocal()
+        try:
+            _u = _db.query(_User).filter(_User.email == _seed_email).first()
+            if _u:
+                _u.role = "admin"
+                _db.commit()
+                logger.info(f"[SEED] Promoted {_seed_email} to admin")
+            else:
+                _db.add(_User(email=_seed_email, hashed_password=_hp(_seed_pass),
+                              full_name="Admin", role="admin", is_active=True))
+                _db.commit()
+                logger.info(f"[SEED] Created admin user {_seed_email}")
+        except Exception as _e:
+            logger.error(f"[SEED] Failed: {_e}")
+        finally:
+            _db.close()
     yield
     logger.info("[STOP] Shutting down Bonus Life AI Platform")
 
