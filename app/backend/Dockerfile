@@ -1,18 +1,13 @@
 FROM python:3.11-slim
 
-# System deps needed by numpy, Pillow, scikit-learn, PyTorch CPU
+# libgomp1 needed by scikit-learn/numpy at runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ libgomp1 \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# --- PyTorch CPU (requirements.txt uses +cpu suffix which requires the PyTorch wheel index) ---
-RUN pip install --no-cache-dir \
-    torch torchvision \
-    --index-url https://download.pytorch.org/whl/cpu
-
-# --- All other dependencies (prod-only slim list) ---
+# --- All dependencies (prod-only slim list, torch excluded — lazy-loaded) ---
 COPY app/backend/requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
 
