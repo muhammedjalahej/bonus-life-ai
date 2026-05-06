@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+# libgomp1 needed by scikit-learn/numpy/torch at runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# PyTorch CPU — installed first so this heavy layer is cached separately
+RUN pip install --no-cache-dir \
+    torch torchvision \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# All other production dependencies
+COPY app/backend/requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt \
+    && rm requirements-prod.txt
