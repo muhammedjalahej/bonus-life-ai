@@ -61,12 +61,11 @@ venv.bak/
 .vscode/
 .idea/
 
-# Data files
-*.pkl
-*.csv
-*.json
-data/
-models/
+# Data files — model files ARE committed so Railway can COPY them in Docker build
+# Only exclude the SQLite database and mail output
+*.db
+*.db-shm
+*.db-wal
 mail_output/
 
 # Logs

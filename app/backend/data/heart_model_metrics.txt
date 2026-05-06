@@ -1,0 +1,11 @@
+Heart model evaluation metrics
+=================================
+Accuracy:    0.8852 (88.52%)
+F1 (binary): 0.8814
+Precision:   0.8387
+Recall:      0.9286
+ROC-AUC:     0.9491
+
+Confusion matrix:
+[[28  5]
+ [ 2 26]]

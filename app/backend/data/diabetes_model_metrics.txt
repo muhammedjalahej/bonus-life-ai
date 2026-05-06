@@ -1,0 +1,12 @@
+Diabetes model evaluation metrics
+=================================
+Accuracy:    0.8225 (82.25%)
+F1 (binary): 0.7574
+F1 (weighted): 0.8241
+Precision:   0.7273
+Recall:      0.7901
+ROC-AUC:    0.8913
+
+Confusion matrix:
+[[126  24]
+ [ 17  64]]
