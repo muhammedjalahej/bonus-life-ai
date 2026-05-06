@@ -40,8 +40,11 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trigger Railway deployment
+        if: ${{ secrets.RAILWAY_TOKEN != '' }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           curl -s -X POST https://backboard.railway.app/graphql/v2 \
-            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"query":"mutation { serviceInstanceDeploy(serviceId: \"21b8546a-1298-4ee3-9c68-9a3ad82b0bb2\", environmentId: \"184703d8-d1bd-4456-b48d-1be20e531577\") }"}'
+            -d '{"query":"mutation { serviceInstanceDeploy(serviceId: \"21b8546a-1298-4ee3-9c68-9a3ad82b0bb2\", environmentId: \"184703d8-d1bd-4456-b48d-1be20e531577\") }"}' || true
