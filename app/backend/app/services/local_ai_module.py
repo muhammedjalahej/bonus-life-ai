@@ -1,6 +1,6 @@
 """
 Local AI module: one module for two features (health tip, scenario).
-Uses a local LLM (Ollama) only — no external AI API. Full control over data and model.
+Tries Ollama first (local); falls back to Groq cloud API if GROQ_API_KEY is set.
 """
 import os
 import logging
@@ -13,7 +13,26 @@ logger = logging.getLogger(__name__)
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
-OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "90"))
+OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "30"))
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+
+
+def _call_groq(prompt: str, system: Optional[str] = None) -> str:
+    """Call Groq cloud API (free tier). Raises on failure."""
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {"model": GROQ_MODEL, "messages": messages, "max_tokens": 300}
+    with httpx.Client(timeout=30) as client:
+        r = client.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
+        r.raise_for_status()
+        return r.json()["choices"][0]["message"]["content"].strip()
 
 
 def _call_ollama(prompt: str, system: Optional[str] = None) -> str:
@@ -26,17 +45,26 @@ def _call_ollama(prompt: str, system: Optional[str] = None) -> str:
     }
     if system:
         payload["system"] = system
+    with httpx.Client(timeout=OLLAMA_TIMEOUT) as client:
+        r = client.post(url, json=payload)
+        r.raise_for_status()
+        data = r.json()
+        return (data.get("response") or "").strip()
+
+
+def _generate(prompt: str, system: Optional[str] = None) -> str:
+    """Try Ollama first; fall back to Groq if available."""
     try:
-        with httpx.Client(timeout=OLLAMA_TIMEOUT) as client:
-            r = client.post(url, json=payload)
-            r.raise_for_status()
-            data = r.json()
-            return (data.get("response") or "").strip()
-    except Exception as e:
-        logger.exception("Ollama call failed: %s", e)
-        raise RuntimeError(
-            "Service unavailable run " + OLLAMA_MODEL
-        ) from e
+        return _call_ollama(prompt, system=system)
+    except Exception as ollama_err:
+        logger.warning("Ollama unavailable (%s), trying Groq.", ollama_err)
+        if GROQ_API_KEY:
+            try:
+                return _call_groq(prompt, system=system)
+            except Exception as groq_err:
+                logger.exception("Groq call failed: %s", groq_err)
+                raise RuntimeError("AI service unavailable. Please try again later.") from groq_err
+        raise RuntimeError("Service unavailable: run ollama with " + OLLAMA_MODEL) from ollama_err
 
 
 # Day-of-week themes for "daily" feel (rotates so tips vary by day)
@@ -71,7 +99,7 @@ def get_health_tip(language: str = "english") -> str:
         f"Generate one short, practical health tip for diabetes prevention or management. "
         f"Give one specific action. 2-3 sentences only. {lang_instruction}"
     )
-    return _call_ollama(prompt, system=system)
+    return _generate(prompt, system=system)
 
 
 def answer_scenario(
@@ -102,4 +130,4 @@ def answer_scenario(
         f"Reply in two parts only: (1) What might change (2) What could help. "
         f"{lang_instruction}"
     )
-    return _call_ollama(prompt, system=system)
+    return _generate(prompt, system=system)
