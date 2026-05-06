@@ -13,16 +13,17 @@ RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cpu
 
 # --- All other dependencies ---
-COPY requirements.txt .
+# Build context = repo root, so paths are relative to repo root
+COPY app/backend/requirements.txt .
 RUN grep -Ev "^torch|^torchvision" requirements.txt > requirements_notorch.txt \
     && pip install --no-cache-dir -r requirements_notorch.txt \
     && rm requirements_notorch.txt
 
 # --- Application source ---
-COPY app/ ./app/
+COPY app/backend/app/ ./app/
 
 # --- ML model files (baked into image — no volume needed for models) ---
-COPY data/ ./data/
+COPY app/backend/data/ ./data/
 
 # Persistent DB lives at /dbdata (Railway volume); avatars at /app/static/avatars
 RUN mkdir -p /dbdata /app/static/avatars

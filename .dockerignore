@@ -1,0 +1,17 @@
+**/__pycache__/
+**/*.py[cod]
+**/*.pyc
+app/backend/.env
+app/backend/.venv/
+app/backend/venv/
+app/backend/*.log
+app/backend/test_images/
+app/backend/backend_scripts/
+app/backend/mail_output/
+app/data/
+app/frontend/
+app/mobile-frontend/
+testing/
+training/
+.claude/
+*.log
