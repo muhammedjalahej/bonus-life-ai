@@ -33,6 +33,7 @@ class Announcement(Base):
     is_active = Column(Boolean, default=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)
 
 
 # ---- Site Settings / Feature Flags ----
@@ -78,10 +79,12 @@ class User(Base):
     subscription_status = Column(String(50), default="")    # active | canceled | past_due | trialing | ""
     current_period_end = Column(DateTime, nullable=True)     # when current billing period ends
 
-    assessments = relationship("Assessment", back_populates="user")
-    heart_assessments = relationship("HeartAssessment", back_populates="user")
-    diet_plans = relationship("DietPlanRecord", back_populates="user")
-    meal_logs = relationship("MealLog", back_populates="user")
+    assessments = relationship("Assessment", back_populates="user", cascade="all, delete-orphan")
+    heart_assessments = relationship("HeartAssessment", back_populates="user", cascade="all, delete-orphan")
+    ckd_assessments = relationship("CKDAssessment", back_populates="user", cascade="all, delete-orphan")
+    brain_mri_analyses = relationship("BrainMriAnalysis", back_populates="user", cascade="all, delete-orphan")
+    diet_plans = relationship("DietPlanRecord", back_populates="user", cascade="all, delete-orphan")
+    meal_logs = relationship("MealLog", back_populates="user", cascade="all, delete-orphan")
     passkey_credentials = relationship("PasskeyCredential", back_populates="user", cascade="all, delete-orphan")
     face_enrollment = relationship("FaceEnrollment", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
@@ -110,6 +113,8 @@ class Assessment(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     # Share token for sharing with doctor (feature f16)
     share_token = Column(String(64), nullable=True, unique=True, index=True)
+    # Soft-delete: admin can hide from admin view without deleting user data
+    admin_hidden = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="assessments")
 
@@ -126,8 +131,28 @@ class HeartAssessment(Base):
     payload = Column(Text)  # JSON string of request/response summary
     created_at = Column(DateTime, default=datetime.utcnow)
     share_token = Column(String(64), nullable=True, unique=True, index=True)
+    admin_hidden = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="heart_assessments")
+
+
+class BrainMriAnalysis(Base):
+    """Brain MRI tumor classification record (ResNet18)."""
+    __tablename__ = "brain_mri_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    assessment_id = Column(String(64), unique=True, index=True)
+    tumor_class = Column(String(64), default="unknown")  # no tumor | glioma | meningioma | pituitary
+    confidence = Column(Float, nullable=True)
+    executive_summary = Column(Text, default="")
+    payload = Column(Text)  # JSON: all_probabilities, full result
+    created_at = Column(DateTime, default=datetime.utcnow)
+    admin_hidden = Column(Boolean, default=False, nullable=False)
+
+    user = relationship("User", back_populates="brain_mri_analyses")
+
+
 
 
 class DietPlanRecord(Base):
@@ -139,8 +164,28 @@ class DietPlanRecord(Base):
     overview = Column(Text, default="")
     payload = Column(Text)  # JSON string of full response
     created_at = Column(DateTime, default=datetime.utcnow)
+    admin_hidden = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="diet_plans")
+
+
+class CKDAssessment(Base):
+    """Chronic Kidney Disease risk assessment record."""
+    __tablename__ = "ckd_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    assessment_id = Column(String(64), unique=True, index=True)
+    prediction = Column(String(32))       # "CKD" | "No CKD"
+    confidence = Column(Float)
+    executive_summary = Column(Text, default="")
+    payload = Column(Text)               # JSON string of request/response summary
+    created_at = Column(DateTime, default=datetime.utcnow)
+    share_token = Column(String(64), nullable=True, unique=True, index=True)
+    # Soft-delete: admin can hide from admin view without deleting user data
+    admin_hidden = Column(Boolean, default=False, nullable=False)
+
+    user = relationship("User", back_populates="ckd_assessments")
 
 
 class MealLog(Base):

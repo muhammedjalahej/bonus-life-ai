@@ -6,18 +6,28 @@ import logging
 from typing import List, Optional
 from datetime import datetime, timedelta
 
+
+def _safe_json(s):
+    """Parse a JSON string, returning None on any error (handles corrupted DB payloads)."""
+    if not s:
+        return None
+    try:
+        return json.loads(s)
+    except Exception:
+        return None
+
 from fastapi import APIRouter, Depends, Query, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from app.database import get_db
-from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, AuditLog, Announcement, SiteSetting
+from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, AuditLog, Announcement, SiteSetting, BrainMriAnalysis, CKDAssessment
 from app.auth import require_admin, hash_password
 from app.services.notification_service import create_notification
 from app.models import (
     AdminUserUpdateRequest, AdminCreateUserRequest, AdminBulkActionRequest,
     AnnouncementRequest, SiteSettingUpdate, AdminSendEmailRequest,
-    AdminBulkEmailRequest, AdminUserNotesRequest,
+    AdminBulkEmailRequest, AdminUserNotesRequest, AdminResetPasswordRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -155,18 +165,99 @@ async def admin_bulk_action(
 
 
 # ---------------------------------------------------------------------------
+# User Profile (detailed, for admin)
+# ---------------------------------------------------------------------------
+@router.get("/users/{user_id}/profile")
+async def admin_get_user_profile(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    diabetes = db.query(func.count(Assessment.id)).filter(Assessment.user_id == user_id).scalar() or 0
+    heart    = db.query(func.count(HeartAssessment.id)).filter(HeartAssessment.user_id == user_id).scalar() or 0
+    ckd      = db.query(func.count(CKDAssessment.id)).filter(CKDAssessment.user_id == user_id).scalar() or 0
+    brain    = db.query(func.count(BrainMriAnalysis.id)).filter(BrainMriAnalysis.user_id == user_id).scalar() or 0
+    diet     = db.query(func.count(DietPlanRecord.id)).filter(DietPlanRecord.user_id == user_id).scalar() or 0
+    activity = {"diabetes": diabetes, "heart": heart, "ckd": ckd, "brain_mri": brain, "diet_plans": diet}
+    total_tests = sum(activity.values())
+    most_used = max(activity, key=activity.get) if total_tests > 0 else None
+    most_used_labels = {"diabetes": "Diabetes Test", "heart": "Heart Test", "ckd": "CKD Test", "brain_mri": "Brain MRI", "diet_plans": "Diet Plans"}
+    return {
+        "id": user.id, "email": user.email, "full_name": user.full_name or "",
+        "role": user.role, "is_active": user.is_active,
+        "preferred_language": user.preferred_language or "english",
+        "avatar_url": user.avatar_url, "admin_notes": user.admin_notes or "",
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "subscription_tier": getattr(user, "subscription_tier", "free") or "free",
+        "subscription_status": getattr(user, "subscription_status", "") or "",
+        "stripe_customer_id": getattr(user, "stripe_customer_id", None),
+        "activity": activity,
+        "total_tests": total_tests,
+        "most_used": most_used_labels.get(most_used) if most_used else "—",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Admin: reset any user's password
+# ---------------------------------------------------------------------------
+@router.post("/users/{user_id}/reset-password")
+async def admin_reset_user_password(
+    user_id: int, data: AdminResetPasswordRequest,
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+) -> dict:
+    if len(data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    user.hashed_password = hash_password(data.new_password)
+    db.commit()
+    _audit(db, admin, "reset_password", "user", user_id, user.email)
+    return {"message": "Password reset successfully."}
+
+
+# ---------------------------------------------------------------------------
 # Stats & Charts
 # ---------------------------------------------------------------------------
 @router.get("/stats")
 async def admin_stats(admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> dict:
-    total_users = db.query(func.count(User.id)).scalar() or 0
+    from datetime import datetime, timedelta
+    total_users = db.query(func.count(User.id)).filter(User.role == "user").scalar() or 0
     total_assessments = db.query(func.count(Assessment.id)).scalar() or 0
     total_diet_plans = db.query(func.count(DietPlanRecord.id)).scalar() or 0
+    total_brain_mri = db.query(func.count(BrainMriAnalysis.id)).scalar() or 0
+    total_ckd = db.query(func.count(CKDAssessment.id)).scalar() or 0
+    total_heart = db.query(func.count(HeartAssessment.id)).scalar() or 0
     active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
     admin_count = db.query(func.count(User.id)).filter(User.role == "admin").scalar() or 0
+    # New this month
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_users_this_month = db.query(func.count(User.id)).filter(User.created_at >= month_start).scalar() or 0
+    new_assessments_this_month = (
+        (db.query(func.count(Assessment.id)).filter(Assessment.created_at >= month_start).scalar() or 0) +
+        (db.query(func.count(HeartAssessment.id)).filter(HeartAssessment.created_at >= month_start).scalar() or 0) +
+        (db.query(func.count(CKDAssessment.id)).filter(CKDAssessment.created_at >= month_start).scalar() or 0) +
+        (db.query(func.count(BrainMriAnalysis.id)).filter(BrainMriAnalysis.created_at >= month_start).scalar() or 0) +
+        (db.query(func.count(DietPlanRecord.id)).filter(DietPlanRecord.created_at >= month_start).scalar() or 0)
+    )
+    # Risk counts
+    high_risk_diabetes = db.query(func.count(Assessment.id)).filter(Assessment.risk_level.ilike("%high%")).scalar() or 0
+    high_risk_heart = db.query(func.count(HeartAssessment.id)).filter(HeartAssessment.risk_level.ilike("%high%")).scalar() or 0
+    positive_ckd = db.query(func.count(CKDAssessment.id)).filter(CKDAssessment.prediction == "CKD").scalar() or 0
+    brain_tumor_detected = db.query(func.count(BrainMriAnalysis.id)).filter(BrainMriAnalysis.tumor_class != "no tumor").scalar() or 0
     return {
         "total_users": total_users, "active_users": active_users, "admin_count": admin_count,
         "total_assessments": total_assessments, "total_diet_plans": total_diet_plans,
+        "total_brain_mri": total_brain_mri, "total_ckd": total_ckd, "total_heart": total_heart,
+        "new_users_this_month": new_users_this_month,
+        "new_assessments_this_month": new_assessments_this_month,
+        "high_risk_diabetes": high_risk_diabetes,
+        "high_risk_heart": high_risk_heart,
+        "positive_ckd": positive_ckd,
+        "brain_tumor_detected": brain_tumor_detected,
     }
 
 
@@ -280,18 +371,255 @@ async def admin_list_assessments(
     admin: User = Depends(require_admin), db: Session = Depends(get_db),
     skip: int = 0, limit: int = 500,
 ) -> List[dict]:
-    rows = db.query(Assessment).order_by(Assessment.created_at.desc()).offset(skip).limit(limit).all()
-    result = []
-    for r in rows:
-        user = db.query(User).filter(User.id == r.user_id).first()
-        result.append({
+    rows = (
+        db.query(Assessment)
+        .options(joinedload(Assessment.user))
+        .filter(Assessment.admin_hidden == False)
+        .order_by(Assessment.created_at.desc())
+        .offset(skip).limit(limit).all()
+    )
+    return [
+        {
             "id": r.id, "user_id": r.user_id,
-            "user_email": user.email if user else None,
+            "user_email": r.user.email if r.user else None,
+            "user_full_name": (r.user.full_name or "") if r.user else "",
             "assessment_id": r.assessment_id, "risk_level": r.risk_level,
             "probability": r.probability,
+            "executive_summary": r.executive_summary or "",
             "created_at": r.created_at.isoformat() if r.created_at else None,
-        })
-    return result
+        }
+        for r in rows
+    ]
+
+
+# ---------------------------------------------------------------------------
+# CKD Assessments (admin)
+# ---------------------------------------------------------------------------
+@router.get("/ckd-assessments")
+async def admin_list_ckd_assessments(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+    skip: int = 0, limit: int = 500,
+) -> List[dict]:
+    rows = (
+        db.query(CKDAssessment)
+        .options(joinedload(CKDAssessment.user))
+        .filter(CKDAssessment.admin_hidden == False)
+        .order_by(CKDAssessment.created_at.desc())
+        .offset(skip).limit(limit).all()
+    )
+    return [
+        {
+            "id": r.id, "user_id": r.user_id,
+            "user_email": r.user.email if r.user else None,
+            "user_full_name": (r.user.full_name or "") if r.user else "",
+            "assessment_id": r.assessment_id,
+            "prediction": r.prediction,
+            "confidence": r.confidence,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.delete("/assessments/{assessment_id}")
+async def admin_delete_assessment(
+    assessment_id: int,
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    """Soft-delete: hide from admin view but preserve user's data."""
+    row = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    row.admin_hidden = True
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/assessments")
+async def admin_clear_assessments(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    """Soft-delete all: hide all from admin view but preserve user data."""
+    db.query(Assessment).filter(Assessment.admin_hidden == False).update({"admin_hidden": True})
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/ckd-assessments/{assessment_id}")
+async def admin_delete_ckd_assessment(
+    assessment_id: int,
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    """Soft-delete: hide from admin view but preserve user's data."""
+    row = db.query(CKDAssessment).filter(CKDAssessment.id == assessment_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="CKD assessment not found")
+    row.admin_hidden = True
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/ckd-assessments")
+async def admin_clear_ckd_assessments(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    """Soft-delete all: hide all from admin view but preserve user data."""
+    db.query(CKDAssessment).filter(CKDAssessment.admin_hidden == False).update({"admin_hidden": True})
+    db.commit()
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Heart Assessments (admin)
+# ---------------------------------------------------------------------------
+@router.get("/heart-assessments")
+async def admin_list_heart_assessments(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+    skip: int = 0, limit: int = 500,
+) -> List[dict]:
+    rows = (
+        db.query(HeartAssessment)
+        .options(joinedload(HeartAssessment.user))
+        .filter(HeartAssessment.admin_hidden == False)
+        .order_by(HeartAssessment.created_at.desc())
+        .offset(skip).limit(limit).all()
+    )
+    return [
+        {
+            "id": r.id, "user_id": r.user_id,
+            "user_email": r.user.email if r.user else None,
+            "user_full_name": (r.user.full_name or "") if r.user else "",
+            "assessment_id": r.assessment_id, "risk_level": r.risk_level,
+            "probability": r.probability,
+            "executive_summary": r.executive_summary or "",
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.delete("/heart-assessments/{assessment_id}")
+async def admin_delete_heart_assessment(
+    assessment_id: int,
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    row = db.query(HeartAssessment).filter(HeartAssessment.id == assessment_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found")
+    row.admin_hidden = True
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/heart-assessments")
+async def admin_clear_heart_assessments(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    db.query(HeartAssessment).filter(HeartAssessment.admin_hidden == False).update({"admin_hidden": True})
+    db.commit()
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Brain MRI Analyses (admin)
+# ---------------------------------------------------------------------------
+@router.get("/brain-mri-analyses")
+async def admin_list_brain_mri(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+    skip: int = 0, limit: int = 500,
+) -> List[dict]:
+    rows = (
+        db.query(BrainMriAnalysis)
+        .options(joinedload(BrainMriAnalysis.user))
+        .filter(BrainMriAnalysis.admin_hidden == False)
+        .order_by(BrainMriAnalysis.created_at.desc())
+        .offset(skip).limit(limit).all()
+    )
+    return [
+        {
+            "id": r.id, "user_id": r.user_id,
+            "user_email": r.user.email if r.user else None,
+            "user_full_name": (r.user.full_name or "") if r.user else "",
+            "assessment_id": r.assessment_id,
+            "tumor_class": r.tumor_class,
+            "confidence": r.confidence,
+            "executive_summary": r.executive_summary or "",
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.delete("/brain-mri-analyses/{analysis_id}")
+async def admin_delete_brain_mri(
+    analysis_id: int,
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    row = db.query(BrainMriAnalysis).filter(BrainMriAnalysis.id == analysis_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found")
+    row.admin_hidden = True
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/brain-mri-analyses")
+async def admin_clear_brain_mri(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    db.query(BrainMriAnalysis).filter(BrainMriAnalysis.admin_hidden == False).update({"admin_hidden": True})
+    db.commit()
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Diet Plans (admin)
+# ---------------------------------------------------------------------------
+@router.get("/diet-plans")
+async def admin_list_diet_plans(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+    skip: int = 0, limit: int = 500,
+) -> List[dict]:
+    rows = (
+        db.query(DietPlanRecord)
+        .options(joinedload(DietPlanRecord.user))
+        .filter(DietPlanRecord.admin_hidden == False)
+        .order_by(DietPlanRecord.created_at.desc())
+        .offset(skip).limit(limit).all()
+    )
+    return [
+        {
+            "id": r.id, "user_id": r.user_id,
+            "user_email": r.user.email if r.user else None,
+            "user_full_name": (r.user.full_name or "") if r.user else "",
+            "goal": r.goal,
+            "overview": (r.overview or "")[:120],
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.delete("/diet-plans/{plan_id}")
+async def admin_delete_diet_plan(
+    plan_id: int,
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    row = db.query(DietPlanRecord).filter(DietPlanRecord.id == plan_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found")
+    row.admin_hidden = True
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/diet-plans")
+async def admin_clear_diet_plans(
+    admin: User = Depends(require_admin), db: Session = Depends(get_db),
+):
+    db.query(DietPlanRecord).filter(DietPlanRecord.admin_hidden == False).update({"admin_hidden": True})
+    db.commit()
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------------------
@@ -336,7 +664,8 @@ async def admin_list_announcements(
     rows = db.query(Announcement).order_by(Announcement.created_at.desc()).all()
     return [
         {"id": a.id, "title": a.title, "message": a.message, "is_active": a.is_active,
-         "created_at": a.created_at.isoformat() if a.created_at else None}
+         "created_at": a.created_at.isoformat() if a.created_at else None,
+         "expires_at": a.expires_at.isoformat() if getattr(a, "expires_at", None) else None}
         for a in rows
     ]
 
@@ -346,7 +675,17 @@ async def admin_create_announcement(
     data: AnnouncementRequest,
     admin: User = Depends(require_admin), db: Session = Depends(get_db),
 ) -> dict:
-    ann = Announcement(title=data.title, message=data.message, is_active=data.is_active, created_by=admin.id)
+    expires_dt = None
+    if data.expires_at:
+        try:
+            expires_dt = datetime.fromisoformat(data.expires_at.replace("Z", "+00:00")).replace(tzinfo=None)
+        except Exception:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid expires_at format. Use ISO 8601, e.g. 2025-12-31T23:59:00Z",
+            )
+    ann = Announcement(title=data.title, message=data.message, is_active=data.is_active,
+                       created_by=admin.id, expires_at=expires_dt)
     db.add(ann)
     db.commit()
     db.refresh(ann)
@@ -365,6 +704,16 @@ async def admin_update_announcement(
     ann.title = data.title
     ann.message = data.message
     ann.is_active = data.is_active
+    if data.expires_at:
+        try:
+            ann.expires_at = datetime.fromisoformat(data.expires_at.replace("Z", "+00:00")).replace(tzinfo=None)
+        except Exception:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid expires_at format. Use ISO 8601, e.g. 2025-12-31T23:59:00Z",
+            )
+    else:
+        ann.expires_at = None
     db.commit()
     _audit(db, admin, "update_announcement", "announcement", ann_id, data.title)
     return {"message": "Announcement updated."}
@@ -407,6 +756,8 @@ async def admin_update_settings(
     data: SiteSettingUpdate,
     admin: User = Depends(require_admin), db: Session = Depends(get_db),
 ) -> dict:
+    if data.key not in DEFAULT_SETTINGS:
+        raise HTTPException(status_code=400, detail=f"Unknown setting key. Allowed keys: {sorted(DEFAULT_SETTINGS.keys())}")
     existing = db.query(SiteSetting).filter(SiteSetting.key == data.key).first()
     if existing:
         existing.value = data.value
@@ -426,17 +777,23 @@ async def admin_system_health(admin: User = Depends(require_admin), db: Session 
     # DB check
     db_ok = True
     try:
-        db.execute(func.count(User.id)).scalar()
+        db.query(func.count(User.id)).scalar()
     except Exception:
         db_ok = False
 
-    # LLM check (Gemini or Groq)
+    # LLM check — key present in env
     llm_ok = False
     try:
-        from app.services.ai_specialist import ai_specialist
-        llm_ok = ai_specialist.client is not None
+        import os
+        from dotenv import load_dotenv
+        load_dotenv()
+        llm_ok = bool(os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY"))
     except Exception:
-        pass
+        try:
+            from app.services.ai_specialist import ai_specialist
+            llm_ok = ai_specialist.client is not None
+        except Exception:
+            llm_ok = False
 
     # Email check
     email_ok = False
@@ -446,11 +803,38 @@ async def admin_system_health(admin: User = Depends(require_admin), db: Session 
     except Exception:
         pass
 
+    # Count DB tables and stats
+    db_tables = 0
+    total_users = 0
+    total_assessments = 0
+    try:
+        from sqlalchemy import inspect as sa_inspect, text
+        from app.database import engine
+        from app.db_models import Assessment, CKDAssessment, HeartAssessment, BrainMriAnalysis, DietPlanRecord
+        inspector = sa_inspect(engine)
+        db_tables = len(inspector.get_table_names())
+        total_users = db.query(func.count(User.id)).scalar() or 0
+        total_assessments = (
+            (db.query(func.count(Assessment.id)).scalar() or 0) +
+            (db.query(func.count(CKDAssessment.id)).scalar() or 0) +
+            (db.query(func.count(HeartAssessment.id)).scalar() or 0) +
+            (db.query(func.count(BrainMriAnalysis.id)).scalar() or 0) +
+            (db.query(func.count(DietPlanRecord.id)).scalar() or 0)
+        )
+    except Exception as e:
+        pass
+
     return {
-        "api": True,
-        "database": db_ok,
-        "llm": llm_ok,
-        "email": email_ok,
+        "status": "ok" if db_ok else "error",
+        "db_tables": db_tables,
+        "total_users": total_users,
+        "total_assessments": total_assessments,
+        "services": {
+            "API": True,
+            "Database": db_ok,
+            "LLM / AI": llm_ok,
+            "Email": email_ok,
+        },
     }
 
 
@@ -580,7 +964,16 @@ public_router = APIRouter(tags=["public"])
 
 @public_router.get("/announcements/active")
 async def get_active_announcements(db: Session = Depends(get_db)) -> List[dict]:
-    rows = db.query(Announcement).filter(Announcement.is_active == True).order_by(Announcement.created_at.desc()).all()
+    now = datetime.utcnow()
+    rows = (
+        db.query(Announcement)
+        .filter(
+            Announcement.is_active == True,
+            (Announcement.expires_at == None) | (Announcement.expires_at > now),
+        )
+        .order_by(Announcement.created_at.desc())
+        .all()
+    )
     return [{"id": a.id, "title": a.title, "message": a.message} for a in rows]
 
 
@@ -591,12 +984,11 @@ async def get_shared_assessment(token: str, db: Session = Depends(get_db)) -> di
     if not a:
         raise HTTPException(status_code=404, detail="Shared assessment not found or link expired.")
     user = db.query(User).filter(User.id == a.user_id).first()
-    payload = json.loads(a.payload) if a.payload else None
     return {
         "risk_level": a.risk_level,
         "probability": a.probability,
         "executive_summary": a.executive_summary,
-        "payload": payload,
+        "payload": _safe_json(a.payload),
         "created_at": a.created_at.isoformat() if a.created_at else None,
         "user_name": user.full_name if user else "Unknown",
     }
@@ -608,12 +1000,27 @@ async def get_shared_heart_assessment(token: str, db: Session = Depends(get_db))
     if not a:
         raise HTTPException(status_code=404, detail="Shared heart assessment not found or link expired.")
     user = db.query(User).filter(User.id == a.user_id).first()
-    payload = json.loads(a.payload) if a.payload else None
     return {
         "risk_level": a.risk_level,
         "probability": a.probability,
         "executive_summary": a.executive_summary,
-        "payload": payload,
+        "payload": _safe_json(a.payload),
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+        "user_name": user.full_name if user else "Unknown",
+    }
+
+
+@public_router.get("/shared/ckd/{token}")
+async def get_shared_ckd_assessment(token: str, db: Session = Depends(get_db)) -> dict:
+    a = db.query(CKDAssessment).filter(CKDAssessment.share_token == token).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Shared CKD assessment not found or link expired.")
+    user = db.query(User).filter(User.id == a.user_id).first()
+    return {
+        "prediction": a.prediction,
+        "confidence": a.confidence,
+        "executive_summary": a.executive_summary,
+        "payload": _safe_json(a.payload),
         "created_at": a.created_at.isoformat() if a.created_at else None,
         "user_name": user.full_name if user else "Unknown",
     }

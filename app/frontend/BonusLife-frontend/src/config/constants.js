@@ -7,7 +7,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV
 /** Full URL for avatar image (handles relative paths from backend /avatars). */
 export function getAvatarUrl(avatarUrl) {
   if (!avatarUrl) return null;
-  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) return avatarUrl;
+  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') || avatarUrl.startsWith('data:')) return avatarUrl;
   const base = API_BASE_URL.replace(/\/$/, '');
   return base + (avatarUrl.startsWith('/') ? avatarUrl : '/' + avatarUrl);
 }
@@ -33,6 +33,7 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   DASHBOARD_ASSESSMENT: '/dashboard/assessment',
   DASHBOARD_HEART_ASSESSMENT: '/dashboard/heart-assessment',
+  DASHBOARD_CKD_ASSESSMENT: '/dashboard/ckd-assessment',
   DASHBOARD_DIET_PLAN: '/dashboard/diet-plan',
   ADMIN: '/admin',
   STUDIO: '/studio',
@@ -43,4 +44,6 @@ export const ROUTES = {
   LOCAL_AI_TIP: '/local-ai?section=tip',
   LOCAL_AI_SCENARIO: '/local-ai?section=scenario',
   PRICING: '/pricing',
+  BRAIN_MRI: '/brain-mri',
+  CKD_TEST: '/ckd-test',
 };

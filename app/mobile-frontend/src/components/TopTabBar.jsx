@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * Custom tab bar at the top: three pill-style buttons (Home, Chat, More).
- * No dropdowns; clear button styling.
+ * Clinical Calm — cream bg, sage active state.
  */
 export default function TopTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
@@ -46,11 +46,11 @@ export default function TopTabBar({ state, descriptors, navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0f1419',
+    backgroundColor: '#F7F4ED',
     paddingHorizontal: 16,
     paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(28,27,24,0.08)',
   },
   row: {
     flexDirection: 'row',
@@ -65,20 +65,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0.5,
+    borderColor: 'rgba(28,27,24,0.08)',
+    shadowColor: '#1C1B18',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   tabActive: {
-    backgroundColor: 'rgba(16,185,129,0.2)',
-    borderColor: 'rgba(16,185,129,0.5)',
+    backgroundColor: '#2D6A4F',
+    borderColor: '#2D6A4F',
+    shadowOpacity: 0,
   },
   tabLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#7d8590',
+    color: 'rgba(28,27,24,0.5)',
   },
   tabLabelActive: {
-    color: '#10b981',
+    color: '#F7F4ED',
   },
 });

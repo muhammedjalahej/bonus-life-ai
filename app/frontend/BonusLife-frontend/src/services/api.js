@@ -112,6 +112,13 @@ export async function runHeartAssessment(formData) {
   });
 }
 
+export async function runCKDAssessment(formData) {
+  return apiRequest('/api/v1/ckd-assessment', {
+    method: 'POST',
+    body: JSON.stringify(formData),
+  });
+}
+
 export async function chatWithAI(message, language = 'english', conversation_id = null) {
   return apiRequest('/api/v1/chat', {
     method: 'POST',
@@ -361,6 +368,17 @@ export async function changePassword(current_password, new_password) {
 }
 
 // Admin
+export async function adminGetUserProfile(userId) {
+  return apiRequest(`/api/v1/admin/users/${userId}/profile`);
+}
+
+export async function adminResetUserPassword(userId, newPassword) {
+  return apiRequest(`/api/v1/admin/users/${userId}/reset-password`, {
+    method: 'POST',
+    body: JSON.stringify({ new_password: newPassword }),
+  });
+}
+
 export async function adminGetUsers(skip = 0, limit = 100) {
   return apiRequest(`/api/v1/admin/users?skip=${skip}&limit=${limit}`);
 }
@@ -371,6 +389,43 @@ export async function adminGetStats() {
 
 export async function adminGetAssessments(skip = 0, limit = 100) {
   return apiRequest(`/api/v1/admin/assessments?skip=${skip}&limit=${limit}`);
+}
+
+export async function adminDeleteAssessment(id) {
+  return apiRequest(`/api/v1/admin/assessments/${id}`, { method: 'DELETE' });
+}
+
+export async function adminClearAssessments() {
+  return apiRequest('/api/v1/admin/assessments', { method: 'DELETE' });
+}
+
+export async function adminDeleteCKDAssessment(id) {
+  return apiRequest(`/api/v1/admin/ckd-assessments/${id}`, { method: 'DELETE' });
+}
+
+export async function adminClearCKDAssessments() {
+  return apiRequest('/api/v1/admin/ckd-assessments', { method: 'DELETE' });
+}
+
+export async function adminDeleteHeartAssessment(id) {
+  return apiRequest(`/api/v1/admin/heart-assessments/${id}`, { method: 'DELETE' });
+}
+export async function adminClearHeartAssessments() {
+  return apiRequest('/api/v1/admin/heart-assessments', { method: 'DELETE' });
+}
+
+export async function adminDeleteBrainMRI(id) {
+  return apiRequest(`/api/v1/admin/brain-mri-analyses/${id}`, { method: 'DELETE' });
+}
+export async function adminClearBrainMRI() {
+  return apiRequest('/api/v1/admin/brain-mri-analyses', { method: 'DELETE' });
+}
+
+export async function adminDeleteDietPlan(id) {
+  return apiRequest(`/api/v1/admin/diet-plans/${id}`, { method: 'DELETE' });
+}
+export async function adminClearDietPlans() {
+  return apiRequest('/api/v1/admin/diet-plans', { method: 'DELETE' });
 }
 
 export async function adminDeleteUser(userId) {
@@ -535,6 +590,60 @@ export async function getSharedHeartAssessment(token) {
   return apiRequest(`/api/v1/shared/heart/${token}`);
 }
 
+export async function getSharedCKDAssessment(token) {
+  return apiRequest(`/api/v1/shared/ckd/${token}`);
+}
+
+// ---- CKD assessments (mirror heart/diabetes: list, share, delete, sign) ----
+export async function getMyCKDAssessments(limit = 50) {
+  return apiRequest(`/api/v1/users/me/ckd-assessments?limit=${limit}`);
+}
+
+export async function shareCKDAssessment(ckdAssessmentId) {
+  return apiRequest(`/api/v1/users/me/ckd-assessments/${ckdAssessmentId}/share`, { method: 'POST' });
+}
+
+export async function revokeCKDShare(ckdAssessmentId) {
+  return apiRequest(`/api/v1/users/me/ckd-assessments/${ckdAssessmentId}/share`, { method: 'DELETE' });
+}
+
+export async function deleteCKDAssessment(ckdAssessmentId) {
+  return apiRequest(`/api/v1/users/me/ckd-assessments/${ckdAssessmentId}`, { method: 'DELETE' });
+}
+
+export async function signCKDAssessmentReport(ckdAssessmentId) {
+  return apiRequest(`/api/v1/reports/sign-ckd-assessment/${ckdAssessmentId}`, { method: 'POST' });
+}
+
+export async function signMriAssessmentReport(mriAssessmentId) {
+  return apiRequest(`/api/v1/reports/sign-mri-assessment/${mriAssessmentId}`, { method: 'POST' });
+}
+
+export async function adminGetCKDAssessments(skip = 0, limit = 500) {
+  return apiRequest(`/api/v1/admin/ckd-assessments?skip=${skip}&limit=${limit}`);
+}
+
+export async function adminGetHeartAssessments(skip = 0, limit = 500) {
+  return apiRequest(`/api/v1/admin/heart-assessments?skip=${skip}&limit=${limit}`);
+}
+
+export async function adminGetBrainMRIAnalyses(skip = 0, limit = 500) {
+  return apiRequest(`/api/v1/admin/brain-mri-analyses?skip=${skip}&limit=${limit}`);
+}
+
+export async function adminGetDietPlans(skip = 0, limit = 500) {
+  return apiRequest(`/api/v1/admin/diet-plans?skip=${skip}&limit=${limit}`);
+}
+
+// ---- Brain MRI imaging history ----
+export async function getMyBrainMriAnalyses(limit = 50) {
+  return apiRequest(`/api/v1/users/me/brain-mri-analyses?limit=${limit}`);
+}
+
+export async function deleteBrainMriAnalysis(id) {
+  return apiRequest(`/api/v1/users/me/brain-mri-analyses/${id}`, { method: 'DELETE' });
+}
+
 // ---- 2FA (feature f15) ----
 export async function setup2FA() {
   return apiRequest('/api/v1/users/me/2fa/setup', { method: 'POST' });
@@ -563,6 +672,14 @@ export async function markAllNotificationsRead() {
 
 export async function deleteNotification(notifId) {
   return apiRequest(`/api/v1/users/me/notifications/${notifId}`, { method: 'DELETE' });
+}
+
+export async function createReminder(title, message = '') {
+  return apiRequest('/api/v1/users/me/notifications/reminder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, message }),
+  });
 }
 
 // ---- Admin: user notes (feature f12) ----
@@ -618,6 +735,7 @@ export async function localAIAnswerScenario(scenario, assessment = null, languag
 
 const apiService = {
   predictDiabetesRisk,
+  runCKDAssessment,
   chatWithAI,
   voiceChat,
   generateDietPlan,
@@ -674,6 +792,7 @@ const apiService = {
   deleteHeartAssessment,
   signHeartAssessmentReport,
   getSharedHeartAssessment,
+  getSharedCKDAssessment,
   deleteDietPlan,
   getSharedAssessment,
   setup2FA,
@@ -687,7 +806,17 @@ const apiService = {
   markAllNotificationsRead,
   analyzeMealPhoto,
   getMealLog,
-  clearMealLog,
+  // History Brain MRI
+  getMyBrainMriAnalyses,
+  deleteBrainMriAnalysis,
+  // CKD assessments
+  getMyCKDAssessments,
+  shareCKDAssessment,
+  revokeCKDShare,
+  deleteCKDAssessment,
+  signCKDAssessmentReport,
+  signMriAssessmentReport,
+  adminGetCKDAssessments,
 };
 
 export default apiService;

@@ -85,7 +85,16 @@ async def heart_assessment(
         }
 
         assessment_id = str(uuid.uuid4())
-        if current_user:
+
+    except Exception as e:
+        logger.error(f"Heart assessment error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Heart assessment service temporarily unavailable. Please try again shortly.",
+        )
+
+    if current_user:
+        try:
             payload = {
                 "request": request.dict(),
                 "risk_analysis": risk_analysis,
@@ -107,20 +116,17 @@ async def heart_assessment(
                 "Your heart risk assessment is ready. View it in your Dashboard.",
                 "success",
             )
+        except Exception as db_err:
+            logger.error(f"Failed to save heart assessment to DB: {db_err}")
+            db.rollback()
 
-        return HeartAssessmentResponse(
-            assessment_id=assessment_id,
-            timestamp=datetime.utcnow().isoformat(),
-            executive_summary=llm_insights,
-            risk_analysis=risk_analysis,
-            recommendations=recommendations,
-        )
-    except Exception as e:
-        logger.error(f"Heart assessment error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Heart assessment service temporarily unavailable. Please try again shortly.",
-        )
+    return HeartAssessmentResponse(
+        assessment_id=assessment_id,
+        timestamp=datetime.utcnow().isoformat(),
+        executive_summary=llm_insights,
+        risk_analysis=risk_analysis,
+        recommendations=recommendations,
+    )
 
 
 def _identify_risk_factors(features: Dict[str, Any]) -> List[Dict[str, Any]]:

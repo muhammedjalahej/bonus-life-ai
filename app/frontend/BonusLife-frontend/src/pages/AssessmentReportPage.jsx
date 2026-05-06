@@ -9,7 +9,7 @@ import { buildAndDownloadSignedPDF } from '../utils/assessmentPdf';
 
 const getRiskBadgeClasses = (riskLevel) => {
   const r = (riskLevel || '').toLowerCase();
-  if (r.includes('low') || r.includes('minimal')) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+  if (r.includes('low') || r.includes('minimal')) return 'bg-violet-500/20 text-violet-400 border-violet-500/30';
   if (r.includes('medium') || r.includes('moderate')) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
   if (r.includes('high') || r.includes('elevated')) return 'bg-red-500/20 text-red-400 border-red-500/30';
   return 'bg-white/[0.08] text-gray-300 border-white/[0.12]';
@@ -69,7 +69,7 @@ export default function AssessmentReportPage({ language }) {
           <p className="text-gray-400 mb-4">{isTr ? 'Değerlendirme bulunamadı.' : 'Assessment not found.'}</p>
           <Link
             to={`${ROUTES.DASHBOARD}?tab=assessments`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30 transition"
           >
             <ArrowLeft className="w-4 h-4" />
             {isTr ? 'Değerlendirmelerime dön' : 'Back to My Assessments'}
@@ -85,7 +85,7 @@ export default function AssessmentReportPage({ language }) {
         <button
           type="button"
           onClick={backToAssessments}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-violet-500/50"
         >
           <ArrowLeft className="w-4 h-4" />
           {isTr ? 'Değerlendirmelerime dön' : 'Back to My Assessments'}
@@ -94,8 +94,8 @@ export default function AssessmentReportPage({ language }) {
 
       <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] shadow-2xl">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/[0.06]">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-            <Activity className="w-5 h-5 text-emerald-400" />
+          <div className="w-11 h-11 rounded-xl bg-violet-500/10 flex items-center justify-center">
+            <Activity className="w-5 h-5 text-violet-400" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">
@@ -148,7 +148,7 @@ export default function AssessmentReportPage({ language }) {
             <button
               onClick={handleDownloadPDF}
               disabled={pdfLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-white/[0.05] text-gray-400 hover:text-emerald-400 border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-white/[0.05] text-gray-400 hover:text-violet-400 border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:opacity-50"
             >
               {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               {isTr ? 'PDF İndir' : 'Download PDF'}
@@ -156,7 +156,7 @@ export default function AssessmentReportPage({ language }) {
             <button
               onClick={handleShare}
               disabled={shareLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-white/[0.05] text-gray-400 hover:text-emerald-400 border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-white/[0.05] text-gray-400 hover:text-violet-400 border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:opacity-50"
             >
               {shareLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
               {isTr ? 'Doktora Paylaş' : 'Share with Doctor'}
@@ -164,9 +164,9 @@ export default function AssessmentReportPage({ language }) {
           </div>
 
           {shareLink?.id === assessment.id && (
-            <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs text-emerald-400">{isTr ? 'Link kopyalandı:' : 'Link copied:'}</p>
-              <p className="text-xs text-emerald-300 break-all mt-1">{shareLink.link}</p>
+            <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <p className="text-xs text-violet-400">{isTr ? 'Link kopyalandı:' : 'Link copied:'}</p>
+              <p className="text-xs text-violet-300 break-all mt-1">{shareLink.link}</p>
             </div>
           )}
 

@@ -1,36 +1,68 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
 import {
-  Mic, MicOff, Bot, Globe, Keyboard, Loader2, AlertTriangle,
-  Clock, X, Send, RotateCcw, Sparkles,
+  Mic, MicOff, Globe, Keyboard, AlertTriangle,
+  Clock, X, Send, RotateCcw, ArrowLeft,
 } from 'lucide-react';
+import { ROUTES } from '../config/constants';
 import { useAuth } from '../context/AuthContext';
 import apiService from '../services/api';
 
 const SpeechRecognitionAPI = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
+const PROCESSING_TEXT = 'Generating';
+
+const aiLoaderStyles = `
+  @keyframes loaderCircle {
+    0%   { transform: rotate(90deg);  box-shadow: 0 6px 12px 0 #38bdf8 inset, 0 12px 18px 0 #005dff inset, 0 36px 36px 0 #1e40af inset, 0 0 3px 1.2px rgba(56,189,248,0.3), 0 0 6px 1.8px rgba(0,93,255,0.2); }
+    50%  { transform: rotate(270deg); box-shadow: 0 6px 12px 0 #60a5fa inset, 0 12px 6px  0 #0284c7 inset, 0 24px 36px 0 #005dff inset, 0 0 3px 1.2px rgba(56,189,248,0.3), 0 0 6px 1.8px rgba(0,93,255,0.2); }
+    100% { transform: rotate(450deg); box-shadow: 0 6px 12px 0 #4dc8fd inset, 0 12px 18px 0 #005dff inset, 0 36px 36px 0 #1e40af inset, 0 0 3px 1.2px rgba(56,189,248,0.3), 0 0 6px 1.8px rgba(0,93,255,0.2); }
+  }
+  @keyframes loaderLetter {
+    0%, 100% { opacity: 0.35; transform: translateY(0);  }
+    20%       { opacity: 1;    transform: scale(1.18);    }
+    40%       { opacity: 0.65; transform: translateY(0);  }
+  }
+  @keyframes recordPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3), 0 6px 12px 0 #7f1d1d inset, 0 24px 36px 0 #450a0a inset; }
+    50%       { box-shadow: 0 0 0 16px rgba(239,68,68,0), 0 6px 12px 0 #991b1b inset, 0 24px 36px 0 #7f1d1d inset; }
+  }
+  .ai-loader-circle  { animation: loaderCircle 5s linear infinite; }
+  .ai-loader-letter  { animation: loaderLetter 3s infinite; display: inline-block; color: #60a5fa; opacity: 0.35; }
+  @keyframes waveBar {
+    0%, 100% { transform: scaleY(0.5); }
+    50%       { transform: scaleY(1.6); }
+  }
+  .wave-bar { animation: waveBar 0.7s ease-in-out infinite; transform-origin: bottom; }
+`;
+
 const VoiceChat = ({ language = 'english' }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const voiceUserId = user?.id ? String(user.id) : 'voice-user';
-  const textUserId = user?.id ? String(user.id) : 'text-user';
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [textInput, setTextInput] = useState('');
+  const textUserId  = user?.id ? String(user.id) : 'text-user';
+  const [isRecording, setIsRecording]       = useState(false);
+  const [isProcessing, setIsProcessing]     = useState(false);
+  const [result, setResult]                 = useState(null);
+  const [error, setError]                   = useState('');
+  const [textInput, setTextInput]           = useState('');
   const [showTextDialog, setShowTextDialog] = useState(false);
-  const mediaRecorder = useRef(null);
-  const audioChunks = useRef([]);
+  const mediaRecorder       = useRef(null);
+  const audioChunks         = useRef([]);
   const speechRecognitionRef = useRef(null);
-  const speechTranscriptRef = useRef('');
+  const speechTranscriptRef  = useRef('');
 
   const t = language === 'turkish' ? {
-    title: 'Sesli Asistan', sub: 'Diyabet hakkında kendi dilinizde doğal bir şekilde konuşun', start: 'Kayıt Başlat', stop: 'Durdur',
-    processing: 'İşleniyor...', question: 'Sorunuz', response: 'Yapay Zeka Yanıtı', retry: 'Tekrar Dene',
+    title: 'Sesli Asistan', sub: 'Diyabet hakkında kendi dilinizde doğal bir şekilde konuşun',
+    start: 'Kayıt Başlat', stop: 'Durdur', processing: 'İşleniyor',
+    question: 'Sorunuz', response: 'Yapay Zeka Yanıtı', retry: 'Tekrar Dene',
     type: 'Yazıyla Sor', enter: 'Sorunuzu buraya yazın', submit: 'Gönder', cancel: 'İptal',
   } : {
-    title: 'Voice Assistant', sub: 'Speak naturally about diabetes in your preferred language', start: 'Start Recording', stop: 'Stop',
-    processing: 'Processing...', question: 'Your Question', response: 'AI Response', retry: 'Try Again',
-    type: 'Type Instead', enter: 'Type your question', submit: 'Submit', cancel: 'Cancel',
+    title: 'Voice Assistant', sub: 'Speak naturally about diabetes in your preferred language',
+    start: 'Start Recording', stop: 'Stop', processing: 'Generating',
+    question: 'Your Question', response: 'AI Response', retry: 'Try Again',
+    type: 'Type Instead', enter: 'Type your question here', submit: 'Submit', cancel: 'Cancel',
   };
 
   const startRecording = async () => {
@@ -43,8 +75,7 @@ const VoiceChat = ({ language = 'english' }) => {
       mediaRecorder.current.start(1000);
       if (SpeechRecognitionAPI) {
         const recognition = new SpeechRecognitionAPI();
-        recognition.continuous = true;
-        recognition.interimResults = true;
+        recognition.continuous = true; recognition.interimResults = true;
         recognition.lang = language === 'turkish' ? 'tr-TR' : 'en-US';
         recognition.onresult = (e) => {
           const full = Array.from(e.results).map((r) => r[0].transcript).join(' ').trim();
@@ -59,30 +90,22 @@ const VoiceChat = ({ language = 'english' }) => {
 
   const stopRecording = () => {
     if (mediaRecorder.current && isRecording) {
-      if (speechRecognitionRef.current) {
-        speechRecognitionRef.current.stop();
-        speechRecognitionRef.current = null;
-      }
+      if (speechRecognitionRef.current) { speechRecognitionRef.current.stop(); speechRecognitionRef.current = null; }
       mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach((track) => track.stop());
+      mediaRecorder.current.stream.getTracks().forEach((t) => t.stop());
       setIsRecording(false);
     }
   };
 
   const processRecording = async () => {
     const transcript = (speechTranscriptRef.current || '').trim();
-    if (!transcript && !audioChunks.current.length) {
-      setError('No speech detected. Try again or type your question.');
-      return;
-    }
+    if (!transcript && !audioChunks.current.length) { setError('No speech detected. Try again or type your question.'); return; }
     setIsProcessing(true);
     try {
       if (transcript) {
         const data = await apiService.voiceChat(transcript, language, voiceUserId, true);
         setResult(data);
-      } else {
-        setError('Could not understand. Try typing your question or speak again.');
-      }
+      } else { setError('Could not understand. Try typing your question or speak again.'); }
     } catch (err) { setError(err.message); } finally { setIsProcessing(false); }
   };
 
@@ -91,144 +114,208 @@ const VoiceChat = ({ language = 'english' }) => {
     setIsProcessing(true); setShowTextDialog(false);
     try {
       const data = await apiService.voiceChat(textInput, language, textUserId, true);
-      setResult(data);
-      setTextInput('');
+      setResult(data); setTextInput('');
     } catch (err) { setError(err.message); } finally { setIsProcessing(false); }
   };
 
+  const letters = t.processing.split('');
+
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-32 pb-16">
-      {/* Header */}
-      <div className="text-center mb-14 animate-fade-in-up">
-        <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-5 py-2 mb-5">
-          <Sparkles className="w-4 h-4 text-violet-400" />
-          <span className="text-[11px] font-extrabold text-violet-400 uppercase tracking-[0.15em]">Voice AI</span>
-        </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
-        <p className="text-gray-500 max-w-md mx-auto">{t.sub}</p>
-      </div>
+    <>
+      <style>{aiLoaderStyles}</style>
 
-      {error && (
-        <div className="flex items-center gap-3 p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm animate-fade-in-up">
-          <AlertTriangle className="w-5 h-5 shrink-0" /> {error}
-        </div>
-      )}
+      {/* Background — matches app dark theme with subtle blue tint */}
+      <div className="fixed inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(160deg, #060e18 0%, #060a12 50%, #04080f 100%)', zIndex: 0 }} />
+      <div className="fixed pointer-events-none"
+        style={{ top: '15%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,33,80,0.25), transparent 70%)', filter: 'blur(80px)', zIndex: 0 }} />
 
-      <div className="gradient-border animate-fade-in-up">
-        <div className="card p-10 sm:p-14 rounded-[1.25rem]">
-          {/* Recording state */}
-          {!result && !isProcessing && (
-            <div className="flex flex-col items-center gap-10">
-              <div className="relative">
-                {/* Rings */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-32 pb-16 relative z-10"
+        style={{ fontFamily: "'Figtree','Inter',sans-serif" }}>
+
+        {/* Back */}
+        <button onClick={() => navigate(ROUTES.DASHBOARD)}
+          className="flex items-center gap-2 mb-8 text-sm transition-colors group"
+          style={{ color: 'rgba(147,197,253,0.6)' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#93c5fd'}
+          onMouseLeave={e => e.currentTarget.style.color = 'rgba(147,197,253,0.6)'}>
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          Back to Dashboard
+        </button>
+
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
+          <p style={{ color: 'rgba(147,197,253,0.5)' }} className="max-w-md mx-auto text-sm">{t.sub}</p>
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-3 p-4 mb-8 rounded-xl text-red-300 text-sm"
+            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <AlertTriangle className="w-5 h-5 shrink-0" /> {error}
+          </div>
+        )}
+
+        <div className="p-10 sm:p-14">
+
+            {/* ── Idle / Recording ── */}
+            {!result && !isProcessing && (
+              <div className="flex flex-col items-center gap-10">
+                {/* Circle */}
+                <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
+                  {/* Animated ring */}
+                  <div className="absolute inset-0 rounded-full"
+                    style={isRecording ? {} : { animation: 'loaderCircle 5s linear infinite' }} />
+
+                  {/* Mic button */}
+                  <button
+                    onClick={isRecording ? stopRecording : startRecording}
+                    disabled={isProcessing}
+                    className="relative z-10 flex items-center justify-center transition-all duration-500"
+                    style={{
+                      width: 144, height: 144, borderRadius: '50%',
+                      ...(isRecording
+                        ? { animation: 'recordPulse 1.4s ease-in-out infinite' }
+                        : { animation: 'loaderCircle 5s linear infinite' }),
+                    }}
+                    onMouseEnter={e => { if (!isRecording) e.currentTarget.style.transform = 'scale(1.07)'; }}
+                    onMouseLeave={e => { if (!isRecording) e.currentTarget.style.transform = 'scale(1)'; }}>
+                    </button>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-xl font-bold text-white">{isRecording ? t.stop : t.start}</p>
+                  <p className="text-sm mt-1.5" style={{ color: 'rgba(147,197,253,0.5)' }}>
+                    {isRecording ? 'Speak now…' : 'Click the microphone to begin'}
+                  </p>
+                </div>
+
+                {/* Wave bars while recording */}
                 {isRecording && (
-                  <>
-                    <div className="absolute inset-[-24px] rounded-full border border-red-500/20 animate-ping" style={{ animationDuration: '2s' }} />
-                    <div className="absolute inset-[-48px] rounded-full border border-red-500/10 animate-ping" style={{ animationDuration: '3s' }} />
-                    <div className="absolute inset-[-72px] rounded-full border border-red-500/5 animate-ping" style={{ animationDuration: '4s' }} />
-                  </>
+                  <div className="flex items-end gap-1.5" style={{ height: 36 }}>
+                    {[...Array(9)].map((_, i) => (
+                      <div key={i} className="wave-bar w-1.5 rounded-full"
+                        style={{
+                          height: `${14 + Math.sin(i * 0.9) * 14 + 6}px`,
+                          background: 'linear-gradient(to top, #0d2137, #1e3a5f)',
+                          animationDelay: `${i * 70}ms`,
+                        }} />
+                    ))}
+                  </div>
                 )}
-                {!isRecording && (
-                  <>
-                    <div className="absolute inset-[-16px] rounded-full border border-violet-500/10 animate-pulse-ring" />
-                    <div className="absolute inset-[-32px] rounded-full border border-violet-500/5 animate-pulse-ring" style={{ animationDelay: '1s' }} />
-                  </>
-                )}
-                <button onClick={isRecording ? stopRecording : startRecording} disabled={isProcessing}
-                  className={`relative z-10 w-36 h-36 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl
-                    ${isRecording
-                      ? 'bg-gradient-to-br from-red-500 to-pink-600 shadow-red-500/30 recording-pulse scale-110'
-                      : 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-violet-500/30 hover:scale-110 hover:shadow-violet-500/40'}`}>
-                  {isRecording ? <MicOff className="w-14 h-14 text-white" /> : <Mic className="w-14 h-14 text-white" />}
+
+                <button onClick={() => setShowTextDialog(true)}
+                  className="flex items-center gap-2 text-sm font-semibold transition-colors px-4 py-2 rounded-xl"
+                  style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.12)', color: 'rgba(147,197,253,0.6)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#93c5fd'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(147,197,253,0.6)'}>
+                  <Keyboard className="w-4 h-4" /> {t.type}
                 </button>
               </div>
+            )}
 
-              <div className="text-center">
-                <p className="text-xl font-bold text-white">{isRecording ? t.stop : t.start}</p>
-                <p className="text-sm text-gray-500 mt-2">{isRecording ? 'Speak now...' : 'Click the microphone to begin'}</p>
-              </div>
-
-              {isRecording && (
-                <div className="flex items-center gap-1.5">
-                  {[...Array(7)].map((_, i) => (
-                    <div key={i} className="w-1.5 bg-red-400 rounded-full animate-bounce"
-                      style={{ height: `${10 + Math.random() * 24}px`, animationDelay: `${i * 80}ms`, animationDuration: '0.7s' }} />
-                  ))}
-                </div>
-              )}
-
-              <button onClick={() => setShowTextDialog(true)} className="btn-ghost text-gray-500">
-                <Keyboard className="w-4 h-4" /> {t.type}
-              </button>
-            </div>
-          )}
-
-          {/* Processing */}
-          {isProcessing && (
-            <div className="flex flex-col items-center py-16 gap-6">
-              <div className="relative w-20 h-20">
-                <div className="absolute inset-0 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
-                <div className="absolute inset-2 rounded-full border-2 border-purple-500/10 border-b-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-                <div className="absolute inset-0 flex items-center justify-center"><Mic className="w-7 h-7 text-violet-400 animate-pulse" /></div>
-              </div>
-              <p className="text-gray-400 font-medium">{t.processing}</p>
-            </div>
-          )}
-
-          {/* Results */}
-          {result && (
-            <div className="space-y-6 animate-fade-in-up">
-              <div className="card p-6 bg-white/[0.02]">
-                <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.15em] mb-3">{t.question}</p>
-                <p className="text-[15px] text-gray-300 italic leading-relaxed">"{result.text_input}"</p>
-                <span className="badge bg-violet-500/20 text-violet-400 mt-4">
-                  {(result.confidence * 100).toFixed(0)}% confidence
-                </span>
-              </div>
-
-              <div className="card p-6 border border-emerald-500/10 bg-emerald-500/[0.03]">
-                <p className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-[0.15em] mb-3">{t.response}</p>
-                <p className="text-[15px] text-gray-300 leading-relaxed whitespace-pre-wrap">{result.ai_response?.replace(/\*\*/g, '')}</p>
-                <div className="flex gap-2 mt-4">
-                  <span className="badge bg-white/[0.04] text-gray-400 border border-white/[0.08]">
-                    <Globe className="w-3 h-3" /> {result.language}
-                  </span>
-                  <span className="badge bg-white/[0.04] text-gray-400 border border-white/[0.08]">
-                    <Clock className="w-3 h-3" /> {new Date(result.timestamp).toLocaleTimeString()}
-                  </span>
+            {/* ── Processing ── */}
+            {isProcessing && (
+              <div className="flex flex-col items-center py-16">
+                <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
+                  <div className="absolute inset-0 rounded-full ai-loader-circle" />
+                  <div
+                    className="relative z-10 flex items-center justify-center"
+                    style={{ width: 144, height: 144, borderRadius: '50%', animation: 'loaderCircle 5s linear infinite' }}
+                  >
+                    <span style={{ color: 'rgba(255,255,255,0.92)', fontSize: 13, fontWeight: 700, letterSpacing: '0.06em' }}>
+                      {t.processing}
+                    </span>
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="text-center pt-2">
-                <button onClick={() => { setResult(null); setError(''); audioChunks.current = []; }} className="btn-secondary">
-                  <RotateCcw className="w-4 h-4" /> {t.retry}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+            {/* ── Results ── */}
+            {result && (
+              <div className="space-y-5">
+                {/* Question */}
+                <div className="p-5 rounded-xl"
+                  style={{ background: 'rgba(0,93,255,0.07)', border: '1px solid rgba(56,189,248,0.15)' }}>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3"
+                    style={{ color: 'rgba(147,197,253,0.5)' }}>{t.question}</p>
+                  <p className="text-sm text-gray-300 italic leading-relaxed">"{result.text_input}"</p>
+                  <span className="inline-flex items-center gap-1.5 mt-4 text-[11px] font-bold px-3 py-1 rounded-full"
+                    style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', color: '#93c5fd' }}>
+                    {(result.confidence * 100).toFixed(0)}% confidence
+                  </span>
+                </div>
 
-      {/* Text Modal */}
-      {showTextDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="gradient-border animate-fade-in-up">
-            <div className="card p-7 max-w-md w-full space-y-5 rounded-[1.25rem]">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-white text-lg">{t.type}</h3>
-                <button onClick={() => setShowTextDialog(false)} className="btn-ghost p-1.5 rounded-xl"><X className="w-5 h-5" /></button>
+                {/* Response */}
+                <div className="p-5 rounded-xl"
+                  style={{ background: 'rgba(0,93,255,0.05)', border: '1px solid rgba(56,189,248,0.12)' }}>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3"
+                    style={{ color: '#38bdf8' }}>{t.response}</p>
+                  <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {result.ai_response?.replace(/\*\*/g, '')}
+                  </p>
+                  <div className="flex gap-2 mt-4">
+                    {[
+                      { icon: <Globe className="w-3 h-3" />, label: result.language },
+                      { icon: <Clock className="w-3 h-3" />, label: new Date(result.timestamp).toLocaleTimeString() },
+                    ].map(({ icon, label }) => (
+                      <span key={label} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1 rounded-full"
+                        style={{ background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.1)', color: 'rgba(147,197,253,0.6)' }}>
+                        {icon} {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-center pt-2">
+                  <LiquidMetalButton onClick={() => { setResult(null); setError(''); audioChunks.current = []; }} width={140}>
+                    <RotateCcw className="w-4 h-4" /> {t.retry}
+                  </LiquidMetalButton>
+                </div>
               </div>
-              <textarea autoFocus value={textInput} onChange={(e) => setTextInput(e.target.value)}
-                placeholder={t.enter} rows={4} className="input-field resize-none" />
-              <div className="flex gap-3 justify-end">
-                <button onClick={() => setShowTextDialog(false)} className="btn-ghost">{t.cancel}</button>
-                <button onClick={handleTextSubmit} className="btn-primary"><Send className="w-4 h-4" /> {t.submit}</button>
+            )}
+        {/* Text modal */}
+        {showTextDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl overflow-hidden"
+              style={{ background: 'rgba(8,14,26,0.95)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
+              <div className="h-px w-full"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(30,58,95,0.8) 40%, rgba(14,33,80,0.6) 60%, transparent)' }} />
+              <div className="p-7 space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-white text-lg">{t.type}</h3>
+                  <button onClick={() => setShowTextDialog(false)}
+                    className="p-1.5 rounded-xl transition-colors"
+                    style={{ background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.12)', color: 'rgba(147,197,253,0.5)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#93c5fd'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(147,197,253,0.5)'}>
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <textarea autoFocus value={textInput} onChange={(e) => setTextInput(e.target.value)}
+                  placeholder={t.enter} rows={4}
+                  className="w-full resize-none text-sm text-white outline-none transition-all duration-200 rounded-xl px-4 py-3"
+                  style={{ background: 'rgba(0,93,255,0.05)', border: '1px solid rgba(56,189,248,0.12)', color: 'white' }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(56,189,248,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(56,189,248,0.12)'}
+                />
+                <div className="flex gap-3 justify-end">
+                  <button onClick={() => setShowTextDialog(false)}
+                    className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                    style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.1)', color: 'rgba(147,197,253,0.6)' }}>
+                    {t.cancel}
+                  </button>
+                  <LiquidMetalButton onClick={handleTextSubmit} width={120}>
+                    <Send className="w-4 h-4" /> {t.submit}
+                  </LiquidMetalButton>
+                </div>
               </div>
             </div>
           </div>
+        )}
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 };
 

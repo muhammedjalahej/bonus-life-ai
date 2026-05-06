@@ -4,6 +4,7 @@ Returns curated video IDs; optional YouTube Data API search can be added via YOU
 Videos are shuffled per user (logged-in: stable order by user id; anonymous: random order).
 """
 
+import asyncio
 import os
 import random
 import logging
@@ -109,7 +110,7 @@ async def get_workout_videos(
     api_key = os.getenv("YOUTUBE_API_KEY", "").strip()
     if api_key:
         try:
-            dynamic = _fetch_from_youtube_api(api_key, goal_key)
+            dynamic = await asyncio.to_thread(_fetch_from_youtube_api, api_key, goal_key)
             if dynamic:
                 videos = _shuffle_and_take(dynamic, seed)
                 return {"goal": goal_key, "videos": videos, "source": "youtube_api"}

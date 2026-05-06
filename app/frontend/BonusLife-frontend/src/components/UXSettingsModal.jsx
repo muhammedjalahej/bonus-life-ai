@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { X, Palette, Move, Type, Zap, Volume2, Mic } from 'lucide-react';
+import { X, Palette, Move, Type, Zap, Volume2, Mic, Monitor, Sun, Moon, ChevronRight } from 'lucide-react';
+import { AnimatedSelect } from '../components/ui/AnimatedSelect';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useUXSettings } from '../context/UXSettingsContext';
 import { API_BASE_URL } from '../config/constants';
@@ -12,6 +13,78 @@ function getVoiceApiBase() {
   return 'http://127.0.0.1:8001';
 }
 
+/* ── Toggle switch ── */
+function Toggle({ checked, onChange, disabled }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${
+        checked ? 'bg-violet-600' : 'bg-white/[0.1]'
+      } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+      <span className={`absolute top-[3px] left-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-md transition-transform duration-200 ${
+        checked ? 'translate-x-5' : 'translate-x-0'
+      }`} />
+    </button>
+  );
+}
+
+/* ── Pill radio group ── */
+function PillGroup({ value, onChange, options }) {
+  return (
+    <div className="flex gap-1.5 flex-wrap">
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${
+            value === opt.value
+              ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
+              : 'bg-white/[0.06] text-gray-400 hover:bg-white/[0.1] hover:text-white'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ── Section header ── */
+function SectionHeader({ label }) {
+  return (
+    <div className="flex items-center gap-3 pt-1">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">{label}</span>
+      <div className="flex-1 h-px bg-white/[0.05]" />
+    </div>
+  );
+}
+
+/* ── Setting row ── */
+function SettingRow({ icon: Icon, iconColor = 'text-gray-500', label, description, control, accent }) {
+  return (
+    <div className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-colors ${
+      accent ? 'bg-white/[0.03] border border-white/[0.05]' : ''
+    }`}>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+        accent ? 'bg-violet-500/10' : 'bg-white/[0.05]'
+      }`}>
+        <Icon className={`w-4 h-4 ${iconColor}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-white leading-tight">{label}</p>
+        {description && <p className="text-xs text-gray-500 mt-0.5 leading-snug">{description}</p>}
+      </div>
+      <div className="shrink-0">{control}</div>
+    </div>
+  );
+}
+
 export default function UXSettingsModal({ isOpen, onClose }) {
   const containerRef = useFocusTrap(isOpen, onClose);
   const [ttsVoices, setTtsVoices] = useState([]);
@@ -20,24 +93,12 @@ export default function UXSettingsModal({ isOpen, onClose }) {
     try { return localStorage.getItem(TTS_VOICE_STORAGE_KEY) || ''; } catch { return ''; }
   });
   const {
-    theme,
-    motion,
-    contrast,
-    textSize,
-    haptics,
-    sound,
-    setTheme,
-    setMotion,
-    setContrast,
-    setTextSize,
-    setHaptics,
-    setSound,
+    theme, motion, contrast, textSize, haptics, sound,
+    setTheme, setMotion, setContrast, setTextSize, setHaptics, setSound,
   } = useUXSettings();
 
   useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
-    }
+    function handleKeyDown(e) { if (e.key === 'Escape') onClose(); }
     if (isOpen) window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
@@ -48,8 +109,8 @@ export default function UXSettingsModal({ isOpen, onClose }) {
     setTtsVoiceLoading(true);
     const base = getVoiceApiBase();
     fetch(`${base}/api/v1/voices`)
-      .then((res) => res.ok ? res.json() : Promise.reject(new Error(res.statusText)))
-      .then((data) => setTtsVoices(data.voices || []))
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => setTtsVoices(data.voices || []))
       .catch(() => setTtsVoices([]))
       .finally(() => setTtsVoiceLoading(false));
   }, [isOpen]);
@@ -61,160 +122,194 @@ export default function UXSettingsModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const themeIcons = { default: Sun, system: Monitor };
+  const ThemeIcon = themeIcons[theme] || Sun;
+
   return (
     <>
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001]"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10001]"
         onClick={onClose}
         aria-hidden
       />
+
+      {/* Modal */}
       <div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="ux-settings-title"
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10002] w-full max-w-md max-h-[85vh] overflow-auto"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10002] w-full max-w-[420px]"
+        style={{ maxHeight: '85vh' }}
       >
-        <div className="ux-settings-modal bg-[#12121f] border border-white/[0.08] rounded-2xl shadow-2xl p-6 mx-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 id="ux-settings-title" className="text-lg font-semibold text-white">
-              UX Settings
-            </h2>
+        <div
+          className="mx-4 overflow-hidden rounded-2xl shadow-2xl"
+          style={{
+            background: 'linear-gradient(145deg, #16162a 0%, #12121f 100%)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            boxShadow: '0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,92,246,0.05)',
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)' }}>
+                <Palette className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 id="ux-settings-title" className="text-sm font-bold text-white leading-tight">Preferences</h2>
+                <p className="text-[11px] text-gray-500">Customize your experience</p>
+              </div>
+            </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-gray-400 hover:bg-white/[0.05] hover:text-white transition focus:outline-none"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-500 hover:bg-white/[0.07] hover:text-white transition focus:outline-none"
               aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-5">
-            {/* Theme */}
-            <div className="flex items-center gap-3">
-              <Palette className="w-5 h-5 text-gray-500 shrink-0" />
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Theme</label>
-                <select
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  className="select-field py-2.5"
-                  aria-label="Theme"
-                >
-                  <option value="default">Default</option>
-                  <option value="system">System</option>
-                </select>
-              </div>
-            </div>
+          {/* Scrollable body */}
+          <div className="overflow-y-auto px-4 py-4 space-y-3" style={{ maxHeight: 'calc(85vh - 80px)', scrollbarWidth: 'none' }}>
 
-            {/* Motion */}
-            <div className="flex items-center gap-3">
-              <Move className="w-5 h-5 text-gray-500 shrink-0" />
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Motion</label>
-                <select
-                  value={motion}
-                  onChange={(e) => setMotion(e.target.value)}
-                  className="select-field py-2.5"
-                  aria-label="Motion"
-                >
-                  <option value="auto">Auto (follow system)</option>
-                  <option value="reduced">Reduced</option>
-                  <option value="full">Full</option>
-                </select>
-              </div>
-            </div>
+            {/* ── Appearance ── */}
+            <SectionHeader label="Appearance" />
 
-            {/* High contrast - scaffolding only, no visual change when On */}
-            <div className="flex items-center gap-3">
-              <span className="w-5 h-5 shrink-0 flex items-center justify-center text-gray-500" aria-hidden>◐</span>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">High contrast</label>
-                <select
-                  value={contrast}
-                  onChange={(e) => setContrast(e.target.value)}
-                  className="select-field py-2.5"
-                  aria-label="High contrast"
-                >
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
-                </select>
+            {/* Theme pill selector */}
+            <div className="px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
+                  <ThemeIcon className="w-4 h-4 text-violet-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white leading-tight">Theme</p>
+                  <p className="text-xs text-gray-500">Choose your color scheme</p>
+                </div>
               </div>
+              <PillGroup
+                value={theme}
+                onChange={setTheme}
+                options={[
+                  { value: 'default', label: '☀ Default' },
+                  { value: 'system', label: '⬛ System' },
+                ]}
+              />
             </div>
 
             {/* Text size */}
-            <div className="flex items-center gap-3">
-              <Type className="w-5 h-5 text-gray-500 shrink-0" />
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Text size</label>
-                <select
-                  value={textSize}
-                  onChange={(e) => setTextSize(e.target.value)}
-                  className="select-field py-2.5"
-                  aria-label="Text size"
-                >
-                  <option value="normal">Normal</option>
-                  <option value="lg">Large</option>
-                </select>
+            <div className="px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
+                  <Type className="w-4 h-4 text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white leading-tight">Text size</p>
+                  <p className="text-xs text-gray-500">Base font size across the app</p>
+                </div>
               </div>
+              <PillGroup
+                value={textSize}
+                onChange={setTextSize}
+                options={[
+                  { value: 'normal', label: 'Normal' },
+                  { value: 'lg', label: 'Large' },
+                ]}
+              />
             </div>
 
-            {/* Haptics */}
-            <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-gray-500 shrink-0" />
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Haptics</label>
-                <select
-                  value={haptics}
-                  onChange={(e) => setHaptics(e.target.value)}
-                  className="select-field py-2.5"
-                  aria-label="Haptics"
-                >
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
-                </select>
+            {/* ── Accessibility ── */}
+            <SectionHeader label="Accessibility" />
+
+            <SettingRow
+              icon={() => <span className="text-sm text-gray-400" aria-hidden>◐</span>}
+              label="High contrast"
+              description="Increase text and border contrast"
+              control={
+                <Toggle
+                  checked={contrast === 'on'}
+                  onChange={v => setContrast(v ? 'on' : 'off')}
+                />
+              }
+            />
+
+            {/* ── Motion & Interaction ── */}
+            <SectionHeader label="Motion & Interaction" />
+
+            <div className="px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
+                  <Move className="w-4 h-4 text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white leading-tight">Motion</p>
+                  <p className="text-xs text-gray-500">Controls animations and transitions</p>
+                </div>
               </div>
+              <PillGroup
+                value={motion}
+                onChange={setMotion}
+                options={[
+                  { value: 'auto', label: 'Auto' },
+                  { value: 'reduced', label: 'Reduced' },
+                  { value: 'full', label: 'Full' },
+                ]}
+              />
             </div>
 
-            {/* Chart sounds (sonification) */}
-            <div className="flex items-center gap-3">
-              <Volume2 className="w-5 h-5 text-gray-500 shrink-0" />
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Chart sounds</label>
-                <select
-                  value={sound}
-                  onChange={(e) => setSound(e.target.value)}
-                  className="select-field py-2.5"
-                  aria-label="Chart sounds"
-                >
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Hover chart bars to hear data as sound</p>
+            <SettingRow
+              icon={Zap}
+              label="Haptic feedback"
+              description="Vibration on mobile devices"
+              control={
+                <Toggle
+                  checked={haptics === 'on'}
+                  onChange={v => setHaptics(v ? 'on' : 'off')}
+                />
+              }
+            />
+
+            {/* ── Sound & Voice ── */}
+            <SectionHeader label="Sound & Voice" />
+
+            <SettingRow
+              icon={Volume2}
+              label="Chart sounds"
+              description="Hear data as tones when hovering charts"
+              control={
+                <Toggle
+                  checked={sound === 'on'}
+                  onChange={v => setSound(v ? 'on' : 'off')}
+                />
+              }
+            />
+
+            {/* TTS Voice */}
+            <div className="px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
+                  <Mic className="w-4 h-4 text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white leading-tight">Voice assistant</p>
+                  <p className="text-xs text-gray-500">ElevenLabs voice for the AI agent</p>
+                </div>
               </div>
+              <AnimatedSelect
+                value={ttsVoiceId}
+                onChange={e => setTtsVoiceId(e.target.value)}
+                disabled={ttsVoiceLoading}
+                options={[
+                  { value: '', label: ttsVoiceLoading ? 'Loading voices…' : 'Default (backend)' },
+                  ...ttsVoices.map(v => ({ value: v.voice_id, label: v.name || v.voice_id })),
+                ]}
+              />
             </div>
 
-            {/* TTS Voice (voice agent) */}
-            <div className="flex items-center gap-3">
-              <Mic className="w-5 h-5 text-gray-500 shrink-0" />
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Voice assistant voice</label>
-                <select
-                  value={ttsVoiceId}
-                  onChange={(e) => setTtsVoiceId(e.target.value)}
-                  className="select-field py-2.5"
-                  aria-label="TTS voice"
-                  disabled={ttsVoiceLoading}
-                >
-                  <option value="">Default (backend)</option>
-                  {ttsVoices.map((v) => (
-                    <option key={v.voice_id} value={v.voice_id}>{v.name || v.voice_id}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">ElevenLabs voice for the voice agent</p>
-              </div>
-            </div>
+            {/* Bottom padding */}
+            <div className="h-1" />
           </div>
         </div>
       </div>

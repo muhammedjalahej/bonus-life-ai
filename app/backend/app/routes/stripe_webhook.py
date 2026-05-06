@@ -35,7 +35,12 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         sub = event["data"]["object"]
         user_id = (sub.get("metadata") or {}).get("user_id")
         if user_id:
-            user = db.query(User).filter(User.id == int(user_id)).first()
+            try:
+                user_id_int = int(user_id)
+            except (ValueError, TypeError):
+                logger.warning("Stripe webhook: non-integer user_id in metadata: %s", user_id)
+                return {"received": True}
+            user = db.query(User).filter(User.id == user_id_int).first()
             if user:
                 tier, status, period_end = stripe_service.parse_subscription_event(sub)
                 user.stripe_subscription_id = sub.get("id")

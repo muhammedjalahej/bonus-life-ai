@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
+import { AnimatedActionMenu } from '../components/ui/AnimatedActionMenu';
 import ReactMarkdown from 'react-markdown';
 import {
   Activity, MessageSquare, Mic, Salad, AlertTriangle, User, FileText, UtensilsCrossed,
   Loader2, ChevronRight, ChevronDown, Camera, X, Check, Upload, Download, Share2, RefreshCw,
-  Megaphone, ArrowRight, Shield, Bell, GitCompare, Heart, Apple, AlertCircle,
-  Search, Calendar, Eye, Clock, Trash2, QrCode, ScanFace, Dumbbell, Sun, HelpCircle,
-  CreditCard, Sparkles,
+  Megaphone, ArrowRight, Shield, GitCompare, Heart, Apple, AlertCircle,
+  Search, Calendar, Eye, Clock, Trash2, QrCode, ScanFace, Dumbbell, Sun, HelpCircle, Ellipsis, Bell,
+  CreditCard, Sparkles, ScanLine, Brain, Droplets,
 } from 'lucide-react';
 import { ROUTES, getAvatarUrl } from '../config/constants';
 import { useAuth } from '../context/AuthContext';
@@ -15,24 +18,55 @@ import apiService, {
   faceStatus,
   faceToggleEnabled,
   confirmSubscription,
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification,
 } from '../services/api';
-import { haptic } from '../utils/haptics';
-import { buildAndDownloadSignedPDF, buildAndDownloadSignedHeartPDF } from '../utils/assessmentPdf';
+import { buildAndDownloadSignedPDF, buildAndDownloadSignedHeartPDF, buildAndDownloadSignedMriPDF, buildAndDownloadSignedCKDPDF } from '../utils/assessmentPdf';
 import FluidCard from '../components/FluidCard';
+import { StackedToolCards } from '../components/ui/StackedToolCards';
+import { MiniCalendar } from '../components/ui/MiniCalendar';
+import { AvatarPicker } from '../components/ui/AvatarPicker';
+import { DateRangePicker } from '../components/ui/DateRangePicker';
 
-// accent: tailwind border/icon classes (e.g. emerald, amber, blue). primary = slightly emphasized.
-const cardLinks = [
-  { path: ROUTES.TEST, labelEn: 'Assessment', labelTr: 'Değerlendirme', icon: Activity, accent: 'emerald', primary: true },
-  { path: ROUTES.HEART_TEST, labelEn: 'Heart Risk', labelTr: 'Kalp Risk', icon: Heart, accent: 'pink', primary: true },
-  { path: ROUTES.CHAT, labelEn: 'AI Chat', labelTr: 'Yapay Zeka Sohbet', icon: MessageSquare, accent: 'blue', primary: true },
-  { path: ROUTES.VOICE_CHAT, labelEn: 'Voice Chat', labelTr: 'Sesli Sohbet', icon: Mic, accent: 'blue' },
-  { path: ROUTES.DIET_PLAN, labelEn: 'Diet Plan', labelTr: 'Diyet Planı', icon: Salad, accent: 'emerald' },
-  { path: ROUTES.MEAL_PHOTO, labelEn: 'Meal Analyzer', labelTr: 'Öğün Analizi', icon: Apple, accent: 'emerald' },
-  { path: ROUTES.SPORT, labelEn: 'Workout Videos', labelTr: 'Antrenman Videoları', icon: Dumbbell, accent: 'cyan' },
-  { path: ROUTES.SYMPTOM_CHECKER, labelEn: 'Symptom Checker', labelTr: 'Belirti Kontrolü', icon: AlertTriangle, accent: 'amber' },
-  { path: ROUTES.VERIFY, labelEn: 'Verify Report', labelTr: 'Rapor Doğrula', icon: QrCode, accent: 'gray' },
-  { path: ROUTES.LOCAL_AI_TIP, labelEn: 'Tip of the day', labelTr: 'Günün ipucu', icon: Sun, accent: 'amber' },
-  { path: ROUTES.LOCAL_AI_SCENARIO, labelEn: 'What if…?', labelTr: 'Ya… olursa?', icon: HelpCircle, accent: 'cyan' },
+const toolGroups = [
+  {
+    id: 'assessments',
+    titleEn: 'Health Assessments',
+    titleTr: 'Sağlık Değerlendirmeleri',
+    accent: 'violet',
+    items: [
+      { path: ROUTES.TEST,            labelEn: 'Diabetes Assessment',                labelTr: 'Diyabet Değerlendirmesi',            icon: Activity },
+      { path: ROUTES.HEART_TEST,      labelEn: 'Heart Risk Assessment',              labelTr: 'Kalp Risk Değerlendirmesi',           icon: Heart },
+      { path: ROUTES.BRAIN_MRI,       labelEn: 'Brain MRI Risk Assessment',          labelTr: 'Beyin MRI Risk Değerlendirmesi',      icon: Brain },
+      { path: ROUTES.CKD_TEST,        labelEn: 'Kidney Disease (CKD) Risk Assessment', labelTr: 'Böbrek Hastalığı (CKD) Risk Değerlendirmesi', icon: Droplets },
+      { path: ROUTES.SYMPTOM_CHECKER, labelEn: 'Symptom Checker',                   labelTr: 'Belirti Kontrolü',                   icon: AlertTriangle },
+    ],
+  },
+  {
+    id: 'ai',
+    titleEn: 'Diabetes Specialist AI',
+    titleTr: 'Diyabet Uzmanı Yapay Zeka',
+    accent: 'blue',
+    items: [
+      { path: ROUTES.CHAT,               labelEn: 'AI Chat',    labelTr: 'Yapay Zeka Sohbet', icon: MessageSquare },
+      { path: ROUTES.VOICE_CHAT,         labelEn: 'Voice Chat', labelTr: 'Sesli Sohbet',       icon: Mic },
+      { path: ROUTES.LOCAL_AI_SCENARIO,  labelEn: 'What if…?', labelTr: 'Ya… olursa?',        icon: HelpCircle },
+    ],
+  },
+  {
+    id: 'nutrition',
+    titleEn: 'Nutrition & Fitness',
+    titleTr: 'Beslenme & Fitness',
+    accent: 'emerald',
+    items: [
+      { path: ROUTES.DIET_PLAN,  labelEn: 'Diet Plan',       labelTr: 'Diyet Planı',         icon: Salad },
+      { path: ROUTES.MEAL_PHOTO, labelEn: 'Meal Analyzer',   labelTr: 'Öğün Analizi',        icon: Apple },
+      { path: ROUTES.SPORT,      labelEn: 'Workout Videos',  labelTr: 'Antrenman Videoları', icon: Dumbbell },
+      { path: ROUTES.LOCAL_AI_TIP, labelEn: 'Tip of the Day', labelTr: 'Günün İpucu',       icon: Sun },
+    ],
+  },
 ];
 
 // Friendly labels for diet plan goal (stored as e.g. diabetes_prevention)
@@ -51,14 +85,14 @@ const formatTime = (dateStr) => {
 // Risk level → badge color classes (Low=green, Medium=amber, High=red)
 const getRiskBadgeClasses = (riskLevel) => {
   const r = (riskLevel || '').toLowerCase();
-  if (r.includes('low') || r.includes('minimal')) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+  if (r.includes('low') || r.includes('minimal')) return 'bg-violet-500/20 text-violet-400 border-violet-500/30';
   if (r.includes('medium') || r.includes('moderate')) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
   if (r.includes('high') || r.includes('elevated')) return 'bg-red-500/20 text-red-400 border-red-500/30';
   return 'bg-white/[0.08] text-gray-300 border-white/[0.12]';
 };
 const getRiskBorderClass = (riskLevel) => {
   const r = (riskLevel || '').toLowerCase();
-  if (r.includes('low') || r.includes('minimal')) return 'border-l-emerald-500/50';
+  if (r.includes('low') || r.includes('minimal')) return 'border-l-violet-500/50';
   if (r.includes('medium') || r.includes('moderate')) return 'border-l-amber-500/50';
   if (r.includes('high') || r.includes('elevated')) return 'border-l-red-500/50';
   return 'border-l-white/10';
@@ -66,7 +100,7 @@ const getRiskBorderClass = (riskLevel) => {
 /** Hover accent by risk (e.g. for Heart cards: green low, red high, like diabetes). */
 const getRiskHoverClass = (riskLevel) => {
   const r = (riskLevel || '').toLowerCase();
-  if (r.includes('low') || r.includes('minimal')) return 'hover:border-emerald-500/30 hover:text-emerald-400 focus:ring-emerald-500/50';
+  if (r.includes('low') || r.includes('minimal')) return 'hover:border-violet-500/30 hover:text-violet-400 focus:ring-violet-500/50';
   if (r.includes('medium') || r.includes('moderate')) return 'hover:border-amber-500/30 hover:text-amber-400 focus:ring-amber-500/50';
   if (r.includes('high') || r.includes('elevated')) return 'hover:border-red-500/30 hover:text-red-400 focus:ring-red-500/50';
   return 'hover:border-white/20 hover:text-gray-300 focus:ring-white/20';
@@ -89,9 +123,50 @@ export default function Dashboard({ language }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, refreshUser, setUserAvatar } = useAuth();
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const calendarAnchorRef = useRef(null);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifPos, setNotifPos] = useState({ top: 0, left: 0 });
+  const notifAnchorRef = useRef(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try { const d = await getNotifications(20); setNotifications(Array.isArray(d) ? d : []); } catch {}
+    };
+    load();
+    const iv = setInterval(load, 60000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  const handleOpenNotif = () => {
+    if (notifAnchorRef.current) {
+      const rect = notifAnchorRef.current.getBoundingClientRect();
+      const dropdownWidth = 320;
+      let left = rect.right - dropdownWidth;
+      if (left < 8) left = 8;
+      setNotifPos({ top: rect.bottom + 4, left });
+    }
+    setNotifOpen(o => !o);
+  };
+  const handleMarkRead = async (id) => {
+    try { await markNotificationRead(id); setNotifications(p => p.map(n => n.id === id ? { ...n, is_read: true } : n)); } catch {}
+  };
+  const handleMarkAllRead = async () => {
+    try { await markAllNotificationsRead(); setNotifications(p => p.map(n => ({ ...n, is_read: true }))); } catch {}
+  };
+  const handleDeleteNotif = async (e, id) => {
+    e.stopPropagation();
+    try { await deleteNotification(id); setNotifications(p => p.filter(n => n.id !== id)); } catch {}
+  };
+
   const [assessments, setAssessments] = useState([]);
   const [heartAssessments, setHeartAssessments] = useState([]);
+  const [ckdAssessments, setCKDAssessments] = useState([]);
   const [dietPlans, setDietPlans] = useState([]);
+  const [brainMriAnalyses, setBrainMriAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -103,11 +178,21 @@ export default function Dashboard({ language }) {
   const [compareMode, setCompareMode] = useState(false);
   const [compareIds, setCompareIds] = useState([]);
 
+  // Imaging compare state
+  const [imagingCompareMode, setImagingCompareMode] = useState(false);
+  const [imagingCompareIds, setImagingCompareIds] = useState([]);
+
+  // Filters: imaging (brain mri)
+  const [imagingSearch, setImagingSearch] = useState('');
+  const [imagingDateFrom, setImagingDateFrom] = useState('');
+  const [imagingDateTo, setImagingDateTo] = useState('');
+  const [imagingTypeFilter, setImagingTypeFilter] = useState('all'); // 'all' | 'mri'
+
   // Filters: assessments (combined diabetes + heart)
   const [assessmentSearch, setAssessmentSearch] = useState('');
   const [assessmentDateFrom, setAssessmentDateFrom] = useState('');
   const [assessmentDateTo, setAssessmentDateTo] = useState('');
-  const [assessmentTypeFilter, setAssessmentTypeFilter] = useState('all'); // 'all' | 'diabetes' | 'heart'
+  const [assessmentTypeFilter, setAssessmentTypeFilter] = useState('all'); // 'all' | 'diabetes' | 'heart' | 'ckd'
   // Filters: diet plans
   const [dietPlanSearch, setDietPlanSearch] = useState('');
   const [dietPlanDateFrom, setDietPlanDateFrom] = useState('');
@@ -138,21 +223,27 @@ export default function Dashboard({ language }) {
     setLoading(true);
     setError(null);
     try {
-      const [a, h, d, ann] = await Promise.all([
+      const [a, h, d, ann, bmr, ckd] = await Promise.all([
         apiService.getMyAssessments(),
         apiService.getMyHeartAssessments(),
         apiService.getMyDietPlans(),
         apiService.getActiveAnnouncements().catch(() => []),
+        apiService.getMyBrainMriAnalyses().catch(() => []),
+        apiService.getMyCKDAssessments().catch(() => []),
       ]);
       setAssessments(Array.isArray(a) ? a : []);
       setHeartAssessments(Array.isArray(h) ? h : []);
       setDietPlans(Array.isArray(d) ? d : []);
       setAnnouncements(Array.isArray(ann) ? ann : []);
+      setBrainMriAnalyses(Array.isArray(bmr) ? bmr : []);
+      setCKDAssessments(Array.isArray(ckd) ? ckd : []);
     } catch (err) {
       setError(err.message || (isTr ? 'Veriler yüklenemedi.' : 'Failed to load data.'));
       setAssessments([]);
       setHeartAssessments([]);
       setDietPlans([]);
+      setBrainMriAnalyses([]);
+      setCKDAssessments([]);
     } finally {
       setLoading(false);
     }
@@ -170,9 +261,15 @@ export default function Dashboard({ language }) {
       setSearchParams({ ...Object.fromEntries(searchParams.entries()), tab: 'assessments', type: 'heart' }, { replace: true });
       return;
     }
-    if (tab && ['overview', 'assessments', 'diet-plans', 'subscription', 'profile'].includes(tab)) {
+    if (tab === 'ckd-assessments') {
+      setActiveTab('assessments');
+      setAssessmentTypeFilter('ckd');
+      setSearchParams({ ...Object.fromEntries(searchParams.entries()), tab: 'assessments', type: 'ckd' }, { replace: true });
+      return;
+    }
+    if (tab && ['overview', 'assessments', 'imaging', 'diet-plans', 'subscription', 'profile'].includes(tab)) {
       setActiveTab(tab);
-      if (tab === 'assessments') setAssessmentTypeFilter(type === 'diabetes' || type === 'heart' ? type : 'all');
+      if (tab === 'assessments') setAssessmentTypeFilter(['diabetes', 'heart', 'ckd'].includes(type) ? type : 'all');
     }
   }, [searchParams, setSearchParams]);
 
@@ -196,8 +293,8 @@ export default function Dashboard({ language }) {
     return () => { cancelled = true; };
   }, [searchParams, refreshUser, setSearchParams, isTr]);
 
-  // Onboarding: check if user has no assessments (diabetes or heart) = first time
-  const totalAssessmentsCount = (assessments?.length || 0) + (heartAssessments?.length || 0);
+  // Onboarding: check if user has no assessments (any type) = first time
+  const totalAssessmentsCount = (assessments?.length || 0) + (heartAssessments?.length || 0) + (ckdAssessments?.length || 0);
   const isFirstTime = !loading && totalAssessmentsCount === 0 && !user?.onboarding_completed;
   const dismissOnboarding = async () => {
     try {
@@ -219,6 +316,22 @@ export default function Dashboard({ language }) {
         ? (isTr ? 'PDF imzalama servisi bulunamadı (404). Backend çalışıyor mu?' : 'PDF signing service not found (404). Is the backend running?')
         : (msg || (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
       alert(friendly);
+    } finally {
+      setPdfLoading(null);
+    }
+  };
+
+  // Signed Brain MRI PDF export
+  const exportSignedMriPDF = async (assessment) => {
+    setPdfLoading(`bm-${assessment.id}`);
+    try {
+      await buildAndDownloadSignedMriPDF(assessment, user, isTr, apiService);
+    } catch (err) {
+      const msg = err.message || '';
+      const friendly = msg.includes('404')
+        ? (isTr ? 'PDF imzalama servisi bulunamadı.' : 'PDF signing service not found.')
+        : (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.');
+      alert(friendly + ' ' + msg);
     } finally {
       setPdfLoading(null);
     }
@@ -281,6 +394,44 @@ export default function Dashboard({ language }) {
       setDeletingId(null);
     }
   };
+  const exportSignedCKDPDF = async (assessment) => {
+    setPdfLoading(`ckd-${assessment.id}`);
+    try {
+      await buildAndDownloadSignedCKDPDF(assessment, user, isTr, apiService);
+    } catch (err) {
+      const msg = err.message || '';
+      const friendly = msg.includes('404')
+        ? (isTr ? 'PDF imzalama servisi bulunamadı (404).' : 'PDF signing service not found (404).')
+        : (msg || (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
+      alert(friendly);
+    } finally {
+      setPdfLoading(null);
+    }
+  };
+  const handleShareCKD = async (ckdAssessmentId) => {
+    setShareLoading(ckdAssessmentId);
+    try {
+      const result = await apiService.shareCKDAssessment(ckdAssessmentId);
+      const link = `${window.location.origin}/shared/ckd/${result.share_token}`;
+      setShareLink({ id: ckdAssessmentId, link, type: 'ckd' });
+      navigator.clipboard?.writeText(link);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setShareLoading(null);
+    }
+  };
+  const handleDeleteCKDAssessment = async (a) => {
+    setDeletingId(`ckd-${a.id}`);
+    try {
+      await apiService.deleteCKDAssessment(a.id);
+      setCKDAssessments(prev => prev.filter(x => x.id !== a.id));
+    } catch (err) {
+      alert(err.message || (isTr ? 'Silinemedi.' : 'Could not delete.'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
   const handleDeleteAssessment = async (a) => {
     setDeletingId(`a-${a.id}`);
     try {
@@ -305,40 +456,106 @@ export default function Dashboard({ language }) {
   };
 
   // Compare assessments
-  const toggleCompare = (id) => {
+  const toggleCompare = (id, type) => {
     setCompareIds(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+
+      if (prev.length > 0) {
+        const firstId = prev[0];
+        const firstIsCKD = Boolean(ckdAssessments.find(a => a.id === firstId));
+        const firstIsHeart = !firstIsCKD && Boolean(heartAssessments.find(a => a.id === firstId));
+        const firstType = firstIsCKD ? 'ckd' : firstIsHeart ? 'heart' : 'diabetes';
+        if (type !== firstType) return prev;
+      }
+
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+  };
+
+  const comparedAssessments = React.useMemo(() => {
+    return compareIds.map(id => {
+      let item = assessments.find(a => a.id === id);
+      if (item) return { ...item, _type: 'diabetes' };
+      item = heartAssessments.find(h => h.id === id);
+      if (item) return { ...item, _type: 'heart' };
+      item = ckdAssessments.find(c => c.id === id);
+      if (item) return { ...item, _type: 'ckd' };
+      return null;
+    }).filter(Boolean);
+  }, [compareIds, assessments, heartAssessments, ckdAssessments]);
+
+  const toggleImagingCompare = (id) => {
+    setImagingCompareIds(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id);
       if (prev.length >= 2) return [prev[1], id];
       return [...prev, id];
     });
   };
 
-  const comparedAssessments = compareIds.map(id => assessments.find(a => a.id === id)).filter(Boolean);
+  const combinedImagingAnalyses = React.useMemo(() => {
+    return (brainMriAnalyses || []).map(a => ({ ...a, _type: 'mri' })).sort((a, b) => {
+      const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return tB - tA;
+    });
+  }, [brainMriAnalyses]);
 
-  // Combined assessments (diabetes + heart) for list, sorted by date desc
+  const comparedImagingAnalyses = React.useMemo(() => {
+    return imagingCompareIds.map(id => {
+      return combinedImagingAnalyses.find(a => a.id === id) || null;
+    }).filter(Boolean);
+  }, [imagingCompareIds, combinedImagingAnalyses]);
+
+  const filteredImagingAnalyses = React.useMemo(() => {
+    return combinedImagingAnalyses.filter(a => {
+      if (imagingTypeFilter !== 'all' && a._type !== imagingTypeFilter) return false;
+      if (imagingSearch) {
+        const query = imagingSearch.toLowerCase();
+        const summary = (a.executive_summary || '').toLowerCase();
+        const conds = (a.tumor_class || '').toLowerCase();
+        if (!summary.includes(query) && !conds.includes(query)) return false;
+      }
+      if (imagingDateFrom) {
+        if (!a.created_at || new Date(a.created_at) < new Date(imagingDateFrom)) return false;
+      }
+      if (imagingDateTo) {
+        const toD = new Date(imagingDateTo);
+        toD.setHours(23, 59, 59, 999);
+        if (!a.created_at || new Date(a.created_at) > toD) return false;
+      }
+      return true;
+    });
+  }, [combinedImagingAnalyses, imagingTypeFilter, imagingSearch, imagingDateFrom, imagingDateTo]);
+
+  // Combined assessments (diabetes + heart + ckd) for list, sorted by date desc
   const combinedAssessments = React.useMemo(() => {
     const diabetes = (assessments || []).map(a => ({ ...a, _type: 'diabetes' }));
     const heart = (heartAssessments || []).map(a => ({ ...a, _type: 'heart' }));
-    const list = [...diabetes, ...heart].sort((a, b) => {
+    const ckd = (ckdAssessments || []).map(a => ({ ...a, _type: 'ckd' }));
+    const list = [...diabetes, ...heart, ...ckd].sort((a, b) => {
       const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
       const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
       return tB - tA;
     });
     return list;
-  }, [assessments, heartAssessments]);
+  }, [assessments, heartAssessments, ckdAssessments]);
 
   // Filtered combined list (type + search + date)
   const filteredAssessments = React.useMemo(() => {
     let list = [...combinedAssessments];
     if (assessmentTypeFilter === 'diabetes') list = list.filter(a => a._type === 'diabetes');
     else if (assessmentTypeFilter === 'heart') list = list.filter(a => a._type === 'heart');
+    else if (assessmentTypeFilter === 'ckd') list = list.filter(a => a._type === 'ckd');
     const q = (assessmentSearch || '').toLowerCase().trim();
     if (q) {
       list = list.filter(a => {
         const matchText = (a.risk_level || '').toLowerCase().includes(q) ||
+          (a.prediction || '').toLowerCase().includes(q) ||
           (a.executive_summary || '').toLowerCase().includes(q);
         const matchType = (q === 'diabetes' && a._type === 'diabetes') || (q === 'heart' && a._type === 'heart') ||
-          (isTr && (q === 'kalp' && a._type === 'heart') || (q === 'diyabet' && a._type === 'diabetes'));
+          (q === 'ckd' && a._type === 'ckd') || (q === 'kidney' && a._type === 'ckd') ||
+          (isTr && ((q === 'kalp' && a._type === 'heart') || (q === 'diyabet' && a._type === 'diabetes') || (q === 'böbrek' && a._type === 'ckd')));
         return matchText || matchType;
       });
     }
@@ -400,14 +617,137 @@ export default function Dashboard({ language }) {
 
   return (
     <div className="max-w-5xl mx-auto px-6 pt-32 pb-24">
-      <header className="relative rounded-2xl mb-8 p-6 bg-gradient-to-br from-white/[0.04] via-transparent to-emerald-500/[0.04] border border-white/[0.06]">
-        <p className="text-sm font-medium text-emerald-400/90 mb-1">{getGreeting(isTr, user?.full_name)}</p>
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
-          {isTr ? 'Kontrol Paneli' : 'Dashboard'}
-        </h1>
-        <p className="text-gray-400">
-          {isTr ? 'Araçlara hızlı erişim ve kayıtlarınız' : 'Quick access to tools and your records'}
-        </p>
+      <header className="relative rounded-2xl mb-8 p-6 border border-white/[0.08]" style={{ background: 'linear-gradient(160deg, rgba(38,38,38,0.72) 0%, rgba(8,8,8,0.88) 45%, rgba(28,28,28,0.75) 100%)', backdropFilter: 'blur(48px) saturate(180%) brightness(1.05)' }}>
+        {/* Subtle decorative glows */}
+        <div style={{ position: 'absolute', top: '-60px', right: '-40px', width: '220px', height: '220px', background: 'radial-gradient(circle, rgba(139,92,246,0.09) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-30px', left: '40%', width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(96,165,250,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        {/* Top row: greeting + date */}
+        <div className="relative flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-white/40 mb-1">{getGreeting(isTr, user?.full_name)}</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+              {isTr ? 'Kontrol Paneli' : 'Dashboard'}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 mt-1">
+            {/* Notification bell pill */}
+            <button
+              ref={notifAnchorRef}
+              onClick={handleOpenNotif}
+              className="relative flex items-center justify-center w-8 h-8 rounded-full border border-white/[0.08] bg-white/[0.04] text-white/40 hover:text-white/70 hover:border-white/[0.14] hover:bg-white/[0.07] transition-all"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white text-black text-[7px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification portal overlay */}
+            {notifOpen && createPortal(
+              <>
+                <div
+                  onClick={() => setNotifOpen(false)}
+                  style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 99998 }}
+                />
+                <div style={{ position: 'fixed', top: notifPos.top, left: notifPos.left, width: 320, zIndex: 99999 }}>
+                  <div style={{ borderRadius: 16, overflow: 'hidden', background: 'linear-gradient(160deg, rgba(28,28,28,0.97) 0%, rgba(8,8,10,0.99) 100%)', backdropFilter: 'blur(48px) saturate(200%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 16px 56px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.07)' }}>
+                    {/* Header */}
+                    <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>{isTr ? 'Bildirimler' : 'Notifications'}</span>
+                      {unreadCount > 0 && (
+                        <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontWeight: 600, padding: 0 }}>
+                          {isTr ? 'Tümünü oku' : 'Mark all read'}
+                        </button>
+                      )}
+                    </div>
+                    {/* List */}
+                    <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                      {notifications.length === 0 ? (
+                        <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem' }}>
+                          <Bell style={{ width: 24, height: 24, margin: '0 auto 0.5rem', opacity: 0.15 }} />
+                          {isTr ? 'Bildirim yok' : 'No notifications'}
+                        </div>
+                      ) : notifications.slice(0, 15).map(n => (
+                        <div key={n.id} onClick={() => handleMarkRead(n.id)}
+                          style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem', padding: '0.7rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)', background: n.is_read ? 'transparent' : 'rgba(255,255,255,0.02)', transition: 'background 0.15s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                          onMouseLeave={e => e.currentTarget.style.background = n.is_read ? 'transparent' : 'rgba(255,255,255,0.02)'}
+                        >
+                          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: 'rgba(255,255,255,0.45)', flexShrink: 0 }}>
+                            {(n.title || '?').slice(0, 2).toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                              <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: n.is_read ? 'rgba(255,255,255,0.4)' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</p>
+                              <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', flexShrink: 0, marginLeft: 6 }}>{n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span>
+                            </div>
+                            {n.message && <p style={{ margin: '0 0 3px', fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</p>}
+                            <span style={{ fontSize: '0.6rem', color: n.is_read ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.35)' }}>{n.is_read ? (isTr ? '✓ Okundu' : '✓ Read') : (isTr ? '● Okunmadı' : '● Unread')}</span>
+                          </div>
+                          <button onClick={(e) => handleDeleteNotif(e, n.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.15)', padding: '2px', borderRadius: 6, flexShrink: 0, display: 'flex' }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.15)'}
+                          >
+                            <Trash2 style={{ width: 12, height: 12 }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>,
+              document.body
+            )}
+
+            {/* Date pill */}
+            <button
+              ref={calendarAnchorRef}
+              onClick={() => setCalendarOpen(o => !o)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] text-xs text-white/40 hover:text-white/70 hover:border-white/[0.14] hover:bg-white/[0.07] transition-all"
+            >
+              <Calendar className="w-3 h-3" />
+              {new Date().toLocaleDateString(isTr ? 'tr-TR' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </button>
+            <MiniCalendar
+              open={calendarOpen}
+              onClose={() => setCalendarOpen(false)}
+              isTr={isTr}
+              anchorRef={calendarAnchorRef}
+            />
+          </div>
+        </div>
+
+        {/* Bottom stats strip */}
+        {!loading && (
+          <div className="relative mt-5 pt-4 border-t border-white/[0.06] flex items-center justify-between gap-4">
+            {/* Left: stats */}
+            <div className="flex items-center gap-5 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-white/30" />
+                <span className="text-xs text-white/45">{totalAssessmentsCount} {isTr ? 'değerlendirme' : totalAssessmentsCount === 1 ? 'assessment' : 'assessments'}</span>
+              </div>
+              <div className="w-px h-3 bg-white/[0.08]" />
+              <div className="flex items-center gap-1.5">
+                <ScanLine className="w-3.5 h-3.5 text-white/30" />
+                <span className="text-xs text-white/45">{combinedImagingAnalyses.length} {isTr ? 'görüntüleme' : combinedImagingAnalyses.length === 1 ? 'imaging scan' : 'imaging scans'}</span>
+              </div>
+              <div className="w-px h-3 bg-white/[0.08]" />
+              <div className="flex items-center gap-1.5">
+                <UtensilsCrossed className="w-3.5 h-3.5 text-white/30" />
+                <span className="text-xs text-white/45">{dietPlans.length} {isTr ? 'diyet planı' : dietPlans.length === 1 ? 'diet plan' : 'diet plans'}</span>
+              </div>
+            </div>
+            {/* Right: Verify Report */}
+            <Link to={ROUTES.VERIFY} className="shrink-0 flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors">
+              <QrCode className="w-3.5 h-3.5" />
+              {isTr ? 'Rapor Doğrula' : 'Verify Report'}
+            </Link>
+          </div>
+        )}
       </header>
 
       {/* Feature f1: Announcements Banner (dismissible, max-height + fade) */}
@@ -439,12 +779,9 @@ export default function Dashboard({ language }) {
 
       {/* Feature f2: Onboarding prompt for first-time users */}
       {isFirstTime && (
-        <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20">
+        <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-violet-500/10 to-cyan-500/10 border border-violet-500/20">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-                <Heart className="w-5 h-5 text-emerald-400" />
-              </div>
               <div>
                 <h3 className="text-white font-semibold">
                   {isTr ? 'Hoş geldiniz! Sağlık yolculuğunuza başlayın' : 'Welcome! Start your health journey'}
@@ -456,7 +793,7 @@ export default function Dashboard({ language }) {
                 </p>
                 <Link
                   to={ROUTES.TEST}
-                  className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition"
+                  className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium transition"
                 >
                   <Activity className="w-4 h-4" />
                   {isTr ? 'Değerlendirme Yap' : 'Take Assessment'}
@@ -477,6 +814,7 @@ export default function Dashboard({ language }) {
           {[
             { id: 'overview', labelEn: 'Overview', labelTr: 'Genel Bakış', dataTour: 'dashboard-tab-overview' },
             { id: 'assessments', labelEn: 'My Assessments', labelTr: 'Değerlendirmelerim', dataTour: 'dashboard-tab-assessments' },
+            { id: 'imaging', labelEn: 'Imaging History', labelTr: 'Görüntüleme Geçmişi', dataTour: 'dashboard-tab-imaging' },
             { id: 'diet-plans', labelEn: 'My Diet Plans', labelTr: 'Diyet Planlarım', dataTour: 'dashboard-tab-diet-plans' },
             { id: 'subscription', labelEn: 'My Subscription', labelTr: 'Aboneliğim', dataTour: 'dashboard-tab-subscription' },
             { id: 'profile', labelEn: 'Profile', labelTr: 'Profil', dataTour: 'dashboard-tab-profile' },
@@ -485,7 +823,7 @@ export default function Dashboard({ language }) {
               key={tab.id}
               data-tour={tab.dataTour}
               onClick={() => { setActiveTab(tab.id); setSearchParams({ tab: tab.id }, { replace: true }); }}
-              className={`px-4 py-2.5 text-sm font-medium rounded-full transition whitespace-nowrap shrink-0 ${activeTab === tab.id ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/40' : 'text-gray-500 hover:text-white hover:bg-white/[0.06]'}`}
+              className={`px-4 py-2.5 text-sm font-medium rounded-full transition whitespace-nowrap shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
             >
               {isTr ? tab.labelTr : tab.labelEn}
             </button>
@@ -512,113 +850,66 @@ export default function Dashboard({ language }) {
         <>
           <section className="mb-10" data-tour="dashboard-tools">
             <h2 className="text-lg font-semibold text-white mb-4 tracking-tight">{isTr ? 'Araçlar' : 'TOOLS'}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {cardLinks.map(({ path, labelEn, labelTr, icon: Icon, accent, primary }) => {
-                const styles = {
-                  emerald: { card: 'hover:border-emerald-500/30', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400' },
-                  blue: { card: 'hover:border-blue-500/30', iconBg: 'bg-blue-500/10', iconColor: 'text-blue-400' },
-                  cyan: { card: 'hover:border-cyan-500/30', iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-400' },
-                  amber: { card: 'hover:border-amber-500/30', iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400' },
-                  gray: { card: 'hover:border-white/20', iconBg: 'bg-white/[0.08]', iconColor: 'text-gray-300' },
-                };
-                const s = styles[accent] || styles.emerald;
-                return (
-                  <FluidCard
-                    key={path}
-                    as={Link}
-                    to={path}
-                    className={`flex items-center gap-4 p-5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] hover:shadow-lg hover:shadow-black/20 hover:scale-[1.02] transition cursor-grab active:cursor-grabbing ${s.card}`}
-                  >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${s.iconBg}`}>
-                      <Icon className={`w-6 h-6 ${s.iconColor}`} />
-                    </div>
-                    <span className={`text-white font-medium ${primary ? 'font-semibold' : ''}`}>{isTr ? labelTr : labelEn}</span>
-                    <ChevronRight className="w-5 h-5 text-gray-500 ml-auto" />
-                  </FluidCard>
-                );
-              })}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              {toolGroups.map(group => (
+                <StackedToolCards key={group.id} {...group} isTr={isTr} />
+              ))}
             </div>
           </section>
 
-          <section className="mb-10">
-            <h2 className="text-lg font-semibold text-white mb-4 tracking-tight">{isTr ? 'Özet' : 'Summary'}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <FluidCard className="p-4 rounded-xl bg-gradient-to-br from-white/[0.04] to-emerald-500/[0.06] border border-white/[0.06] cursor-grab active:cursor-grabbing">
-                <div className="flex items-center gap-2 text-emerald-400/90 text-sm mb-1">
-                  <FileText className="w-4 h-4" /> {isTr ? 'Değerlendirmeler' : 'Assessments'}
-                </div>
-                {loading ? (
-                  <div className="h-8 w-16 rounded bg-white/[0.06] animate-pulse" />
-                ) : (
-                  <p className="text-2xl font-bold text-white">{totalAssessmentsCount}</p>
-                )}
-              </FluidCard>
-              <FluidCard className="p-4 rounded-xl bg-gradient-to-br from-white/[0.04] to-cyan-500/[0.06] border border-white/[0.06] cursor-grab active:cursor-grabbing">
-                <div className="flex items-center gap-2 text-cyan-400/90 text-sm mb-1">
-                  <UtensilsCrossed className="w-4 h-4" /> {isTr ? 'Diyet Planları' : 'Diet plans'}
-                </div>
-                {loading ? (
-                  <div className="h-8 w-16 rounded bg-white/[0.06] animate-pulse" />
-                ) : (
-                  <p className="text-2xl font-bold text-white">{dietPlans.length}</p>
-                )}
-              </FluidCard>
-              <FluidCard className="p-4 rounded-xl bg-gradient-to-br from-white/[0.04] to-white/[0.06] border border-white/[0.06] cursor-grab active:cursor-grabbing">
-                <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
-                  <Calendar className="w-4 h-4" /> {isTr ? 'Son değerlendirme' : 'Last assessment'}
-                </div>
-                {loading ? (
-                  <div className="h-8 w-20 rounded bg-white/[0.06] animate-pulse" />
-                ) : combinedAssessments.length > 0 && combinedAssessments[0].created_at ? (
-                  (() => {
-                    const last = new Date(combinedAssessments[0].created_at);
-                    const now = new Date();
-                    const days = Math.floor((now - last) / (24 * 60 * 60 * 1000));
-                    const label = days === 0 ? (isTr ? 'Bugün' : 'Today') : days === 1 ? (isTr ? '1 gün önce' : '1 day ago') : isTr ? `${days} gün önce` : `${days} days ago`;
-                    return <p className="text-2xl font-bold text-white">{label}</p>;
-                  })()
-                ) : (
-                  <p className="text-lg font-medium text-gray-500">{isTr ? 'Henüz yok' : 'None yet'}</p>
-                )}
-              </FluidCard>
-            </div>
-          </section>
 
-          {/* Latest assessment summary (most recent diabetes or heart) */}
+          {/* Latest assessment summary (most recent diabetes, heart, or CKD) */}
           {!loading && combinedAssessments.length > 0 && (() => {
             const latest = combinedAssessments[0];
             const isHeart = latest._type === 'heart';
-            const viewRoute = isHeart ? `${ROUTES.DASHBOARD_HEART_ASSESSMENT}/${latest.id}` : `${ROUTES.DASHBOARD_ASSESSMENT}/${latest.id}`;
+            const isCKD = latest._type === 'ckd';
+            const viewRoute = isHeart ? `${ROUTES.DASHBOARD_HEART_ASSESSMENT}/${latest.id}` : isCKD ? `${ROUTES.DASHBOARD_CKD_ASSESSMENT}/${latest.id}` : `${ROUTES.DASHBOARD_ASSESSMENT}/${latest.id}`;
             const shareMatch = shareLink?.id === latest.id && shareLink?.type === latest._type;
+            const borderCls = 'border-l-white/[0.15]';
             return (
               <section className="mt-8">
                 <h2 className="text-lg font-semibold text-white mb-4">{isTr ? 'Son Değerlendirme' : 'Latest Assessment'}</h2>
-                <div className={`p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 ${getRiskBorderClass(latest.risk_level)}`}>
+                <div className={`p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 ${borderCls}`}>
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${isHeart ? getRiskBadgeClasses(latest.risk_level) : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
-                          {isHeart ? <Heart className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
-                          {isTr ? (isHeart ? 'Kalp' : 'Diyabet') : (isHeart ? 'Heart' : 'Diabetes')}
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border bg-white/[0.05] text-white/40 border-white/[0.08]">
+                          {isCKD ? <Droplets className="w-3 h-3" /> : isHeart ? <Heart className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
+                          {isTr ? (isCKD ? 'Böbrek (CKD)' : isHeart ? 'Kalp' : 'Diyabet') : (isCKD ? 'Kidney (CKD)' : isHeart ? 'Heart' : 'Diabetes')}
                         </span>
-                        <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${getRiskBadgeClasses(latest.risk_level)}`}>
-                          {latest.risk_level} · {(latest.probability * 100).toFixed(0)}%
-                        </span>
+                        {isCKD ? (
+                          <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-medium border bg-white/[0.05] text-white/45 border-white/[0.08]">
+                            {latest.prediction} · {((latest.confidence || 0) * 100).toFixed(0)}%
+                          </span>
+                        ) : (
+                          <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-medium border bg-white/[0.05] text-white/45 border-white/[0.08]">
+                            {latest.risk_level} · {(latest.probability * 100).toFixed(0)}%
+                          </span>
+                        )}
                       </div>
                       <div className="text-sm text-gray-400 line-clamp-2 max-w-md mt-2 [&_strong]:font-semibold [&_strong]:text-gray-200">
-                        <ReactMarkdown components={{ p: ({ children }) => <span>{children}</span>, strong: ({ children }) => <strong>{children}</strong> }}>{isHeart ? (latest.executive_summary || '') : (latest.executive_summary || '')}</ReactMarkdown>
+                        <ReactMarkdown components={{ p: ({ children }) => <span>{children}</span>, strong: ({ children }) => <strong>{children}</strong> }}>{latest.executive_summary || ''}</ReactMarkdown>
                       </div>
                       {latest.created_at && <p className="text-xs text-gray-500 mt-1">{new Date(latest.created_at).toLocaleString()}</p>}
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      <Link to={isHeart ? ROUTES.HEART_TEST : ROUTES.TEST} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#060611] border border-white/[0.08]">
+                      <LiquidMetalButton onClick={() => navigate(isCKD ? ROUTES.CKD_TEST : isHeart ? ROUTES.HEART_TEST : ROUTES.TEST)} width={170} height={38}>
                         {isTr ? 'Yeni değerlendirme' : 'New assessment'}
                         <ArrowRight className="w-4 h-4" />
-                      </Link>
-                      <Link to={viewRoute} state={{ assessment: latest }} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#060611]" data-tour="dashboard-view-report">
+                      </LiquidMetalButton>
+                      <LiquidMetalButton data-tour="dashboard-view-report" onClick={() => navigate(viewRoute, { state: { assessment: latest } })} width={90} height={38}>
                         {isTr ? 'Görüntüle' : 'View'} <Eye className="w-4 h-4" />
-                      </Link>
-                      {isHeart ? (
+                      </LiquidMetalButton>
+                      {isCKD ? (
+                        <>
+                          <button onClick={() => exportSignedCKDPDF(latest)} disabled={pdfLoading === `ckd-${latest.id}`} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-cyan-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-500/50" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
+                            {pdfLoading === `ckd-${latest.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                          </button>
+                          <button onClick={() => handleShareCKD(latest.id)} disabled={shareLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-cyan-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-500/50" title={isTr ? 'Paylaş' : 'Share'} aria-label={isTr ? 'Paylaş' : 'Share'} data-tour="dashboard-share">
+                            {shareLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                          </button>
+                        </>
+                      ) : isHeart ? (
                         (() => {
                           const heartHover = getRiskHoverClass(latest.risk_level);
                           return (
@@ -634,10 +925,10 @@ export default function Dashboard({ language }) {
                         })()
                       ) : (
                         <>
-                          <button onClick={() => exportSignedAssessmentPDF(latest)} disabled={pdfLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
+                          <button onClick={() => exportSignedAssessmentPDF(latest)} disabled={pdfLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
                             {pdfLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                           </button>
-                          <button onClick={() => handleShare(latest.id)} disabled={shareLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} aria-label={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} data-tour="dashboard-share">
+                          <button onClick={() => handleShare(latest.id)} disabled={shareLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50" title={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} aria-label={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} data-tour="dashboard-share">
                             {shareLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                           </button>
                         </>
@@ -645,11 +936,53 @@ export default function Dashboard({ language }) {
                     </div>
                   </div>
                   {shareMatch && (
-                    <div className={`mt-3 p-2 rounded-lg border ${isHeart ? 'bg-pink-500/10 border-pink-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-                      <p className={`text-xs ${isHeart ? 'text-pink-400' : 'text-emerald-400'}`}>{isTr ? 'Link panoya kopyalandı:' : 'Link copied to clipboard:'}</p>
-                      <p className={`text-xs break-all mt-1 ${isHeart ? 'text-pink-300' : 'text-emerald-300'}`}>{shareLink.link}</p>
+                    <div className="mt-3 p-2 rounded-lg border bg-white/[0.03] border-white/[0.08]">
+                      <p className="text-xs text-white/40">{isTr ? 'Link panoya kopyalandı:' : 'Link copied to clipboard:'}</p>
+                      <p className="text-xs break-all mt-1 text-white/30">{shareLink.link}</p>
                     </div>
                   )}
+                </div>
+              </section>
+            );
+          })()}
+
+          {/* Latest imaging scan summary */}
+          {!loading && combinedImagingAnalyses.length > 0 && (() => {
+            const latest = combinedImagingAnalyses[0];
+            const badgeCls = 'bg-white/[0.05] text-white/45 border-white/[0.08]';
+            return (
+              <section className="mt-8">
+                <h2 className="text-lg font-semibold text-white mb-4">{isTr ? 'Son Görüntüleme' : 'Latest Imaging'}</h2>
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 border-l-white/[0.15]">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border bg-white/[0.05] text-white/40 border-white/[0.08]">
+                          <Brain className="w-3 h-3" />
+                          {isTr ? 'MRI' : 'Brain MRI'}
+                        </span>
+                        <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${badgeCls}`}>
+                          {`${latest.tumor_class || 'N/A'} ${latest.confidence != null ? `· ${(latest.confidence * 100).toFixed(0)}%` : ''}`}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-400 line-clamp-2 max-w-md mt-2 [&_strong]:font-semibold [&_strong]:text-gray-200">
+                        {latest.executive_summary ? latest.executive_summary.replace(/\*+/g, '') : '—'}
+                      </div>
+                      {latest.created_at && <p className="text-xs text-gray-500 mt-1">{new Date(latest.created_at).toLocaleString()}</p>}
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <LiquidMetalButton onClick={() => navigate(ROUTES.BRAIN_MRI)} width={155} height={38}>
+                        {isTr ? 'Yeni analiz' : 'New analysis'}
+                        <ArrowRight className="w-4 h-4" />
+                      </LiquidMetalButton>
+                      <LiquidMetalButton onClick={() => navigate(ROUTES.BRAIN_MRI, { state: { assessment: latest } })} width={90} height={38}>
+                        {isTr ? 'Görüntüle' : 'View'} <Eye className="w-4 h-4" />
+                      </LiquidMetalButton>
+                      <button onClick={() => exportSignedMriPDF(latest)} disabled={pdfLoading === `bm-${latest.id}`} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 focus:ring-violet-500/50 transition focus:outline-none focus:ring-2" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'}>
+                        {pdfLoading === `bm-${latest.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </section>
             );
@@ -662,45 +995,49 @@ export default function Dashboard({ language }) {
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <h2 className="text-lg font-semibold text-white">{isTr ? 'Değerlendirmelerim' : 'My Assessments'}</h2>
             <div className="flex flex-wrap gap-2 items-center">
-              {assessments.length >= 2 && (
-                <button
-                  onClick={() => { setCompareMode(!compareMode); setCompareIds([]); }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${compareMode ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.05] text-gray-400 hover:text-white border border-white/[0.08]'}`}
-                  aria-pressed={compareMode}
-                  aria-label={isTr ? 'Değerlendirmeleri karşılaştır' : 'Compare assessments'}
-                >
+              {(assessments.length > 0 || heartAssessments.length > 0) && (
+                <LiquidMetalButton onClick={() => { setCompareMode(!compareMode); setCompareIds([]); }} width={120} height={36}>
                   <GitCompare className="w-3.5 h-3.5" />
                   {isTr ? 'Karşılaştır' : 'Compare'}
-                </button>
+                </LiquidMetalButton>
               )}
             </div>
           </div>
 
-          {/* Type filter: All | Diabetes | Heart */}
+          {/* Type filter: All | Diabetes | Heart | CKD */}
           {!loading && totalAssessmentsCount > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {[
-                { value: 'all', labelEn: 'All', labelTr: 'Tümü' },
-                { value: 'diabetes', labelEn: 'Diabetes', labelTr: 'Diyabet' },
-                { value: 'heart', labelEn: 'Heart', labelTr: 'Kalp' },
-              ].map(({ value, labelEn, labelTr }) => (
-                <button
-                  key={value}
-                  onClick={() => {
-                    setAssessmentTypeFilter(value);
-                    setSearchParams(prev => {
-                      const p = Object.fromEntries(prev.entries());
-                      p.tab = 'assessments';
-                      if (value === 'all') delete p.type;
-                      else p.type = value;
-                      return p;
-                    }, { replace: true });
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${assessmentTypeFilter === value ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.05] text-gray-400 hover:text-white border border-white/[0.08]'}`}
-                >
-                  {isTr ? labelTr : labelEn}
-                </button>
-              ))}
+                { value: 'all', labelEn: 'All', labelTr: 'Tümü', w: 72 },
+                { value: 'diabetes', labelEn: 'Diabetes', labelTr: 'Diyabet', w: 110 },
+                { value: 'heart', labelEn: 'Heart', labelTr: 'Kalp', w: 88 },
+                { value: 'ckd', labelEn: 'Kidney (CKD)', labelTr: 'Böbrek (CKD)', w: 148 },
+              ].map(({ value, labelEn, labelTr, w }) => {
+                const active = assessmentTypeFilter === value;
+                return (
+                  <div key={value} className="relative" style={{ borderRadius: '100px', boxShadow: active ? '0 0 18px rgba(124,58,237,0.4)' : 'none' }}>
+                    {active && (
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '100px', background: 'rgba(124,58,237,0.28)', border: '1px solid rgba(167,139,250,0.6)', zIndex: 50, pointerEvents: 'none' }} />
+                    )}
+                    <LiquidMetalButton
+                      onClick={() => {
+                        setAssessmentTypeFilter(value);
+                        setSearchParams(prev => {
+                          const p = Object.fromEntries(prev.entries());
+                          p.tab = 'assessments';
+                          if (value === 'all') delete p.type;
+                          else p.type = value;
+                          return p;
+                        }, { replace: true });
+                      }}
+                      width={w}
+                      height={36}
+                    >
+                      {isTr ? labelTr : labelEn}
+                    </LiquidMetalButton>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -715,23 +1052,24 @@ export default function Dashboard({ language }) {
                     value={assessmentSearch}
                     onChange={(e) => setAssessmentSearch(e.target.value)}
                     placeholder={isTr ? 'Ara (risk, özet…)' : 'Search (risk, summary…)'}
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
                     aria-label={isTr ? 'Değerlendirme ara' : 'Search assessments'}
                   />
                 </div>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <Calendar className="w-4 h-4 text-gray-500" aria-hidden="true" />
-                  <input type="date" value={assessmentDateFrom} onChange={(e) => setAssessmentDateFrom(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Başlangıç' : 'From'} aria-label={isTr ? 'Başlangıç tarihi' : 'From date'} />
-                  <span className="text-gray-500 text-sm">–</span>
-                  <input type="date" value={assessmentDateTo} onChange={(e) => setAssessmentDateTo(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Bitiş' : 'To'} aria-label={isTr ? 'Bitiş tarihi' : 'To date'} />
-                </div>
+                <DateRangePicker
+                  from={assessmentDateFrom}
+                  to={assessmentDateTo}
+                  onFromChange={(e) => setAssessmentDateFrom(e.target.value)}
+                  onToChange={(e) => setAssessmentDateTo(e.target.value)}
+                  isTr={isTr}
+                />
               </div>
               {(assessmentSearch || assessmentDateFrom || assessmentDateTo) && (
                 <div className="flex flex-wrap gap-2 mb-4 items-center">
                   {assessmentSearch && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-xs border border-emerald-500/25">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/15 text-violet-300 text-xs border border-violet-500/25">
                       {isTr ? 'Ara' : 'Search'}: {assessmentSearch}
-                      <button type="button" onClick={() => setAssessmentSearch('')} className="hover:bg-emerald-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      <button type="button" onClick={() => setAssessmentSearch('')} className="hover:bg-violet-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -739,7 +1077,7 @@ export default function Dashboard({ language }) {
                   {assessmentDateFrom && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
                       {isTr ? 'Başlangıç' : 'From'}: {assessmentDateFrom}
-                      <button type="button" onClick={() => setAssessmentDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      <button type="button" onClick={() => setAssessmentDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -747,12 +1085,12 @@ export default function Dashboard({ language }) {
                   {assessmentDateTo && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
                       {isTr ? 'Bitiş' : 'To'}: {assessmentDateTo}
-                      <button type="button" onClick={() => setAssessmentDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      <button type="button" onClick={() => setAssessmentDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
-                  <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-xs text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded px-2 py-1">
+                  <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-xs text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded px-2 py-1">
                     {isTr ? 'Filtreleri temizle' : 'Clear all'}
                   </button>
                 </div>
@@ -783,25 +1121,14 @@ export default function Dashboard({ language }) {
             </div>
           ) : totalAssessmentsCount === 0 ? (
             <div className="text-center py-14 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                <Activity className="w-7 h-7 text-emerald-400" />
-              </div>
               <h3 className="text-white font-semibold mb-1">{isTr ? 'Henüz değerlendirme yok' : 'No assessments yet'}</h3>
-              <p className="text-gray-400 text-sm max-w-sm mx-auto mb-5">{isTr ? 'Diyabet veya kalp riski değerlendirmenizi yapın.' : 'Take a diabetes or heart risk assessment.'}</p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Link to={ROUTES.TEST} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#060611]">
-                  {isTr ? 'Diyabet değerlendirmesi' : 'Diabetes assessment'} <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link to={ROUTES.HEART_TEST} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-[#060611]">
-                  {isTr ? 'Kalp değerlendirmesi' : 'Heart assessment'} <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+              <p className="text-gray-400 text-sm max-w-sm mx-auto">{isTr ? 'Diyabet, kalp, böbrek veya beyin MRI testi yapın — sonuçlarınız burada görünecek.' : 'Run a diabetes, heart, kidney, or brain MRI test — your results will appear here.'}</p>
             </div>
           ) : filteredAssessments.length === 0 ? (
             <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
               <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
               <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan değerlendirme yok.' : 'No assessments match the filters.'}</p>
-              <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-sm text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded-lg px-3 py-1.5">
+              <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-sm text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-lg px-3 py-1.5">
                 {isTr ? 'Filtreleri temizle' : 'Clear filters'}
               </button>
             </div>
@@ -809,30 +1136,43 @@ export default function Dashboard({ language }) {
             <>
               {/* Feature f6: Compare mode */}
               {compareMode && compareIds.length === 2 && comparedAssessments.length === 2 && (
-                <div className="mb-6 p-4 rounded-xl bg-white/[0.03] border border-emerald-500/20">
-                  <h3 className="text-sm font-semibold text-emerald-400 mb-3">{isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
+                <div className="mb-6 p-4 rounded-xl bg-white/[0.03] border border-violet-500/20">
+                  <h3 className="text-sm font-semibold text-violet-400 mb-3">{isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {comparedAssessments.map((a) => (
-                      <div key={a.id} className="space-y-2">
-                        <p className="text-xs text-gray-500">{a.created_at ? new Date(a.created_at).toLocaleDateString() : 'N/A'}</p>
-                        <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${getRiskBadgeClasses(a.risk_level)}`}>
-                          {a.risk_level} · {(a.probability * 100).toFixed(1)}%
-                        </span>
-                        <div className="text-xs text-gray-400 line-clamp-2 mt-1 [&_strong]:font-semibold [&_strong]:text-gray-200">
-                          <ReactMarkdown components={{ p: ({ children }) => <span>{children}</span>, strong: ({ children }) => <strong>{children}</strong> }}>{a.executive_summary}</ReactMarkdown>
+                    {comparedAssessments.map((a) => {
+                      const isCKD = a._type === 'ckd';
+                      const ckdPos = isCKD && (a.prediction || '').toLowerCase() === 'ckd';
+                      return (
+                        <div key={a.id} className="space-y-2">
+                          <p className="text-xs text-gray-500">{a.created_at ? new Date(a.created_at).toLocaleDateString() : 'N/A'}</p>
+                          {isCKD ? (
+                            <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${ckdPos ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-violet-500/20 text-violet-400 border-violet-500/30'}`}>
+                              {a.prediction} · {((a.confidence || 0) * 100).toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${getRiskBadgeClasses(a.risk_level)}`}>
+                              {a.risk_level} · {(a.probability * 100).toFixed(1)}%
+                            </span>
+                          )}
+                          <div className="text-xs text-gray-400 line-clamp-3 mt-1 [&_strong]:font-semibold [&_strong]:text-gray-200">
+                            <ReactMarkdown components={{ p: ({ children }) => <span>{children}</span>, strong: ({ children }) => <strong>{children}</strong> }}>{a.executive_summary}</ReactMarkdown>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   {(() => {
-                    const diff = comparedAssessments[1].probability - comparedAssessments[0].probability;
+                    const [a0, a1] = comparedAssessments;
+                    const v0 = a0._type === 'ckd' ? (a0.confidence || 0) : (a0.probability || 0);
+                    const v1 = a1._type === 'ckd' ? (a1.confidence || 0) : (a1.probability || 0);
+                    const diff = v1 - v0;
                     const improved = diff < 0;
                     const pct = (Math.abs(diff) * 100).toFixed(1);
                     return (
-                      <div className={`mt-3 p-3 rounded-lg text-sm flex items-center gap-2 ${improved ? 'bg-emerald-500/10 text-emerald-400' : diff > 0 ? 'bg-red-500/10 text-red-400' : 'bg-white/[0.05] text-gray-400'}`}>
+                      <div className={`mt-3 p-3 rounded-lg text-sm flex items-center gap-2 ${improved ? 'bg-violet-500/10 text-violet-400' : diff > 0 ? 'bg-red-500/10 text-red-400' : 'bg-white/[0.05] text-gray-400'}`}>
                         {diff !== 0 && (
                           <span className="shrink-0" aria-hidden="true">
-                            {improved ? <span className="text-emerald-400">↓</span> : <span className="text-red-400">↑</span>}
+                            {improved ? <span className="text-violet-400">↓</span> : <span className="text-red-400">↑</span>}
                           </span>
                         )}
                         {improved
@@ -857,26 +1197,30 @@ export default function Dashboard({ language }) {
               <ul className="space-y-3">
                 {filteredAssessments.map((a) => {
                   const isHeart = a._type === 'heart';
-                  const rowKey = isHeart ? `heart-${a.id}` : a.id;
-                  const viewRoute = isHeart ? `${ROUTES.DASHBOARD_HEART_ASSESSMENT}/${a.id}` : `${ROUTES.DASHBOARD_ASSESSMENT}/${a.id}`;
-                  const accentHover = isHeart ? getRiskHoverClass(a.risk_level) : 'hover:border-emerald-500/30 hover:text-emerald-400 focus:ring-emerald-500/50';
+                  const isCKD = a._type === 'ckd';
+                  const rowKey = isHeart ? `heart-${a.id}` : isCKD ? `ckd-${a.id}` : a.id;
+                  const viewRoute = isHeart ? `${ROUTES.DASHBOARD_HEART_ASSESSMENT}/${a.id}` : isCKD ? `${ROUTES.DASHBOARD_CKD_ASSESSMENT}/${a.id}` : `${ROUTES.DASHBOARD_ASSESSMENT}/${a.id}`;
+                  const ckdIsPositive = isCKD && (a.prediction || '').toLowerCase() === 'ckd';
+                  const accentHover = isCKD ? 'hover:border-cyan-500/30 hover:text-cyan-400 focus:ring-cyan-500/50' : isHeart ? getRiskHoverClass(a.risk_level) : 'hover:border-violet-500/30 hover:text-violet-400 focus:ring-violet-500/50';
+                  const borderCls = isCKD ? (ckdIsPositive ? 'border-l-red-500/50' : 'border-l-cyan-500/50') : getRiskBorderClass(a.risk_level);
+                  const compareBorderCls = isCKD ? 'border-cyan-500/40 bg-cyan-500/5 border-l-cyan-500/60' : isHeart ? 'border-pink-500/40 bg-pink-500/5 border-l-pink-500/60' : 'border-violet-500/40 bg-violet-500/5 border-l-violet-500/60';
                   const shareLinkMatch = shareLink?.id === a.id && shareLink?.type === a._type;
                   return (
                     <li
                       key={rowKey}
-                      className={`p-4 rounded-xl bg-white/[0.03] border border-l-4 transition ${compareMode && !isHeart && compareIds.includes(a.id) ? 'border-emerald-500/40 bg-emerald-500/5 border-l-emerald-500/60' : `border-white/[0.06] ${getRiskBorderClass(a.risk_level)} ${!compareMode ? 'cursor-pointer ' + accentHover : ''}`}`}
-                      onClick={!compareMode ? () => navigate(viewRoute, { state: { assessment: a } }) : undefined}
-                      onKeyDown={!compareMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(viewRoute, { state: { assessment: a } }); } } : undefined}
-                      role={!compareMode ? 'button' : undefined}
-                      tabIndex={!compareMode ? 0 : undefined}
-                      aria-label={!compareMode ? (isTr ? (isHeart ? 'Kalp değerlendirmesini görüntüle' : 'Değerlendirmeyi görüntüle') : (isHeart ? 'View heart assessment' : 'View assessment')) : undefined}
+                      className={`p-4 rounded-xl bg-white/[0.03] border border-l-4 transition ${compareMode && compareIds.includes(a.id) ? compareBorderCls : `border-white/[0.06] ${borderCls} ${!compareMode ? 'cursor-pointer ' + accentHover : ''}`}`}
+                      onClick={!compareMode && viewRoute ? () => navigate(viewRoute, { state: { assessment: a } }) : undefined}
+                      onKeyDown={!compareMode && viewRoute ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(viewRoute, { state: { assessment: a } }); } } : undefined}
+                      role={!compareMode && viewRoute ? 'button' : undefined}
+                      tabIndex={!compareMode && viewRoute ? 0 : undefined}
+                      aria-label={!compareMode ? (isTr ? (isCKD ? 'Böbrek değerlendirmesini görüntüle' : isHeart ? 'Kalp değerlendirmesini görüntüle' : 'Değerlendirmeyi görüntüle') : (isCKD ? 'View CKD assessment' : isHeart ? 'View heart assessment' : 'View assessment')) : undefined}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-start gap-3 min-w-0 flex-1">
-                          {compareMode && !isHeart && (
+                          {compareMode && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); toggleCompare(a.id); }}
-                              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${compareIds.includes(a.id) ? 'bg-emerald-500 border-emerald-500' : 'border-white/20 hover:border-emerald-500/50'}`}
+                              onClick={(e) => { e.stopPropagation(); toggleCompare(a.id, a._type); }}
+                              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition focus:outline-none focus:ring-2 ${isCKD ? 'focus:ring-cyan-500/50' : isHeart ? 'focus:ring-pink-500/50' : 'focus:ring-violet-500/50'} ${compareIds.includes(a.id) ? (isCKD ? 'bg-cyan-500 border-cyan-500' : isHeart ? 'bg-pink-500 border-pink-500' : 'bg-violet-500 border-violet-500') : `border-white/20 ${isCKD ? 'hover:border-cyan-500/50' : isHeart ? 'hover:border-pink-500/50' : 'hover:border-violet-500/50'}`}`}
                               aria-label={compareIds.includes(a.id) ? (isTr ? 'Karşılaştırmadan çıkar' : 'Deselect from compare') : (isTr ? 'Karşılaştırmaya ekle' : 'Select to compare')}
                             >
                               {compareIds.includes(a.id) && <Check className="w-3 h-3 text-white" />}
@@ -884,16 +1228,22 @@ export default function Dashboard({ language }) {
                           )}
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${isHeart ? getRiskBadgeClasses(a.risk_level) : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
-                                {isHeart ? <Heart className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
-                                {isTr ? (isHeart ? 'Kalp' : 'Diyabet') : (isHeart ? 'Heart' : 'Diabetes')}
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${isCKD ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : isHeart ? getRiskBadgeClasses(a.risk_level) : 'bg-violet-500/10 text-violet-400 border-violet-500/30'}`}>
+                                {isCKD ? <Droplets className="w-3 h-3" /> : isHeart ? <Heart className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
+                                {isTr ? (isCKD ? 'Böbrek (CKD)' : isHeart ? 'Kalp' : 'Diyabet') : (isCKD ? 'Kidney (CKD)' : isHeart ? 'Heart' : 'Diabetes')}
                               </span>
-                              <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${getRiskBadgeClasses(a.risk_level)}`}>
-                                {a.risk_level} · {(a.probability * 100).toFixed(0)}%
-                              </span>
+                              {isCKD ? (
+                                <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${ckdIsPositive ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-violet-500/20 text-violet-400 border-violet-500/30'}`}>
+                                  {a.prediction} · {((a.confidence || 0) * 100).toFixed(0)}%
+                                </span>
+                              ) : (
+                                <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${getRiskBadgeClasses(a.risk_level)}`}>
+                                  {a.risk_level} · {(a.probability * 100).toFixed(0)}%
+                                </span>
+                              )}
                             </div>
                             <div className="text-sm text-gray-400 mt-1 line-clamp-2 max-w-md [&_strong]:font-semibold [&_strong]:text-gray-200">
-                              <ReactMarkdown components={{ p: ({ children }) => <span>{children}</span>, strong: ({ children }) => <strong>{children}</strong> }}>{isHeart ? (a.executive_summary || '') : (a.executive_summary || '')}</ReactMarkdown>
+                              <ReactMarkdown components={{ p: ({ children }) => <span>{children}</span>, strong: ({ children }) => <strong>{children}</strong> }}>{a.executive_summary || ''}</ReactMarkdown>
                             </div>
                             {a.created_at && (
                               <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
@@ -904,41 +1254,219 @@ export default function Dashboard({ language }) {
                           </div>
                         </div>
                         {!compareMode && (
-                          <div className="flex gap-1 shrink-0 ml-3" onClick={(e) => e.stopPropagation()}>
-                            {isHeart ? (
-                              <>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); exportSignedHeartPDF(a); }} disabled={pdfLoading === a.id} className={`p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 ${accentHover} transition focus:outline-none focus:ring-2`} title={isTr ? 'PDF İndir' : 'Download PDF'} aria-label={isTr ? 'PDF İndir' : 'Download PDF'}>
-                                  {pdfLoading === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                                </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); handleShareHeart(a.id); }} disabled={shareLoading === a.id} className={`p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 ${accentHover} transition focus:outline-none focus:ring-2`} title={isTr ? 'Paylaş' : 'Share'} aria-label={isTr ? 'Paylaş' : 'Share'}>
-                                  {shareLoading === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                                </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteHeartAssessment(a); }} disabled={deletingId === `h-${a.id}`} className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition focus:outline-none focus:ring-2 focus:ring-red-500/50" title={isTr ? 'Sil' : 'Delete'} aria-label={isTr ? 'Sil' : 'Delete'}>
-                                  {deletingId === `h-${a.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); exportSignedAssessmentPDF(a); }} disabled={pdfLoading === a.id} className={`p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 ${accentHover} transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50`} title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'}>
-                                  {pdfLoading === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                                </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); handleShare(a.id); }} disabled={shareLoading === a.id} className={`p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 ${accentHover} transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50`} title={isTr ? 'Paylaş' : 'Share'} aria-label={isTr ? 'Paylaş' : 'Share'}>
-                                  {shareLoading === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                                </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteAssessment(a); }} disabled={deletingId === `a-${a.id}`} className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition focus:outline-none focus:ring-2 focus:ring-red-500/50" title={isTr ? 'Sil' : 'Delete'} aria-label={isTr ? 'Sil' : 'Delete'}>
-                                  {deletingId === `a-${a.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                </button>
-                              </>
-                            )}
+                          <div className="shrink-0 ml-3">
+                            <AnimatedActionMenu
+                              loading={pdfLoading === a.id || pdfLoading === `ckd-${a.id}` || shareLoading === a.id || deletingId === `ckd-${a.id}` || deletingId === `h-${a.id}` || deletingId === `a-${a.id}`}
+                              items={[
+                                { label: isTr ? 'PDF İndir' : 'Download PDF', icon: <Download className="w-4 h-4" />, onClick: () => isCKD ? exportSignedCKDPDF(a) : isHeart ? exportSignedHeartPDF(a) : exportSignedAssessmentPDF(a) },
+                                { label: isTr ? 'Paylaş' : 'Share', icon: <Share2 className="w-4 h-4" />, onClick: () => isCKD ? handleShareCKD(a.id) : isHeart ? handleShareHeart(a.id) : handleShare(a.id) },
+                                { separator: true },
+                                { label: isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, onClick: () => isCKD ? handleDeleteCKDAssessment(a) : isHeart ? handleDeleteHeartAssessment(a) : handleDeleteAssessment(a), destructive: true },
+                              ]}
+                            />
                           </div>
                         )}
                       </div>
                       {shareLinkMatch && (
-                        <div className={`mt-2 p-2 rounded-lg border ${isHeart ? getRiskBadgeClasses(a.risk_level) : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-                          <p className={`text-xs ${isHeart ? '' : 'text-emerald-400'}`}>{isTr ? 'Link kopyalandı:' : 'Link copied:'}</p>
-                          <p className={`text-xs break-all opacity-90 ${isHeart ? '' : 'text-emerald-300'}`}>{shareLink.link}</p>
+                        <div className={`mt-2 p-2 rounded-lg border ${isCKD ? 'bg-cyan-500/10 border-cyan-500/20' : isHeart ? getRiskBadgeClasses(a.risk_level) : 'bg-violet-500/10 border-violet-500/20'}`}>
+                          <p className={`text-xs ${isCKD ? 'text-cyan-400' : isHeart ? '' : 'text-violet-400'}`}>{isTr ? 'Link kopyalandı:' : 'Link copied:'}</p>
+                          <p className={`text-xs break-all opacity-90 ${isCKD ? 'text-cyan-300' : isHeart ? '' : 'text-violet-300'}`}>{shareLink.link}</p>
                         </div>
                       )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
+      {activeTab === 'imaging' && (
+        <section>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <h2 className="text-lg font-semibold text-white">{isTr ? 'G�r�nt�leme Ge�misi' : 'Imaging History'}</h2>
+            <div className="flex flex-wrap gap-2 items-center">
+              {brainMriAnalyses.length > 0 && (
+                <LiquidMetalButton onClick={() => { setImagingCompareMode(!imagingCompareMode); setImagingCompareIds([]); }} width={120} height={36}>
+                  <GitCompare className="w-3.5 h-3.5" />
+                  {isTr ? 'Karşılaştır' : 'Compare'}
+                </LiquidMetalButton>
+              )}
+            </div>
+          </div>
+
+          {/* Type filter: Brain MRI only */}
+          {!loading && brainMriAnalyses.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                { id: 'all', labelEn: 'All', labelTr: 'Tümü', w: 72 },
+                { id: 'mri', labelEn: 'Brain MRI', labelTr: 'Beyin MRI', icon: <Brain className="w-3.5 h-3.5" />, w: 120 },
+              ].map(f => {
+                const active = imagingTypeFilter === f.id;
+                return (
+                  <div key={f.id} className="relative" style={{ borderRadius: '100px', boxShadow: active ? '0 0 18px rgba(124,58,237,0.4)' : 'none' }}>
+                    {active && (
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '100px', background: 'rgba(124,58,237,0.28)', border: '1px solid rgba(167,139,250,0.6)', zIndex: 50, pointerEvents: 'none' }} />
+                    )}
+                    <LiquidMetalButton onClick={() => setImagingTypeFilter(f.id)} width={f.w} height={36}>
+                      {f.icon} {isTr ? f.labelTr : f.labelEn}
+                    </LiquidMetalButton>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Date + Search filters */}
+          {!loading && brainMriAnalyses.length > 0 && (
+            <>
+              <div className="flex flex-wrap gap-3 mb-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" aria-hidden="true" />
+                  <input
+                    type="text"
+                    value={imagingSearch}
+                    onChange={(e) => setImagingSearch(e.target.value)}
+                    placeholder={isTr ? 'Ara (bulgular, ozet...)' : 'Search (findings, summary...)'}
+                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
+                  />
+                </div>
+                <DateRangePicker
+                  from={imagingDateFrom}
+                  to={imagingDateTo}
+                  onFromChange={(e) => setImagingDateFrom(e.target.value)}
+                  onToChange={(e) => setImagingDateTo(e.target.value)}
+                  isTr={isTr}
+                />
+              </div>
+              {(imagingSearch || imagingDateFrom || imagingDateTo) && (
+                <div className="flex flex-wrap gap-2 mb-4 items-center">
+                  {imagingSearch && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/15 text-violet-300 text-xs border border-violet-500/25">
+                      {isTr ? 'Ara' : 'Search'}: {imagingSearch}
+                      <button type="button" onClick={() => setImagingSearch('')} className="hover:bg-violet-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50"><X className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                  {(imagingDateFrom || imagingDateTo) && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-300 text-xs border border-blue-500/25">
+                      {isTr ? 'Tarih' : 'Date'}: {imagingDateFrom || '...'} � {imagingDateTo || '...'}
+                      <button type="button" onClick={() => { setImagingDateFrom(''); setImagingDateTo(''); }} className="hover:bg-blue-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"><X className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              {[1, 2, 3].map(i => <div key={i} className="h-[120px] bg-white/[0.03] border border-white/[0.06] rounded-xl animate-pulse" />)}
+            </div>
+          ) : combinedImagingAnalyses.length === 0 ? (
+            <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
+              <Brain className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+              <p className="text-gray-400">{isTr ? 'Henüz görüntüleme analizi yok.' : 'No imaging analyses recorded yet.'}</p>
+            </div>
+          ) : filteredImagingAnalyses.length === 0 ? (
+            <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
+              <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+              <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan analiz yok.' : 'No analyses match the filters.'}</p>
+              <button type="button" onClick={() => { setImagingSearch(''); setImagingDateFrom(''); setImagingDateTo(''); }} className="text-sm text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-lg px-3 py-1.5">
+                {isTr ? 'Filtreleri temizle' : 'Clear filters'}
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Feature f6: Compare mode */}
+              {imagingCompareMode && imagingCompareIds.length === 2 && comparedImagingAnalyses.length === 2 && (
+                <div className="mb-6 p-4 rounded-xl bg-white/[0.03] border border-violet-500/20">
+                  <h3 className="text-sm font-semibold mb-3 text-violet-400">{isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {comparedImagingAnalyses.map((a) => (
+                      <div key={a.id} className="space-y-2">
+                        <p className="text-xs text-gray-500">{a.created_at ? new Date(a.created_at).toLocaleDateString() : 'N/A'}</p>
+                        <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${a.tumor_class === 'no tumor' ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' : 'bg-violet-500/20 text-violet-400 border-violet-500/30'}`}>
+                          {`${a.tumor_class || 'N/A'} ${a.confidence != null ? `· ${(a.confidence * 100).toFixed(0)}%` : ''}`}
+                        </span>
+                        <div className="text-xs text-gray-400 line-clamp-3 mt-1 [&_strong]:font-semibold [&_strong]:text-gray-200">
+                          {a.executive_summary ? a.executive_summary.replace(/\*+/g, '') : '—'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {imagingCompareMode && imagingCompareIds.length < 2 && (
+                <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+                  <GitCompare className="w-5 h-5 text-amber-400 shrink-0" />
+                  <p className="text-sm text-amber-200/90">
+                    {isTr ? 'Karşılaştırmak için 2 analiz seçin' : 'Select 2 analyses to compare'}
+                  </p>
+                </div>
+              )}
+
+              <ul className="space-y-3">
+                {filteredImagingAnalyses.map((a) => {
+                  const rowKey = `mri-${a.id}`;
+                  const borderCls = a.tumor_class === 'no tumor' ? 'border-l-violet-500/50' : 'border-l-violet-500/50';
+                  return (
+                    <li
+                      key={rowKey}
+                      className={`p-4 rounded-xl bg-white/[0.03] border border-l-4 transition ${imagingCompareMode && imagingCompareIds.includes(a.id) ? 'border-violet-500/40 bg-violet-500/5 border-l-violet-500/60' : `border-white/[0.06] ${borderCls} ${!imagingCompareMode ? 'cursor-pointer hover:border-violet-500/30 focus:ring-violet-500/50 hover:text-violet-400' : ''}`}`}
+                      onClick={!imagingCompareMode ? () => navigate(ROUTES.BRAIN_MRI, { state: { assessment: a } }) : undefined}
+                      onKeyDown={!imagingCompareMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(ROUTES.BRAIN_MRI, { state: { assessment: a } }); } } : undefined}
+                      role={!imagingCompareMode ? 'button' : undefined}
+                      tabIndex={!imagingCompareMode ? 0 : undefined}
+                      aria-label={!imagingCompareMode ? (isTr ? 'MRI görüntüle' : 'View MRI') : undefined}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          {imagingCompareMode && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleImagingCompare(a.id); }}
+                              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50 ${imagingCompareIds.includes(a.id) ? 'bg-violet-500 border-violet-500' : 'border-white/20 hover:border-violet-500/50'}`}
+                              aria-label={imagingCompareIds.includes(a.id) ? (isTr ? 'Çıkar' : 'Deselect') : (isTr ? 'Seç' : 'Select')}
+                            >
+                              {imagingCompareIds.includes(a.id) && <Check className="w-3 h-3 text-white" />}
+                            </button>
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border bg-violet-500/10 text-violet-400 border-violet-500/25">
+                                <Brain className="w-3 h-3" />
+                                Brain MRI
+                              </span>
+                              <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${a.tumor_class === 'no tumor' ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' : 'bg-violet-500/20 text-violet-400 border-violet-500/30'}`}>
+                                {`${a.tumor_class || 'N/A'} ${a.confidence != null ? `· ${(a.confidence * 100).toFixed(0)}%` : ''}`}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-400 mt-1 line-clamp-2 max-w-md [&_strong]:font-semibold [&_strong]:text-gray-200">
+                              {a.executive_summary ? a.executive_summary.replace(/\*+/g, '') : '—'}
+                            </div>
+                            {a.created_at && <p className="text-xs text-gray-500 mt-1.5">{new Date(a.created_at).toLocaleString()}</p>}
+                          </div>
+                        </div>
+                        {!imagingCompareMode && (
+                          <div className="shrink-0 ml-2">
+                            <AnimatedActionMenu
+                              loading={pdfLoading === `bm-${a.id}` || deletingId === `bmr-${a.id}`}
+                              items={[
+                                { label: isTr ? 'PDF İndir' : 'Download PDF', icon: <Download className="w-4 h-4" />, onClick: () => exportSignedMriPDF(a) },
+                                { separator: true },
+                                { label: isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, destructive: true, onClick: async () => {
+                                  if (!window.confirm(isTr ? 'Bu kayıt silinsin mi?' : 'Delete this record?')) return;
+                                  setDeletingId(`bmr-${a.id}`);
+                                  try {
+                                    await apiService.deleteBrainMriAnalysis(a.id);
+                                    setBrainMriAnalyses(prev => prev.filter(x => x.id !== a.id));
+                                  } catch(err) { alert(err.message); } finally { setDeletingId(null); }
+                                }},
+                              ]}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </li>
                   );
                 })}
@@ -952,9 +1480,9 @@ export default function Dashboard({ language }) {
         <section>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <h2 className="text-lg font-semibold text-white">{isTr ? 'Diyet Planlarım' : 'My Diet Plans'}</h2>
-            <Link to={ROUTES.DIET_PLAN} className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+            <LiquidMetalButton onClick={() => navigate(ROUTES.DIET_PLAN)} width={130} height={36}>
               {isTr ? 'Yeni plan' : 'New plan'} <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </LiquidMetalButton>
           </div>
 
           {/* Date + Search filters for diet plans */}
@@ -968,23 +1496,24 @@ export default function Dashboard({ language }) {
                     value={dietPlanSearch}
                     onChange={(e) => setDietPlanSearch(e.target.value)}
                     placeholder={isTr ? 'Ara (hedef, özet…)' : 'Search (goal, overview…)'}
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
                     aria-label={isTr ? 'Diyet planı ara' : 'Search diet plans'}
                   />
                 </div>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <Calendar className="w-4 h-4 text-gray-500" aria-hidden="true" />
-                  <input type="date" value={dietPlanDateFrom} onChange={(e) => setDietPlanDateFrom(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Başlangıç' : 'From'} aria-label={isTr ? 'Başlangıç tarihi' : 'From date'} />
-                  <span className="text-gray-500 text-sm">–</span>
-                  <input type="date" value={dietPlanDateTo} onChange={(e) => setDietPlanDateTo(e.target.value)} className="py-2 px-3 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Bitiş' : 'To'} aria-label={isTr ? 'Bitiş tarihi' : 'To date'} />
-                </div>
+                <DateRangePicker
+                  from={dietPlanDateFrom}
+                  to={dietPlanDateTo}
+                  onFromChange={(e) => setDietPlanDateFrom(e.target.value)}
+                  onToChange={(e) => setDietPlanDateTo(e.target.value)}
+                  isTr={isTr}
+                />
               </div>
               {(dietPlanSearch || dietPlanDateFrom || dietPlanDateTo) && (
                 <div className="flex flex-wrap gap-2 mb-4 items-center">
                   {dietPlanSearch && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 text-xs border border-cyan-500/25">
                       {isTr ? 'Ara' : 'Search'}: {dietPlanSearch}
-                      <button type="button" onClick={() => setDietPlanSearch('')} className="hover:bg-cyan-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      <button type="button" onClick={() => setDietPlanSearch('')} className="hover:bg-cyan-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -992,7 +1521,7 @@ export default function Dashboard({ language }) {
                   {dietPlanDateFrom && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
                       {isTr ? 'Başlangıç' : 'From'}: {dietPlanDateFrom}
-                      <button type="button" onClick={() => setDietPlanDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      <button type="button" onClick={() => setDietPlanDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -1000,12 +1529,12 @@ export default function Dashboard({ language }) {
                   {dietPlanDateTo && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
                       {isTr ? 'Bitiş' : 'To'}: {dietPlanDateTo}
-                      <button type="button" onClick={() => setDietPlanDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      <button type="button" onClick={() => setDietPlanDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
-                  <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-xs text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded px-2 py-1">
+                  <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-xs text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded px-2 py-1">
                     {isTr ? 'Filtreleri temizle' : 'Clear all'}
                   </button>
                 </div>
@@ -1034,20 +1563,14 @@ export default function Dashboard({ language }) {
             </div>
           ) : dietPlans.length === 0 ? (
             <div className="text-center py-14 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
-              <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
-                <Salad className="w-7 h-7 text-cyan-400" />
-              </div>
               <h3 className="text-white font-semibold mb-1">{isTr ? 'Henüz diyet planı yok' : 'No diet plans yet'}</h3>
-              <p className="text-gray-400 text-sm max-w-sm mx-auto mb-5">{isTr ? 'Hedefinize uygun kişiselleştirilmiş bir diyet planı oluşturun.' : 'Create a personalized diet plan for your goals.'}</p>
-              <Link to={ROUTES.DIET_PLAN} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#060611]">
-                {isTr ? 'Bir plan oluşturun' : 'Create a plan'} <ArrowRight className="w-4 h-4" />
-              </Link>
+              <p className="text-gray-400 text-sm max-w-sm mx-auto">{isTr ? 'Yapay zeka destekli kişiselleştirilmiş diyet planlarınız burada görünecek.' : 'Your AI-generated personalized diet plans will appear here.'}</p>
             </div>
           ) : filteredDietPlans.length === 0 ? (
             <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
               <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
               <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan diyet planı yok.' : 'No diet plans match the filters.'}</p>
-              <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-sm text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 rounded-lg px-3 py-1.5">
+              <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-sm text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-lg px-3 py-1.5">
                 {isTr ? 'Filtreleri temizle' : 'Clear filters'}
               </button>
             </div>
@@ -1056,7 +1579,7 @@ export default function Dashboard({ language }) {
               {filteredDietPlans.map((d) => {
                 const payload = d.payload || {};
                 return (
-                  <li key={d.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 border-l-emerald-500/50 hover:border-emerald-500/30 transition">
+                  <li key={d.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 border-l-violet-500/50 hover:border-violet-500/30 transition">
                     <div className="flex justify-between items-start gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-white">{dietGoalDisplay(d.goal, isTr)}</p>
@@ -1068,32 +1591,27 @@ export default function Dashboard({ language }) {
                           </p>
                         )}
                       </div>
-                      <div className="flex gap-1 shrink-0">
-                        <button onClick={() => navigate(`${ROUTES.DASHBOARD_DIET_PLAN}/${d.id}`, { state: { dietPlan: d } })} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50" title={isTr ? 'Planı görüntüle' : 'View plan'} aria-label={isTr ? 'Planı görüntüle' : 'View plan'}>
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {payload.grocery_list && (
-                          <button
-                            onClick={() => {
-                              const text = typeof payload.grocery_list === 'string' ? payload.grocery_list : JSON.stringify(payload.grocery_list, null, 2);
-                              const blob = new Blob([text], { type: 'text/plain' });
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `grocery-list-${d.id}.txt`;
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            }}
-                            className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                            title={isTr ? 'Alışveriş Listesi' : 'Grocery List'}
-                            aria-label={isTr ? 'Alışveriş listesini indir' : 'Download grocery list'}
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button onClick={() => handleDeleteDietPlan(d)} disabled={deletingId === `d-${d.id}`} className="p-2 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition focus:outline-none focus:ring-2 focus:ring-red-500/50" title={isTr ? 'Sil' : 'Delete'} aria-label={isTr ? 'Sil' : 'Delete'}>
-                          {deletingId === `d-${d.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                        </button>
+                      <div className="shrink-0">
+                        <AnimatedActionMenu
+                          loading={deletingId === `d-${d.id}`}
+                          items={[
+                            { label: isTr ? 'Planı görüntüle' : 'View plan', icon: <Eye className="w-4 h-4" />, onClick: () => navigate(`${ROUTES.DASHBOARD_DIET_PLAN}/${d.id}`, { state: { dietPlan: d } }) },
+                            ...(payload.grocery_list ? [{
+                              label: isTr ? 'Alışveriş Listesi' : 'Grocery List',
+                              icon: <Download className="w-4 h-4" />,
+                              onClick: () => {
+                                const text = typeof payload.grocery_list === 'string' ? payload.grocery_list : JSON.stringify(payload.grocery_list, null, 2);
+                                const blob = new Blob([text], { type: 'text/plain' });
+                                const url = URL.createObjectURL(blob);
+                                const el = document.createElement('a');
+                                el.href = url; el.download = `grocery-list-${d.id}.txt`; el.click();
+                                URL.revokeObjectURL(url);
+                              },
+                            }] : []),
+                            { separator: true },
+                            { label: isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, destructive: true, onClick: () => handleDeleteDietPlan(d) },
+                          ]}
+                        />
                       </div>
                     </div>
                   </li>
@@ -1107,8 +1625,8 @@ export default function Dashboard({ language }) {
       {activeTab === 'subscription' && (
         <section className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">{isTr ? 'Aboneliğim' : 'My subscription'}</h2>
-            <p className="text-gray-400 text-sm mt-1">{isTr ? 'Mevcut planınızı görüntüleyin ve yönetin.' : 'View and manage your current plan.'}</p>
+            <h2 className="text-xl font-semibold text-white tracking-tight">{isTr ? 'Aboneliğim' : 'My Plan'}</h2>
+            <p className="text-gray-400 text-sm mt-1">{isTr ? 'Mevcut planınızı görüntüleyin ve yönetin.' : 'Manage your current plan and access.'}</p>
           </div>
 
           {subscriptionConfirmError && (
@@ -1122,7 +1640,7 @@ export default function Dashboard({ language }) {
 
           <FluidCard className={`overflow-hidden rounded-2xl border cursor-grab active:cursor-grabbing transition-all ${
             (user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly')
-              ? 'bg-gradient-to-br from-emerald-500/[0.08] via-white/[0.03] to-cyan-500/[0.06] border-emerald-500/25 shadow-lg shadow-emerald-500/5'
+              ? 'bg-gradient-to-br from-violet-500/[0.08] via-white/[0.03] to-cyan-500/[0.06] border-violet-500/25 shadow-lg shadow-violet-500/5'
               : 'bg-gradient-to-br from-white/[0.04] to-white/[0.02] border-white/[0.08]'
           }`}>
             <div className="p-6 sm:p-8">
@@ -1130,11 +1648,11 @@ export default function Dashboard({ language }) {
                 <div className="flex items-start gap-4">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
                     (user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly')
-                      ? 'bg-emerald-500/20 ring-2 ring-emerald-500/30'
+                      ? 'bg-violet-500/20 ring-2 ring-violet-500/30'
                       : 'bg-white/[0.08] ring-1 ring-white/[0.1]'
                   }`}>
                     {(user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly') ? (
-                      <Sparkles className="w-7 h-7 text-emerald-400" />
+                      <Sparkles className="w-7 h-7 text-violet-400" />
                     ) : (
                       <CreditCard className="w-7 h-7 text-gray-400" />
                     )}
@@ -1143,7 +1661,7 @@ export default function Dashboard({ language }) {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
                         (user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly')
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
                           : 'bg-white/[0.1] text-gray-200 border border-white/[0.12]'
                       }`}>
                         {(user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly')
@@ -1151,7 +1669,7 @@ export default function Dashboard({ language }) {
                           : (isTr ? 'Ücretsiz tier' : 'Free tier')}
                       </span>
                       {user?.subscription_status === 'active' && (user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly') && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-500/15 text-violet-400 border border-violet-500/25">
                           {isTr ? 'Aktif' : 'Active'}
                         </span>
                       )}
@@ -1162,7 +1680,7 @@ export default function Dashboard({ language }) {
                         : (isTr ? 'Tüm araçlar ücretsiz. İstediğiniz zaman Pro\'ya geçebilirsiniz.' : 'All tools are free. Upgrade to Pro anytime for early access to new features.')}
                     </p>
                     {(user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly') ? (
-                      <p className="text-emerald-400/90 text-xs mt-1.5">{isTr ? 'Yeni özelliklere erken erişim.' : 'Early access to new features.'}</p>
+                      <p className="text-violet-400/90 text-xs mt-1.5">{isTr ? 'Yeni özelliklere erken erişim.' : 'Early access to new features.'}</p>
                     ) : (
                       <p className="text-gray-500 text-xs mt-1.5">{isTr ? 'Assessment, Chat, Diyet, Ses ve daha fazlası.' : 'Assessment, Chat, Diet, Voice & more.'}</p>
                     )}
@@ -1184,25 +1702,22 @@ export default function Dashboard({ language }) {
                         }
                       }}
                       disabled={portalLoading}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.1] hover:bg-white/[0.15] text-white text-sm font-medium border border-white/[0.15] transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.1] hover:bg-white/[0.15] text-white text-sm font-medium border border-white/[0.15] transition focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                     >
                       {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                       {isTr ? 'Aboneliği yönet' : 'Manage subscription'}
                     </button>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => navigate(ROUTES.PRICING)}
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold shadow-lg shadow-emerald-500/25 border border-emerald-400/30 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-[#060611]"
-                    >
+                    <LiquidMetalButton onClick={() => navigate(ROUTES.PRICING)} width={180}>
                       <Sparkles className="w-4 h-4" />
                       {isTr ? "Pro'ya geç" : 'Upgrade to Pro'}
-                    </button>
+                    </LiquidMetalButton>
                   )}
                 </div>
               </div>
             </div>
           </FluidCard>
+
         </section>
       )}
 
@@ -1227,7 +1742,7 @@ function AvatarPreview({ url, initials }) {
   useEffect(() => { setErr(false); }, [url]);
   if (!url || err) {
     return (
-      <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center text-3xl font-bold text-emerald-400 border-2 border-white/[0.08]">
+      <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-violet-500/30 to-cyan-500/30 flex items-center justify-center text-3xl font-bold text-violet-400 border-2 border-white/[0.08]">
         {initials}
       </div>
     );
@@ -1348,10 +1863,10 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
     setFaceEnrollLoading(true);
     setMessage('');
     try {
-      const { getFaceEmbedding } = await import('../utils/faceEmbedding');
-      const embedding = await getFaceEmbedding(faceVideoRef.current);
+      const { getEnrollmentEmbedding } = await import('../utils/faceEmbedding');
+      const embedding = await getEnrollmentEmbedding(faceVideoRef.current);
       if (!embedding || embedding.length === 0) {
-        showMessage(isTr ? 'Yüz algılanamadı.' : 'No face detected.', 'error');
+        showMessage(isTr ? 'Yüz algılanamadı. Işığı kontrol edip tekrar deneyin.' : 'No face detected. Check lighting and try again.', 'error');
         setFaceEnrollLoading(false);
         return;
       }
@@ -1437,6 +1952,24 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       showMessage(isTr ? 'Profil fotoğrafı kaldırıldı.' : 'Profile picture removed.', 'success');
     } catch (err) {
       showMessage(err.message || (isTr ? 'Kaldırma başarısız.' : 'Remove failed.'), 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSelectPresetAvatar = async (dataUrl) => {
+    setSaving(true);
+    try {
+      await apiService.updateProfile({ avatar_url: dataUrl });
+      setAvatarError(false);
+      setAvatarUrl(dataUrl);
+      setAvatarInput(dataUrl);
+      if (setUserAvatar) setUserAvatar(dataUrl);
+      await refreshUser();
+      setShowAvatarEdit(false);
+      showMessage(isTr ? 'Avatar güncellendi.' : 'Avatar updated.', 'success');
+    } catch (err) {
+      showMessage(err.message || (isTr ? 'Güncelleme başarısız.' : 'Update failed.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -1543,13 +2076,13 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
               onError={() => setAvatarError(true)}
             />
           ) : (
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center text-2xl font-bold text-emerald-400 border-2 border-white/[0.08]">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-violet-500/30 to-cyan-500/30 flex items-center justify-center text-2xl font-bold text-violet-400 border-2 border-white/[0.08]">
               {initials}
             </div>
           )}
           <button
             onClick={() => { setShowAvatarEdit(true); setAvatarInput(avatarUrl); }}
-            className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center shadow-lg transition"
+            className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-violet-500 hover:bg-violet-600 flex items-center justify-center shadow-lg transition"
           >
             <Camera className="w-4 h-4 text-white" />
           </button>
@@ -1569,7 +2102,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => setShowAvatarEdit(false)} />
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
-            <div className="bg-[#12121f] border border-white/[0.08] rounded-2xl shadow-2xl p-6">
+            <div className="bg-[#0e0e0e] border border-white/[0.08] rounded-2xl shadow-2xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">{isTr ? 'Profil Fotoğrafı' : 'Profile Picture'}</h3>
                 <button onClick={() => setShowAvatarEdit(false)} className="p-1 hover:bg-white/[0.05] rounded-lg">
@@ -1580,20 +2113,20 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
                 {avatarInput ? (
                   <AvatarPreview url={getAvatarUrl(avatarInput)} initials={initials} />
                 ) : (
-                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center text-3xl font-bold text-emerald-400 border-2 border-white/[0.08]">
+                  <div className="w-32 h-32 rounded-2xl bg-white/[0.04] flex items-center justify-center text-3xl font-bold text-white/30 border border-white/[0.08]">
                     {initials}
                   </div>
                 )}
               </div>
               <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleFileSelect} />
               <div className="space-y-4">
-                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={saving} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 transition disabled:opacity-50">
+                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={saving} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/[0.04] text-white/50 hover:bg-white/[0.07] hover:text-white/70 border border-white/[0.08] transition disabled:opacity-50">
                   <Upload className="w-5 h-5" />
                   {isTr ? 'Bilgisayardan yükle' : 'Upload from computer'}
                 </button>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Veya resim URL' : 'Or image URL'}</label>
-                  <input type="url" value={avatarInput} onChange={(e) => setAvatarInput(e.target.value)} placeholder="https://example.com/photo.jpg" className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50" />
+                  <input type="url" value={avatarInput} onChange={(e) => setAvatarInput(e.target.value)} placeholder="https://example.com/photo.jpg" className="w-full px-4 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/20 focus:outline-none focus:border-white/20" />
                 </div>
                 <div className="flex gap-3">
                   {avatarUrl && (
@@ -1604,11 +2137,14 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
                   <button onClick={() => setShowAvatarEdit(false)} className="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-white/[0.05] border border-white/[0.08] transition">
                     {isTr ? 'İptal' : 'Cancel'}
                   </button>
-                  <button onClick={handleSaveAvatar} disabled={saving} className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center justify-center gap-2">
+                  <button onClick={handleSaveAvatar} disabled={saving} className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-white/[0.08] hover:bg-white/[0.12] text-white/80 border border-white/[0.1] transition flex items-center justify-center gap-2">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     {isTr ? 'Kaydet' : 'Save'}
                   </button>
                 </div>
+
+                {/* Preset illustration avatars */}
+                <AvatarPicker onSelect={handleSelectPresetAvatar} saving={saving} />
               </div>
             </div>
           </div>
@@ -1620,22 +2156,22 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
         <h3 className="text-white font-medium">{isTr ? 'Profil bilgileri' : 'Profile info'}</h3>
         <div>
           <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Ad Soyad' : 'Full name'}</label>
-          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50" />
+          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
         </div>
         <div ref={langDropdownRef} className="relative">
           <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Dil' : 'Language'}</label>
           <button
             type="button"
             onClick={() => setLangDropdownOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50 text-left"
+            className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50 text-left"
           >
             <span>{preferredLanguage === 'turkish' ? 'Türkçe' : 'English'}</span>
             <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
           {langDropdownOpen && (
             <div className="absolute z-20 mt-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a2e] shadow-xl py-1">
-              <button type="button" onClick={() => { setPreferredLanguage('english'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'english' ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>English</button>
-              <button type="button" onClick={() => { setPreferredLanguage('turkish'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'turkish' ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>Türkçe</button>
+              <button type="button" onClick={() => { setPreferredLanguage('english'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'english' ? 'bg-violet-500/20 text-violet-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>English</button>
+              <button type="button" onClick={() => { setPreferredLanguage('turkish'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'turkish' ? 'bg-violet-500/20 text-violet-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>Türkçe</button>
             </div>
           )}
         </div>
@@ -1649,7 +2185,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
               <button
                 type="button"
                 onClick={() => setDietDropdownOpen((o) => !o)}
-                className="w-full flex items-center justify-between pl-4 pr-3 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50 text-left"
+                className="w-full flex items-center justify-between pl-4 pr-3 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50 text-left"
               >
                 <span className={dietPref ? 'text-white' : 'text-gray-500'}>
                   {dietPref === 'balanced' ? (isTr ? 'Dengeli' : 'Balanced') : dietPref === 'vegetarian' ? (isTr ? 'Vejetaryen' : 'Vegetarian') : dietPref === 'vegan' ? 'Vegan' : dietPref === 'mediterranean' ? (isTr ? 'Akdeniz' : 'Mediterranean') : dietPref === 'low_carb' ? (isTr ? 'Düşük Karbonhidrat' : 'Low Carb') : dietPref === 'diabetic_friendly' ? (isTr ? 'Diyabet Dostu' : 'Diabetic Friendly') : (isTr ? 'Seçin...' : 'Select...')}
@@ -1671,7 +2207,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
                       key={opt.value || 'empty'}
                       type="button"
                       onClick={() => { setDietPref(opt.value); setDietDropdownOpen(false); }}
-                      className={`w-full px-4 py-2.5 text-left text-sm transition ${opt.value === dietPref ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}
+                      className={`w-full px-4 py-2.5 text-left text-sm transition ${opt.value === dietPref ? 'bg-violet-500/20 text-violet-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}
                     >
                       {isTr ? opt.labelTr : opt.labelEn}
                     </button>
@@ -1681,20 +2217,20 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Alerjiler / kısıtlamalar' : 'Allergies / restrictions'}</label>
-              <input type="text" value={allergies} onChange={(e) => setAllergies(e.target.value)} placeholder={isTr ? 'örn. glüten, laktoz' : 'e.g. gluten, lactose'} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50" />
+              <input type="text" value={allergies} onChange={(e) => setAllergies(e.target.value)} placeholder={isTr ? 'örn. glüten, laktoz' : 'e.g. gluten, lactose'} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/50" />
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Günlük kalori hedefi' : 'Daily calorie goal'}</label>
-              <input type="number" value={calorieGoal} onChange={(e) => setCalorieGoal(e.target.value)} placeholder={isTr ? 'örn. 2000' : 'e.g. 2000'} className={`w-full px-4 py-2 rounded-lg bg-white/[0.05] border text-white placeholder-gray-500 focus:outline-none ${calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-emerald-500/50'}`} />
+              <input type="number" value={calorieGoal} onChange={(e) => setCalorieGoal(e.target.value)} placeholder={isTr ? 'örn. 2000' : 'e.g. 2000'} className={`w-full px-4 py-2 rounded-lg bg-white/[0.05] border text-white placeholder-gray-500 focus:outline-none ${calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-violet-500/50'}`} />
               {calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 && <p className="text-[11px] text-red-400 font-medium mt-1">{isTr ? 'Lütfen negatif olmayan bir sayı girin.' : 'Please enter a positive number.'}</p>}
             </div>
           </div>
         </div>
 
         <div className="pt-4">
-          <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-medium disabled:opacity-50 transition">
-            {saving ? (isTr ? 'Kaydediliyor…' : 'Saving…') : (isTr ? 'Kaydet' : 'Save')}
-          </button>
+          <LiquidMetalButton type="submit" disabled={saving} width={120}>
+            {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Kaydediliyor…' : 'Saving…'}</> : (isTr ? 'Kaydet' : 'Save')}
+          </LiquidMetalButton>
         </div>
       </form>
 
@@ -1703,22 +2239,22 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
         <h3 className="text-white font-medium">{isTr ? 'Yüz ile giriş' : 'Face login'}</h3>
         <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-4">
           <div className="flex items-center gap-2">
-            <ScanFace className="w-5 h-5 text-emerald-400 shrink-0" />
+            <ScanFace className="w-5 h-5 text-violet-400 shrink-0" />
             <span className="text-gray-300">{isTr ? 'Giriş sayfasında yüzünüzle otomatik giriş yapın.' : 'Sign in on the login page with your face.'}</span>
           </div>
           {!hasFace ? (
-            <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-4 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-medium hover:bg-emerald-500/25 transition">
+            <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-4 py-2 rounded-lg bg-violet-500/20 text-violet-400 border border-violet-500/30 text-sm font-medium hover:bg-violet-500/25 transition">
               {isTr ? 'Yüz kaydı oluştur' : 'Set up face login'}
             </button>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`text-sm px-2.5 py-1 rounded-lg ${faceEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.06] text-gray-400 border border-white/[0.08]'}`}>
+              <span className={`text-sm px-2.5 py-1 rounded-lg ${faceEnabled ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' : 'bg-white/[0.06] text-gray-400 border border-white/[0.08]'}`}>
                 {faceEnabled ? (isTr ? 'Açık' : 'On') : (isTr ? 'Kapalı' : 'Off')}
               </span>
               <button type="button" onClick={handleFaceToggle} disabled={faceToggleLoading} className="px-3 py-1.5 rounded-lg bg-white/[0.06] text-gray-300 hover:text-white border border-white/[0.08] text-sm font-medium disabled:opacity-50 transition">
                 {faceToggleLoading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : (faceEnabled ? (isTr ? 'Kapat' : 'Turn off') : (isTr ? 'Aç' : 'Turn on'))}
               </button>
-              <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-medium hover:bg-emerald-500/25 transition">
+              <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-400 border border-violet-500/30 text-sm font-medium hover:bg-violet-500/25 transition">
                 {isTr ? 'Yüz taramasını güncelle' : 'Update face scan'}
               </button>
             </div>
@@ -1738,11 +2274,11 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
             </div>
             <div className="flex gap-2">
               {!faceCameraActive ? (
-                <button type="button" onClick={startFaceEnrollCamera} className="flex-1 py-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <button type="button" onClick={startFaceEnrollCamera} className="flex-1 py-2.5 rounded-xl bg-violet-500/20 text-violet-400 border border-violet-500/30">
                   {isTr ? 'Kamerayı aç' : 'Start camera'}
                 </button>
               ) : (
-                <button type="button" onClick={captureAndEnrollFace} disabled={faceEnrollLoading} className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white font-medium disabled:opacity-50">
+                <button type="button" onClick={captureAndEnrollFace} disabled={faceEnrollLoading} className="flex-1 py-2.5 rounded-xl bg-violet-500 text-white font-medium disabled:opacity-50">
                   {faceEnrollLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (isTr ? 'Kaydet' : 'Capture')}
                 </button>
               )}
@@ -1759,15 +2295,15 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
         <h3 className="text-white font-medium">{isTr ? 'Şifre değiştir' : 'Change password'}</h3>
         <div>
           <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Mevcut şifre' : 'Current password'}</label>
-          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50" />
+          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
         </div>
         <div>
           <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Yeni şifre' : 'New password'}</label>
-          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50" />
+          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
         </div>
-        <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-medium disabled:opacity-50 transition">
-          {isTr ? 'Şifreyi güncelle' : 'Update password'}
-        </button>
+        <LiquidMetalButton type="submit" disabled={saving} width={180}>
+          {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Güncelleniyor…' : 'Updating…'}</> : (isTr ? 'Şifreyi güncelle' : 'Update password')}
+        </LiquidMetalButton>
       </form>
 
       {/* Feature f15: 2FA Section */}
@@ -1776,9 +2312,9 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
         <p className="text-sm text-gray-500">{isTr ? 'Hesabınıza ek güvenlik katmanı ekleyin.' : 'Add an extra layer of security to your account.'}</p>
         {user?.totp_enabled ? (
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <Shield className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm text-emerald-400">{isTr ? '2FA Etkin' : '2FA Enabled'}</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <Shield className="w-4 h-4 text-violet-400" />
+              <span className="text-sm text-violet-400">{isTr ? '2FA Etkin' : '2FA Enabled'}</span>
             </div>
             <button onClick={handle2FADisable} disabled={twoFALoading} className="px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 border border-red-500/20 transition">
               {isTr ? 'Kapat' : 'Disable'}
@@ -1793,12 +2329,12 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
             {show2FA && twoFAData && (
               <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-3">
                 <p className="text-sm text-gray-400">{isTr ? 'Google Authenticator, Microsoft Authenticator veya Authy gibi bir uygulamada bu gizli anahtarı ekleyin:' : 'Use any TOTP app (e.g. Google Authenticator, Microsoft Authenticator, or Authy) and add this secret key:'}</p>
-                <code className="block p-2 rounded-lg bg-white/[0.05] text-emerald-400 text-xs break-all">{twoFAData.secret}</code>
+                <code className="block p-2 rounded-lg bg-white/[0.05] text-violet-400 text-xs break-all">{twoFAData.secret}</code>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Doğrulama kodu' : 'Verification code'}</label>
                   <div className="flex gap-2">
-                    <input type="text" value={twoFACode} onChange={(e) => setTwoFACode(e.target.value)} placeholder="000000" maxLength={6} className="flex-1 px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-emerald-500/50" />
-                    <button onClick={handle2FAVerify} disabled={twoFALoading || twoFACode.length < 6} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium disabled:opacity-50 transition">
+                    <input type="text" value={twoFACode} onChange={(e) => setTwoFACode(e.target.value)} placeholder="000000" maxLength={6} className="flex-1 px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
+                    <button onClick={handle2FAVerify} disabled={twoFALoading || twoFACode.length < 6} className="px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium disabled:opacity-50 transition">
                       {isTr ? 'Doğrula' : 'Verify'}
                     </button>
                   </div>
@@ -1822,7 +2358,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       {/* Message Toast (profile-specific: save success, avatar, etc.) */}
       {message && (
         <div role="status" aria-live={messageType === 'success' ? 'polite' : 'assertive'} aria-atomic="true" className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border animate-pulse
-          ${messageType === 'success' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}`}>
+          ${messageType === 'success' ? 'bg-violet-500/20 border-violet-500/30 text-violet-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}`}>
           {messageType === 'success' ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />}
           <span className="text-sm font-medium">{message}</span>
         </div>
@@ -1830,3 +2366,5 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
     </div>
   );
 }
+
+

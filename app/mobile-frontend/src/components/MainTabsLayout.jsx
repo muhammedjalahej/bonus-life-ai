@@ -55,6 +55,6 @@ export default function MainTabsLayout({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f1419' },
+  container: { flex: 1, backgroundColor: '#F7F4ED' },
   content: { flex: 1 },
 });

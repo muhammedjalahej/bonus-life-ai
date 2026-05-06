@@ -14,9 +14,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["hospitals"])
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-# Turkey bounding box (minlat, minlon, maxlat, maxlon) for filtering
-TURKEY_BBOX = (35.8, 26.0, 42.2, 45.0)
+OVERPASS_MIRRORS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+]
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -28,11 +30,6 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
-
-
-def in_turkey(lat: float, lon: float) -> bool:
-    minlat, minlon, maxlat, maxlon = TURKEY_BBOX
-    return minlat <= lat <= maxlat and minlon <= lon <= maxlon
 
 
 def parse_overpass_element(el: dict, user_lat: float, user_lon: float) -> dict | None:
@@ -47,8 +44,6 @@ def parse_overpass_element(el: dict, user_lat: float, user_lon: float) -> dict |
         lat = el["center"].get("lat")
         lon = el["center"].get("lon")
     if lat is None or lon is None:
-        return None
-    if not in_turkey(float(lat), float(lon)):
         return None
     tags = el.get("tags") or {}
     name = tags.get("name") or tags.get("name:en") or "Hospital"
@@ -84,13 +79,8 @@ def get_nearby_hospitals(
     limit: int = Query(25, ge=1, le=50),
 ):
     """
-    Returns hospitals in Turkey near the given coordinates (OpenStreetMap).
+    Returns hospitals near the given coordinates (OpenStreetMap / Overpass API).
     """
-    if not in_turkey(lat, lon):
-        raise HTTPException(
-            status_code=400,
-            detail="Coordinates must be inside Turkey.",
-        )
     radius_m = int(radius_km * 1000)
     # Include amenity=hospital and healthcare=hospital for better coverage in Turkey
     query = (
@@ -105,13 +95,18 @@ def get_nearby_hospitals(
         f");"
         f"out center meta;"
     )
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            r = client.get(OVERPASS_URL, params={"data": query})
-        r.raise_for_status()
-        data = r.json()
-    except Exception as e:
-        logger.warning("Overpass request failed: %s", e)
+    data = None
+    for mirror in OVERPASS_MIRRORS:
+        try:
+            with httpx.Client(timeout=20.0) as client:
+                r = client.post(mirror, data={"data": query})
+            r.raise_for_status()
+            data = r.json()
+            break
+        except Exception as e:
+            logger.warning("Overpass mirror %s failed: %s", mirror, e)
+            continue
+    if data is None:
         raise HTTPException(status_code=502, detail="Could not fetch hospital data.")
     elements = data.get("elements") or []
     seen = set()

@@ -1,0 +1,2213 @@
+Schemathesis v4.17.0
+━━━━━━━━━━━━━━━━━━━━
+
+
+ ✅  Loaded specification from http://127.0.0.1:8001/openapi.json (in 4.39s)   
+
+     Base URL:         http://127.0.0.1:8001/                                  
+     Specification:    Open API 3.1.0                                          
+     Operations:       132 selected / 132 total                                
+
+
+ ✅  API capabilities:                                                         
+
+     Supports NULL byte in headers:    ✘                                       
+
+ ⏭   Examples (in 0.81s)                                                       
+                                                                               
+     ⏭  132 skipped                                                            
+
+ 🚫  Coverage (in 500.74s)                                                     
+                                                                               
+     ✅  18 passed  ❌ 110 failed  🚫   4 errors                               
+
+ 🚫  Fuzzing (in 215.30s)                                                      
+                                                                               
+     ✅  16 passed  ❌ 112 failed  🚫   4 errors                               
+
+ 🚫  Stateful (in 742.82s)                                                     
+
+     Scenarios:    272                                                         
+     API Links:    0 covered / 83 selected / 83 total (83 inferred)            
+
+     ✅ 206 passed  ❌ 13 failed  🚫 53 errors                                 
+
+==================================== ERRORS ====================================
+_______________________ GET /api/v1/local-ai/health-tip ________________________
+Network Error
+
+Read timed out after 10.0 seconds
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/local-ai/health-tip?language=english'
+_________________________ GET /api/v1/nearby-hospitals _________________________
+Network Error
+
+Read timed out after 10.0 seconds
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/nearby-hospitals?lat=0.0&lon=0.0&radius_km=50&x-schemathesis-unknown-property=42'
+______________________ GET /api/v1/webauthn/login/options ______________________
+Network Error
+
+Read timed out after 10.0 seconds
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/webauthn/login/options
+________________________ POST /api/v1/heart-assessment _________________________
+Network Error
+
+Read timed out after 10.0 seconds
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"age": 1, "ca": 0, "chol": 100, "cp": 0, "exang": 0, "fbs": 0, "language": "english", "oldpeak": 0, "restecg": 0, "sex": 0, "slope": 1, "thal": 3, "thalach": 60, "trestbps": 80}' http://127.0.0.1:8001/api/v1/heart-assessment
+______________________ GET /api/v1/user/{user_id}/profile ______________________
+Failed Health Check
+
+Too many generated examples are filtered out for this operation
+
+Unable to identify the specific parameter. Common causes:
+  - Complex regex patterns that match few strings
+  - Multiple overlapping constraints (pattern + format + enum)
+
+Tip: Simplify constraints or widen acceptable value ranges or bypass this health check using `--suppress-health-check=filter_too_much`.
+________________________ POST /api/v1/local-ai/scenario ________________________
+Network Error
+
+Read timed out after 10.0 seconds
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"scenario": "0"}' http://127.0.0.1:8001/api/v1/local-ai/scenario
+________________________________ Stateful tests ________________________________
+Network Error
+
+Read timed out after 10.0 seconds
+
+Reproduce with:
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"age": 21, "blood_pressure": 4.677215115031853, "glucose": 19.266563176595035, "height": 119.90474668729131, "weight": 281.1813395830282, "\udb18\udf99\u0083": {" \u009b\u001f\u0015+\u00f1X9\u00ab\u00836\"\u0005\ud86e\udf22\ud87e\udd66\u0007]": {}, "\ud93f\udc6b\uda3e\udcca\uda22\udd82\uda5b\uddd9f": {";xG\u00a3,": 99133569838035141838888471327210087721}, "\ud87a\udd57\u00d6\u008c+\u009b\uda31\udf88\u0083\u00ed\ud960\udf96": {"\u000fs\u0001\uda3f\udf4a\u00e5\u00f4\u0017\\\uda6f\uddf4": {"\u000b\u00cam": [], "\u00df\u009d\u000f\u00f0\ud9ba\uddc94E\ue710\ue0b9\u00ceP\udb1f\ude34\u00f3r\u0088": 11546, "": -11763}, "\u00f1\fB\u00d0Z\udabd\ude80\u00a1\u0096\udab2\udea8\uda2f\ude75\uda61\udced": []}}, "\u0010\u0019\b\u00e4p~": {}}' http://127.0.0.1:8001/api/v1/diabetes-assessment
+
+Need more help?
+    Join our Discord server: https://discord.gg/R9ASRAmHnA
+=================================== FAILURES ===================================
+_______________________ POST /api/v1/admin/announcements _______________________
+1. Test Case ID: UWU1np
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:10:35.268262"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"expires_at": null, "is_active": true, "message": "", "title": ""}' http://127.0.0.1:8001/api/v1/admin/announcements
+
+______________________ POST /api/v1/admin/audit-log/clear ______________________
+1. Test Case ID: 1jx9Gi
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:10:40.717660"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/admin/audit-log/clear
+
+___________________________ POST /api/v1/admin/users ___________________________
+1. Test Case ID: 5UB8WI
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:10:41.483589"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"email": "", "full_name": "", "password": "", "role": "user"}' http://127.0.0.1:8001/api/v1/admin/users
+
+________________________ POST /api/v1/admin/users/bulk _________________________
+1. Test Case ID: 9JfoQZ
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:10:42.123172"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"action": "", "user_ids": []}' http://127.0.0.1:8001/api/v1/admin/users/bulk
+
+_____________________ POST /api/v1/admin/users/bulk-email ______________________
+1. Test Case ID: IufJqQ
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:10:42.763999"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"body": "", "role_filter": null, "subject": "", "user_ids": null}' http://127.0.0.1:8001/api/v1/admin/users/bulk-email
+
+______________________________ POST /api/v1/agent ______________________________
+1. Test Case ID: HGO75O
+
+- Response violates schema
+
+    "text is required" is not of type "array"
+
+    Schema at /components/schemas/HTTPValidationError/properties/detail:
+
+        {
+            "type": "array",
+            "items": {
+                "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail"
+        }
+
+    Value:
+
+        "text is required"
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+[422] Unprocessable Content:
+
+    `{"detail":"text is required","timestamp":"2026-05-04T20:10:43.239757"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"history": [{}], "text": ""}' http://127.0.0.1:8001/api/v1/agent
+
+___________________________ POST /api/v1/auth/login ____________________________
+1. Test Case ID: u9gP2Z
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Invalid email or password","timestamp":"2026-05-04T20:10:43.905689"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"email": "", "password": ""}' http://127.0.0.1:8001/api/v1/auth/login
+
+__________________________ POST /api/v1/auth/register __________________________
+1. Test Case ID: R03dnz
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"Email already registered","timestamp":"2026-05-04T20:10:44.845450"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"email": "", "full_name": "", "password": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}' http://127.0.0.1:8001/api/v1/auth/register
+
+_______________________ POST /api/v1/auth/reset-password _______________________
+1. Test Case ID: a5eBPF
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"Invalid or expired reset link","timestamp":"2026-05-04T20:10:45.097177"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"new_password": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "token": ""}' http://127.0.0.1:8001/api/v1/auth/reset-password
+
+_______________________ POST /api/v1/brain-mri-analysis ________________________
+1. Test Case ID: 4hidYY
+
+- Missing header not rejected
+
+    Got 400 when missing required 'Authorization' header, expected 401
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"No image data received.","timestamp":"2026-05-04T20:10:46.886361"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: multipart/form-data; boundary=76b85ba6286c5d67b6b7d88b5be56535' -d $'--fcc32cad0576cfa2467292c237277a1e\r\nContent-Disposition: form-data; name="image"; filename="image"\r\n\r\n\r\n--fcc32cad0576cfa2467292c237277a1e\r\nContent-Disposition: form-data; name="language"\r\n\r\nenglish\r\n--fcc32cad0576cfa2467292c237277a1e--\r\n' http://127.0.0.1:8001/api/v1/brain-mri-analysis
+
+2. Test Case ID: SR6F4J
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+[400] Bad Request:
+
+    `{"detail":"No image data received.","timestamp":"2026-05-04T20:18:47.895577"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: multipart/form-data; boundary=96d74f598693f727e48463fefcb9e7ee' -d $'--9025805b74bb6eec0c7de133d9dced9c\r\nContent-Disposition: form-data; name="image"; filename="image"\r\n\r\n\r\n--9025805b74bb6eec0c7de133d9dced9c--\r\n' http://127.0.0.1:8001/api/v1/brain-mri-analysis
+
+_________________________ POST /api/v1/ckd-assessment __________________________
+1. Test Case ID: 8PSY25
+
+- API accepts requests without authentication
+
+    Expected 401, got `200 OK` for `POST /api/v1/ckd-assessment`
+
+- API accepted schema-violating request
+
+    Invalid data should have been rejected
+    Expected: 400, 401, 403, 404, 406, 422, 428, 5xx
+    Invalid component: Missing `Authorization` at header
+
+- Missing header not rejected
+
+    Got 200 when missing required 'Authorization' header, expected 401
+
+[200] OK:
+
+    `{"assessment_id":"ae12b9a3-c782-41ca-94b1-33ab6ebfd0a0","timestamp":"2026-05-04T20:10:49.017914","prediction":"No CKD","confidence":0.28,"executive_summary":"**Understanding Your Kidney Health Risks 🤔**\n\nBased on the provided information, your risk for chronic kidney disease (CKD) is predicted to be low, but it's essential to understand the underlying factors and indicators to maintain your kidney health.\n\n**Key CKD Indicators:**\n\n1. **Serum Creatinine (SCr):** A level of 1.0 mg/dL is within the norma // Output truncated...`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"age": 1.0, "albumin": 0, "anemia": 0, "appetite": 1, "bacteria": 0, "blood_glucose_random": 120, "blood_pressure": 40.0, "blood_urea": 25, "coronary_artery_disease": 0, "diabetes_mellitus": 0, "hemoglobin": 13, "hypertension": 0, "language": "english", "packed_cell_volume": 40, "pedal_edema": 0, "potassium": 4.5, "pus_cell": 0, "pus_cell_clumps": 0, "red_blood_cell_count": 5, "red_blood_cells": 0, "serum_creatinine": 1, "sodium": 140, "specific_gravity": 1.02, "sugar": 0, "white_blood_cell_count": 7800}' http://127.0.0.1:8001/api/v1/ckd-assessment
+
+_________________________ POST /api/v1/detect-language _________________________
+1. Test Case ID: ybZLM8
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"Text cannot be empty","timestamp":"2026-05-04T20:10:49.648353"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/x-www-form-urlencoded' -d text= http://127.0.0.1:8001/api/v1/detect-language
+
+_______________________ POST /api/v1/diabetes-assessment _______________________
+1. Test Case ID: joIXhz
+
+- API accepts requests without authentication
+
+    Expected 401, got `200 OK` for `POST /api/v1/diabetes-assessment`
+
+- API accepted schema-violating request
+
+    Invalid data should have been rejected
+    Expected: 400, 401, 403, 404, 406, 422, 428, 5xx
+    Invalid component: Missing `Authorization` at header
+
+- Missing header not rejected
+
+    Got 200 when missing required 'Authorization' header, expected 401
+
+[200] OK:
+
+    `{"assessment_id":"fc4e0b94-0fc1-45ea-adcc-e784c5c85e7b","timestamp":"2026-05-04T20:10:51.273112","executive_summary":"**Understanding Your Diabetes Risk 🤔**\n\nBased on the provided information, your risk for developing type 2 diabetes in the future is considered low. However, it's essential to address the identified risk factors to maintain your overall health and well-being.\n\n**Executive Summary:**\n\nWhile your current age and glucose levels are not indicative of diabetes risk, your high BMI indicates  // Output truncated...`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"age": 1, "blood_pressure": 0.0, "diabetes_pedigree_function": 0.5, "glucose": 0.0, "height": 50.0, "insulin": 80, "language": "english", "pregnancies": 0, "skin_thickness": 20, "weight": 20.0}' http://127.0.0.1:8001/api/v1/diabetes-assessment
+
+_______________________ POST /api/v1/diet-plan/generate ________________________
+1. Test Case ID: HMNrKe
+
+- API accepts requests without authentication
+
+    Expected 401, got `200 OK` for `POST /api/v1/diet-plan/generate`
+
+- API accepted schema-violating request
+
+    Invalid data should have been rejected
+    Expected: 400, 401, 403, 404, 406, 422, 428, 5xx
+    Invalid component: Missing `Authorization` at header
+
+- Missing header not rejected
+
+    Got 200 when missing required 'Authorization' header, expected 401
+
+[200] OK:
+
+    `{"overview":"Personalized balanced diabetes meal plan for a 0-year-old . Designed for optimal blood sugar control with 1200 daily calories.","daily_plan":"BREAKFAST (7-8 AM): High-fiber cereal with nuts and berries\nLUNCH (12-1 PM): Grilled protein with vegetables and whole grains\nDINNER (6-7 PM): Light protein with non-starchy vegetables\nSNACKS: Fresh fruits, nuts, yogurt between meals","grocery_list":"- Whole grains (oats, brown rice, quinoa)\n- Lean proteins (chicken, fish, legumes)\n- Fresh vegetables // Output truncated...`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"activityLevel": "moderate", "age": 0, "allergies": "", "dietaryPreference": "balanced", "gender": "", "goals": "diabetes_prevention", "healthConditions": "", "height": 0.0, "language": "english", "typicalDay": "", "weight": 0.0}' http://127.0.0.1:8001/api/v1/diet-plan/generate
+
+________________________ POST /api/v1/face-auth/enroll _________________________
+1. Test Case ID: 979oox
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:10:55.709102"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"embedding": []}' http://127.0.0.1:8001/api/v1/face-auth/enroll
+
+________________________ POST /api/v1/face-auth/verify _________________________
+1. Test Case ID: OHvX2F
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"Embedding must be 32–256 dimensions","timestamp":"2026-05-04T20:10:55.928313"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"embedding": [false]}' http://127.0.0.1:8001/api/v1/face-auth/verify
+
+2. Test Case ID: YtJogr
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+[400] Bad Request:
+
+    `{"detail":"Embedding must be 32–256 dimensions","timestamp":"2026-05-04T20:18:53.788589"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"embedding": []}' http://127.0.0.1:8001/api/v1/face-auth/verify
+
+________________________ POST /api/v1/heart-assessment _________________________
+1. Test Case ID: URhRJs
+
+- API accepts invalid authentication
+
+    Expected 401, got `200 OK` for `POST /api/v1/heart-assessment` (generated auth likely invalid)
+
+- API accepted schema-violating request
+
+    Invalid data should have been rejected
+    Expected: 400, 401, 403, 404, 406, 422, 428, 5xx
+    Invalid component: in body - thal: Incorrect type
+
+[200] OK:
+
+    `{"assessment_id":"325a5026-ad0c-44bc-867a-e77abba0ef5e","timestamp":"2026-05-04T20:11:08.379487","executive_summary":"**Understanding Your Heart Health Risks 🤔**\n\nBased on the provided information, your risk for heart disease is considered low. However, it's essential to understand the underlying factors to maintain your heart health.\n\n**Key Risk Factors:**\n\n1. **Age:** At 1 year old, your risk for heart disease is low due to your young age.\n2. **Blood Pressure:** Your resting blood pressure of 80 mm // Output truncated...`
+
+Reproduce with:
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"age": 1, "ca": 0, "chol": 100, "cp": 0, "exang": 0, "fbs": 0, "language": "english", "oldpeak": 0, "restecg": 0, "sex": 0, "slope": 1, "thal": false, "thalach": 60, "trestbps": 80}' http://127.0.0.1:8001/api/v1/heart-assessment
+
+_______________________ POST /api/v1/meal-photo/analyze ________________________
+1. Test Case ID: hr6tUB
+
+- API accepts requests without authentication
+
+    Expected 401, got `200 OK` for `POST /api/v1/meal-photo/analyze`
+
+- API accepted schema-violating request
+
+    Invalid data should have been rejected
+    Expected: 400, 401, 403, 404, 406, 422, 428, 5xx
+    Invalid component: Missing `Authorization` at header
+
+- Missing header not rejected
+
+    Got 200 when missing required 'Authorization' header, expected 401
+
+[200] OK:
+
+    `{"meal_name":"No image","carb_level":"medium","healthier_swaps":"Please upload or take a photo of your meal.","saved_to_log":false}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"image_base64": "", "save_to_log": false}' http://127.0.0.1:8001/api/v1/meal-photo/analyze
+
+______________________ POST /api/v1/meal-photo/log/clear _______________________
+1. Test Case ID: jaw0v4
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Login required to clear meal log","timestamp":"2026-05-04T20:11:11.381525"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/meal-photo/log/clear
+
+___________ POST /api/v1/reports/sign-assessment/{assessment_db_id} ____________
+1. Test Case ID: jvNtAN
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:16.839052"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/reports/sign-assessment/0
+
+_______ POST /api/v1/reports/sign-ckd-assessment/{ckd_assessment_db_id} ________
+1. Test Case ID: L9W4ZS
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:21.806333"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/reports/sign-ckd-assessment/0
+
+_____ POST /api/v1/reports/sign-heart-assessment/{heart_assessment_db_id} ______
+1. Test Case ID: CIfPLP
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:25.958379"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/reports/sign-heart-assessment/0
+
+_______ POST /api/v1/reports/sign-mri-assessment/{mri_assessment_db_id} ________
+1. Test Case ID: 9no7yT
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:29.404565"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/reports/sign-mri-assessment/0
+
+_____________________ POST /api/v1/symptom-checker/predict _____________________
+1. Test Case ID: qfV2JO
+
+- API accepted schema-violating request
+
+    Invalid data should have been rejected
+    Expected: 400, 401, 403, 404, 406, 422, 428, 5xx
+    Invalid component: in body - cholesterol: Incorrect type
+
+[200] OK:
+
+    `{"predictions":[{"disease":"Respiratory","probability":0.55,"disease_examples":["Asthma","Bronchitis","Chronic Obstructive Pulmonary Disease (COPD)","Chronic Obstructive Pulmonary...","Common Cold","Cystic Fibrosis","Influenza","Otitis Media (Ear Infection)"]},{"disease":"Metabolic & Endocrine","probability":0.19,"disease_examples":["Diabetes","Hyperglycemia","Hyperthyroidism","Hypoglycemia","Hypothyroidism","Polycystic Ovary Syndrome (PCOS)"]},{"disease":"Other","probability":0.16,"disease_examples":["Acne // Output truncated...`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"age": 0.0, "bloodPressure": 0, "cholesterol": false, "cough": 0, "difficultyBreathing": 0, "fatigue": 0, "fever": 0, "gender": 0}' http://127.0.0.1:8001/api/v1/symptom-checker/predict
+
+______________________ POST /api/v1/users/me/2fa/disable _______________________
+1. Test Case ID: l3DZxs
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:30.935905"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/2fa/disable
+
+_______________________ POST /api/v1/users/me/2fa/setup ________________________
+1. Test Case ID: HTfaru
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:31.681471"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/2fa/setup
+
+_______________________ POST /api/v1/users/me/2fa/verify _______________________
+1. Test Case ID: gJmVH1
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:32.336697"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"code": ""}' http://127.0.0.1:8001/api/v1/users/me/2fa/verify
+
+_________________________ POST /api/v1/users/me/avatar _________________________
+1. Test Case ID: XUaa1e
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:33.807895"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: multipart/form-data; boundary=769a86931f55e7b069978607b998d965' -d $'--225f2617ac5827ea71f2b3653f40cef4\r\nContent-Disposition: form-data; name="file"; filename="file"\r\n\r\n\r\n--225f2617ac5827ea71f2b3653f40cef4--\r\n' http://127.0.0.1:8001/api/v1/users/me/avatar
+
+____________________ POST /api/v1/users/me/change-password _____________________
+1. Test Case ID: lASvld
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:34.427036"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"current_password": "", "new_password": "00000000"}' http://127.0.0.1:8001/api/v1/users/me/change-password
+
+________________________ POST /api/v1/users/me/checkout ________________________
+1. Test Case ID: PVI5OE
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:35.098580"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"plan": ""}' http://127.0.0.1:8001/api/v1/users/me/checkout
+
+____________________ POST /api/v1/users/me/customer-portal _____________________
+1. Test Case ID: aH5tnJ
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:35.844963"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/customer-portal
+
+_______________________ POST /api/v1/users/me/diet-plans _______________________
+1. Test Case ID: ieumEF
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:36.949018"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"goal": "", "overview": "", "payload": {}}' http://127.0.0.1:8001/api/v1/users/me/diet-plans
+
+_________________ POST /api/v1/users/me/notifications/read-all _________________
+1. Test Case ID: FoHsGN
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:38.039968"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/notifications/read-all
+
+_________________ POST /api/v1/users/me/notifications/reminder _________________
+1. Test Case ID: IOj2XR
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:39.185246"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"message": "", "title": ""}' http://127.0.0.1:8001/api/v1/users/me/notifications/reminder
+
+_____________ POST /api/v1/users/me/notifications/{notif_id}/read ______________
+1. Test Case ID: O56POw
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:44.349732"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/notifications/0/read
+
+__________________ POST /api/v1/users/me/subscription/confirm __________________
+1. Test Case ID: J6Y1cd
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:45.510552"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"session_id": ""}' http://127.0.0.1:8001/api/v1/users/me/subscription/confirm
+
+___________________ POST /api/v1/users/me/subscription/sync ____________________
+1. Test Case ID: 3ycenf
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:46.805486"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/subscription/sync
+
+_________________________ POST /api/v1/voice-chat/test _________________________
+1. Test Case ID: rja72N
+
+- Missing header not rejected
+
+    Got 400 when missing required 'Authorization' header, expected 401
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"detail":"Text input is required","timestamp":"2026-05-04T20:11:47.722650"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/voice-chat/test
+
+2. Test Case ID: IW1LWL
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+[400] Bad Request:
+
+    `{"detail":"Text input is required","timestamp":"2026-05-04T20:20:22.291299"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Authorization: [Filtered]' http://127.0.0.1:8001/api/v1/voice-chat/test
+
+_____________________ POST /api/v1/webauthn/login/complete _____________________
+1. Test Case ID: MmTM53
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"state_key and credential required","timestamp":"2026-05-04T20:11:48.050129"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8001/api/v1/webauthn/login/complete
+
+___________________ POST /api/v1/webauthn/register/complete ____________________
+1. Test Case ID: ytF1uR
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:48.781449"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8001/api/v1/webauthn/register/complete
+
+_________________________ POST /api/v1/webhooks/stripe _________________________
+1. Test Case ID: GxtfOu
+
+- Server error
+
+- Undocumented HTTP status code
+
+    Received: 503
+    Documented: 200
+
+[503] Service Unavailable:
+
+    `{"detail":"Webhook not configured","timestamp":"2026-05-04T20:11:48.841293"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/webhooks/stripe
+
+_______________________ GET /api/v1/admin/announcements ________________________
+1. Test Case ID: K3FQuz
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:51.830440"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/admin/announcements
+
+________________________ GET /api/v1/admin/assessments _________________________
+1. Test Case ID: HznGr2
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:53.107892"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/assessments?skip=0&x-schemathesis-unknown-property=42'
+
+_________________________ GET /api/v1/admin/audit-log __________________________
+1. Test Case ID: eUtnha
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:54.190978"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/audit-log?skip=0&x-schemathesis-unknown-property=42'
+
+_____________________ GET /api/v1/admin/brain-mri-analyses _____________________
+1. Test Case ID: vm1nlV
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:55.443551"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/brain-mri-analyses?skip=0&x-schemathesis-unknown-property=42'
+
+______________________ GET /api/v1/admin/ckd-assessments _______________________
+1. Test Case ID: oeYvPJ
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:56.722669"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/ckd-assessments?skip=0&x-schemathesis-unknown-property=42'
+
+_________________________ GET /api/v1/admin/diet-plans _________________________
+1. Test Case ID: YJbZbg
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:57.564578"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/diet-plans?skip=0&x-schemathesis-unknown-property=42'
+
+_____________________ GET /api/v1/admin/heart-assessments ______________________
+1. Test Case ID: IW5Pcw
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:58.613673"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/heart-assessments?skip=0&x-schemathesis-unknown-property=42'
+
+__________________________ GET /api/v1/admin/settings __________________________
+1. Test Case ID: 4wKjIx
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:11:59.531587"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/admin/settings
+
+___________________________ GET /api/v1/admin/stats ____________________________
+1. Test Case ID: CF94XN
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:00.295019"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/admin/stats
+
+________________________ GET /api/v1/admin/stats/charts ________________________
+1. Test Case ID: x6x5mg
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:01.166028"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/admin/stats/charts?days=30'
+
+_______________________ GET /api/v1/admin/subscriptions ________________________
+1. Test Case ID: sSm3Tu
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:02.265135"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/subscriptions?status=&skip=0&limit=500'
+
+____________________ GET /api/v1/admin/subscriptions/stats _____________________
+1. Test Case ID: eeZJ9t
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:03.030825"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/admin/subscriptions/stats
+
+_______________________ GET /api/v1/admin/system-health ________________________
+1. Test Case ID: O0RNYG
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:04.237719"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/admin/system-health
+
+___________________________ GET /api/v1/admin/users ____________________________
+1. Test Case ID: H8Vt4z
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:05.108637"}`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/admin/users?skip=0&x-schemathesis-unknown-property=42'
+
+_____________________________ GET /api/v1/auth/me ______________________________
+1. Test Case ID: WRUOqp
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:05.980143"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/auth/me
+
+_________________________ GET /api/v1/face-auth/status _________________________
+1. Test Case ID: vMmaMh
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:12:06.914345"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/face-auth/status
+
+__________________________ GET /api/v1/meal-photo/log __________________________
+1. Test Case ID: Rp2xcV
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Login required to view meal log","timestamp":"2026-05-04T20:12:20.046638"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/meal-photo/log?limit=50'
+
+____________________ GET /api/v1/shared/assessment/{token} _____________________
+1. Test Case ID: 5ESflm
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 422
+
+[404] Not Found:
+
+    `{"detail":"Shared assessment not found or link expired.","timestamp":"2026-05-04T20:15:55.991664"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/shared/assessment/0
+
+________________________ GET /api/v1/shared/ckd/{token} ________________________
+1. Test Case ID: PHk5tN
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 422
+
+[404] Not Found:
+
+    `{"detail":"Shared CKD assessment not found or link expired.","timestamp":"2026-05-04T20:15:57.451277"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/shared/ckd/0
+
+_______________________ GET /api/v1/shared/heart/{token} _______________________
+1. Test Case ID: 2ZEkxw
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 422
+
+[404] Not Found:
+
+    `{"detail":"Shared heart assessment not found or link expired.","timestamp":"2026-05-04T20:15:58.858045"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/shared/heart/0
+
+_____________________________ GET /api/v1/users/me _____________________________
+1. Test Case ID: fJh7nK
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:01.792832"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/users/me
+
+_______________________ GET /api/v1/users/me/assessments _______________________
+1. Test Case ID: HNpsaH
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:02.597698"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/users/me/assessments?limit=50'
+
+___________________ GET /api/v1/users/me/brain-mri-analyses ____________________
+1. Test Case ID: jdcXb7
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:03.503497"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/users/me/brain-mri-analyses?limit=50'
+
+_____________________ GET /api/v1/users/me/ckd-assessments _____________________
+1. Test Case ID: VTKSy2
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:04.212077"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/users/me/ckd-assessments?limit=50'
+
+_______________________ GET /api/v1/users/me/diet-plans ________________________
+1. Test Case ID: Qo1rEE
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:05.460156"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/users/me/diet-plans?limit=50'
+
+_________________________ GET /api/v1/users/me/export __________________________
+1. Test Case ID: MypDAH
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:06.505666"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/users/me/export
+
+____________________ GET /api/v1/users/me/heart-assessments ____________________
+1. Test Case ID: MKHpoY
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:07.139828"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/users/me/heart-assessments?limit=50'
+
+______________________ GET /api/v1/users/me/notifications ______________________
+1. Test Case ID: mUXorU
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:07.992593"}`
+
+Reproduce with:
+
+    curl -X GET 'http://127.0.0.1:8001/api/v1/users/me/notifications?limit=50'
+
+______________________ GET /api/v1/users/me/subscription _______________________
+1. Test Case ID: ZcAkW4
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:08.926701"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/users/me/subscription
+
+____________________ GET /api/v1/webauthn/register/options _____________________
+1. Test Case ID: W6CEYK
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:23.691823"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/webauthn/register/options
+
+_________________________ GET /api/v1/webauthn/status __________________________
+1. Test Case ID: E3gCOY
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:24.996546"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/webauthn/status
+
+__________________________ GET /api/v1/workout-videos __________________________
+1. Test Case ID: SVWbAj
+
+- API accepts invalid authentication
+
+    Expected 401, got `200 OK` for `GET /api/v1/workout-videos` (generated auth likely invalid)
+
+[200] OK:
+
+    `{"goal":"beginner","videos":[{"id":"_6WERjVqBwE","title":"THIS type of AT HOME beginner workouts changed my life","channel":"growwithjo"},{"id":"cbKkB3POqaY","title":"25 MIN FULL BODY HIIT for Beginners - No Equipment - No Repeat Home Workout","channel":"growingannanas"},{"id":"UCoN6lyM-ts","title":"Simple full body workout for beginners at the kitchen sink!","channel":"Alyssa Kuhn, Arthritis Adventure"},{"id":"RU85rWg9E1E","title":"Full body routine anyone can start with 💪🏿","channel":"Daniel JrStretch"},{ // Output truncated...`
+
+Reproduce with:
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8001/api/v1/workout-videos?refresh_key=%5BFiltered%5D&x-schemathesis-unknown-property=42'
+
+__________________ PATCH /api/v1/admin/announcements/{ann_id} __________________
+1. Test Case ID: VG9M7B
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:41.659752"}`
+
+Reproduce with:
+
+    curl -X PATCH -H 'Content-Type: application/json' -d '{"expires_at": null, "is_active": true, "message": "", "title": ""}' http://127.0.0.1:8001/api/v1/admin/announcements/0
+
+_________________________ PATCH /api/v1/admin/settings _________________________
+1. Test Case ID: 0X8UeU
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:42.469832"}`
+
+Reproduce with:
+
+    curl -X PATCH -H 'Content-Type: application/json' -d '{"key": "", "value": ""}' http://127.0.0.1:8001/api/v1/admin/settings
+
+_______________________ PATCH /api/v1/face-auth/settings _______________________
+1. Test Case ID: zcAyoc
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:43.828134"}`
+
+Reproduce with:
+
+    curl -X PATCH -H 'Content-Type: application/json' -d '{"enabled": false}' http://127.0.0.1:8001/api/v1/face-auth/settings
+
+____________________________ PATCH /api/v1/users/me ____________________________
+1. Test Case ID: l4GNz7
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:45.182031"}`
+
+Reproduce with:
+
+    curl -X PATCH -H 'Content-Type: application/json' -d '{"allergies": null, "avatar_url": null, "calorie_goal": null, "dietary_preference": null, "full_name": "", "onboarding_completed": null, "preferred_language": null}' http://127.0.0.1:8001/api/v1/users/me
+
+_________________ DELETE /api/v1/admin/announcements/{ann_id} __________________
+1. Test Case ID: 0Nelbi
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:50.471736"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/announcements/0
+
+_______________________ DELETE /api/v1/admin/assessments _______________________
+1. Test Case ID: 89kwEp
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:51.568989"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/assessments
+
+___________________ DELETE /api/v1/admin/brain-mri-analyses ____________________
+1. Test Case ID: Oq7Efg
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:52.514159"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/brain-mri-analyses
+
+____________ DELETE /api/v1/admin/brain-mri-analyses/{analysis_id} _____________
+1. Test Case ID: LnSG4V
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:58.082543"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/brain-mri-analyses/0
+
+_____________________ DELETE /api/v1/admin/ckd-assessments _____________________
+1. Test Case ID: ATXmiV
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:59.008619"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/ckd-assessments
+
+_______________________ DELETE /api/v1/admin/diet-plans ________________________
+1. Test Case ID: Rc9WK8
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:16:59.735808"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/diet-plans
+
+__________________ DELETE /api/v1/admin/diet-plans/{plan_id} ___________________
+1. Test Case ID: Qs9xZB
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:05.142348"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/diet-plans/0
+
+____________________ DELETE /api/v1/admin/heart-assessments ____________________
+1. Test Case ID: lrMz6b
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:05.828529"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/heart-assessments
+
+_______________________ DELETE /api/v1/face-auth/enroll ________________________
+1. Test Case ID: krTClP
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:06.583686"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/face-auth/enroll
+
+________________________ DELETE /api/v1/meal-photo/log _________________________
+1. Test Case ID: La95ys
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200
+
+[401] Unauthorized:
+
+    `{"detail":"Login required to clear meal log","timestamp":"2026-05-04T20:17:07.196174"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/meal-photo/log
+
+____________ DELETE /api/v1/users/me/brain-mri-analyses/{record_id} ____________
+1. Test Case ID: N945Zl
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:11.559384"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/brain-mri-analyses/0
+
+_______________ DELETE /api/v1/users/me/notifications/{notif_id} _______________
+1. Test Case ID: ndiTZ8
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:15.649581"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/notifications/0
+
+___________________ POST /api/v1/admin/users/{user_id}/email ___________________
+1. Test Case ID: hOyECL
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:19.686974"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"body": "", "subject": ""}' http://127.0.0.1:8001/api/v1/admin/users/0/email
+
+______________ POST /api/v1/admin/users/{user_id}/reset-password _______________
+1. Test Case ID: 1uUCV4
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:23.210107"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"new_password": "00000000"}' http://127.0.0.1:8001/api/v1/admin/users/0/reset-password
+
+_______________________________ POST /api/v1/tts _______________________________
+1. Test Case ID: M5D0Z5
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"text is required","timestamp":"2026-05-04T20:17:23.452625"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"language_code": null, "speaking_rate": false, "text": "", "voice_id": null, "voice_name": null}' http://127.0.0.1:8001/api/v1/tts
+
+2. Test Case ID: gm0MRs
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+[400] Bad Request:
+
+    `{"detail":"text is required","timestamp":"2026-05-04T20:22:09.665967"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"text": ""}' http://127.0.0.1:8001/api/v1/tts
+
+___________ POST /api/v1/users/me/assessments/{assessment_id}/share ____________
+1. Test Case ID: 5OjDlV
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:27.183421"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/assessments/-2.220446049250313e-16/share
+
+__________________ GET /api/v1/admin/users/{user_id}/profile ___________________
+1. Test Case ID: fbQKJo
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:31.055900"}`
+
+Reproduce with:
+
+    curl -X GET http://127.0.0.1:8001/api/v1/admin/users/0/profile
+
+__________________ PATCH /api/v1/admin/users/{user_id}/notes ___________________
+1. Test Case ID: nQpCFO
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:34.624208"}`
+
+Reproduce with:
+
+    curl -X PATCH -H 'Content-Type: application/json' -d '{"admin_notes": ""}' http://127.0.0.1:8001/api/v1/admin/users/0/notes
+
+_____________ DELETE /api/v1/admin/ckd-assessments/{assessment_id} _____________
+1. Test Case ID: TUol0v
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:38.549067"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/ckd-assessments/0.75
+
+____________ DELETE /api/v1/admin/heart-assessments/{assessment_id} ____________
+1. Test Case ID: L6WHaW
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:42.239475"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/heart-assessments/6.186232982431926e-34
+
+__________ DELETE /api/v1/users/me/assessments/{assessment_id}/share ___________
+1. Test Case ID: cBdqrB
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:46.713816"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/assessments/-1.6419233466889156e-35/share
+
+______________ DELETE /api/v1/users/me/diet-plans/{diet_plan_id} _______________
+1. Test Case ID: vIEV6E
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:52.275646"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/diet-plans/0
+
+_________ DELETE /api/v1/users/me/ckd-assessments/{ckd_assessment_id} __________
+1. Test Case ID: 0CLEwJ
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:17:57.433092"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/ckd-assessments/0
+
+_______ DELETE /api/v1/users/me/heart-assessments/{heart_assessment_id} ________
+1. Test Case ID: 3tgWW2
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:01.744745"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/heart-assessments/0
+
+_______ POST /api/v1/users/me/ckd-assessments/{ckd_assessment_id}/share ________
+1. Test Case ID: QxD05g
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:06.147732"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/ckd-assessments/0/share
+
+_____ POST /api/v1/users/me/heart-assessments/{heart_assessment_id}/share ______
+1. Test Case ID: NSeYzk
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:09.866826"}`
+
+Reproduce with:
+
+    curl -X POST http://127.0.0.1:8001/api/v1/users/me/heart-assessments/0/share
+
+______ DELETE /api/v1/users/me/ckd-assessments/{ckd_assessment_id}/share _______
+1. Test Case ID: u89o6k
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:13.784580"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/ckd-assessments/0/share
+
+____ DELETE /api/v1/users/me/heart-assessments/{heart_assessment_id}/share _____
+1. Test Case ID: 6fO0L9
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:17.620900"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/heart-assessments/0/share
+
+______________________________ POST /api/v1/chat _______________________________
+1. Test Case ID: fPSvpW
+
+- Response violates schema
+
+    "Message cannot be empty" is not of type "array"
+
+    Schema at /components/schemas/HTTPValidationError/properties/detail:
+
+        {
+            "type": "array",
+            "items": {
+                "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail"
+        }
+
+    Value:
+
+        "Message cannot be empty"
+
+- API rejected schema-compliant request
+
+    Valid data should have been accepted
+    Expected: 2xx, 401, 403, 404, 409, 5xx
+
+[422] Unprocessable Content:
+
+    `{"detail":"Message cannot be empty","timestamp":"2026-05-04T20:18:18.140597"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"language": "english", "message": "", "user_context": "", "user_id": "default"}' http://127.0.0.1:8001/api/v1/chat
+
+___________________________ POST /api/v1/voice-chat ____________________________
+1. Test Case ID: TEc4wM
+
+- API accepts requests without authentication
+
+    Expected 401, got `200 OK` for `POST /api/v1/voice-chat`
+
+- API accepted schema-violating request
+
+    Invalid data should have been rejected
+    Expected: 400, 401, 403, 404, 406, 422, 428, 5xx
+    Invalid component: Missing `Authorization` at header
+
+- Missing header not rejected
+
+    Got 200 when missing required 'Authorization' header, expected 401
+
+[200] OK:
+
+    `{"text_input":"I'm concerned about diabetes in my family","ai_response":"Family history is a significant risk factor for diabetes. What would you like to know about managing risk or preventing diabetes in your family?","timestamp":"2026-05-04T20:18:19.494293","language":"english","confidence":0.85}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '{"audio_data": "", "language": "english", "user_id": "default"}' http://127.0.0.1:8001/api/v1/voice-chat
+
+_____________________ PATCH /api/v1/admin/users/{user_id} ______________________
+1. Test Case ID: 9vBERT
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:24.523872"}`
+
+Reproduce with:
+
+    curl -X PATCH -H 'Content-Type: application/json' -d '{"is_active": null, "role": null}' http://127.0.0.1:8001/api/v1/admin/users/3.052025156526192e-61
+
+_______________ DELETE /api/v1/admin/assessments/{assessment_id} _______________
+1. Test Case ID: qJO9z9
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:28.384918"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/assessments/0
+
+_____________________ DELETE /api/v1/admin/users/{user_id} _____________________
+1. Test Case ID: 6LT2SV
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:32.288223"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/admin/users/-1.9
+
+_____________ DELETE /api/v1/users/me/assessments/{assessment_id} ______________
+1. Test Case ID: vWR22L
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 422
+
+[401] Unauthorized:
+
+    `{"detail":"Not authenticated","timestamp":"2026-05-04T20:18:37.907495"}`
+
+Reproduce with:
+
+    curl -X DELETE http://127.0.0.1:8001/api/v1/users/me/assessments/0
+
+______________________ POST /api/v1/auth/forgot-password _______________________
+1. Test Case ID: s9rZ1i
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"There was an error parsing the body"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '�I' http://127.0.0.1:8001/api/v1/auth/forgot-password
+
+__________________________ POST /api/v1/voice-command __________________________
+1. Test Case ID: 5UVQqy
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 422
+
+[400] Bad Request:
+
+    `{"detail":"There was an error parsing the body"}`
+
+Reproduce with:
+
+    curl -X POST -H 'Content-Type: application/json' -d '�I' http://127.0.0.1:8001/api/v1/voice-command
+
+=================================== WARNINGS ===================================
+
+Authentication failed: 89 operations returned authentication errors
+
+401 Unauthorized (89 operations):
+  - DELETE /api/v1/admin/announcements/{ann_id}
+  - DELETE /api/v1/admin/assessments
+  - DELETE /api/v1/admin/assessments/{assessment_id}
+  - DELETE /api/v1/admin/brain-mri-analyses
+  - DELETE /api/v1/admin/brain-mri-analyses/{analysis_id}
+  - DELETE /api/v1/admin/ckd-assessments
+  - DELETE /api/v1/admin/ckd-assessments/{assessment_id}
+  - DELETE /api/v1/admin/diet-plans
+  - DELETE /api/v1/admin/diet-plans/{plan_id}
+  - DELETE /api/v1/admin/heart-assessments
+  - DELETE /api/v1/admin/heart-assessments/{assessment_id}
+  - DELETE /api/v1/admin/users/{user_id}
+  - DELETE /api/v1/face-auth/enroll
+  - DELETE /api/v1/meal-photo/log
+  - DELETE /api/v1/users/me/assessments/{assessment_id}
+  - DELETE /api/v1/users/me/assessments/{assessment_id}/share
+  - DELETE /api/v1/users/me/brain-mri-analyses/{record_id}
+  - DELETE /api/v1/users/me/ckd-assessments/{ckd_assessment_id}
+  - DELETE /api/v1/users/me/ckd-assessments/{ckd_assessment_id}/share
+  - DELETE /api/v1/users/me/diet-plans/{diet_plan_id}
+  - DELETE /api/v1/users/me/heart-assessments/{heart_assessment_id}
+  - DELETE /api/v1/users/me/heart-assessments/{heart_assessment_id}/share
+  - DELETE /api/v1/users/me/notifications/{notif_id}
+  - GET /api/v1/admin/announcements
+  - GET /api/v1/admin/assessments
+  - GET /api/v1/admin/audit-log
+  - GET /api/v1/admin/brain-mri-analyses
+  - GET /api/v1/admin/ckd-assessments
+  - GET /api/v1/admin/diet-plans
+  - GET /api/v1/admin/heart-assessments
+  - GET /api/v1/admin/settings
+  - GET /api/v1/admin/stats
+  - GET /api/v1/admin/stats/charts
+  - GET /api/v1/admin/subscriptions
+  - GET /api/v1/admin/subscriptions/stats
+  - GET /api/v1/admin/system-health
+  - GET /api/v1/admin/users
+  - GET /api/v1/admin/users/{user_id}/profile
+  - GET /api/v1/auth/me
+  - GET /api/v1/face-auth/status
+  - GET /api/v1/meal-photo/log
+  - GET /api/v1/users/me
+  - GET /api/v1/users/me/assessments
+  - GET /api/v1/users/me/brain-mri-analyses
+  - GET /api/v1/users/me/ckd-assessments
+  - GET /api/v1/users/me/diet-plans
+  - GET /api/v1/users/me/export
+  - GET /api/v1/users/me/heart-assessments
+  - GET /api/v1/users/me/notifications
+  - GET /api/v1/users/me/subscription
+  - GET /api/v1/webauthn/register/options
+  - GET /api/v1/webauthn/status
+  - PATCH /api/v1/admin/announcements/{ann_id}
+  - PATCH /api/v1/admin/settings
+  - PATCH /api/v1/admin/users/{user_id}
+  - PATCH /api/v1/admin/users/{user_id}/notes
+  - PATCH /api/v1/face-auth/settings
+  - PATCH /api/v1/users/me
+  - POST /api/v1/admin/announcements
+  - POST /api/v1/admin/audit-log/clear
+  - POST /api/v1/admin/users
+  - POST /api/v1/admin/users/bulk
+  - POST /api/v1/admin/users/bulk-email
+  - POST /api/v1/admin/users/{user_id}/email
+  - POST /api/v1/admin/users/{user_id}/reset-password
+  - POST /api/v1/auth/login
+  - POST /api/v1/face-auth/enroll
+  - POST /api/v1/meal-photo/log/clear
+  - POST /api/v1/reports/sign-assessment/{assessment_db_id}
+  - POST /api/v1/reports/sign-ckd-assessment/{ckd_assessment_db_id}
+  - POST /api/v1/reports/sign-heart-assessment/{heart_assessment_db_id}
+  - POST /api/v1/reports/sign-mri-assessment/{mri_assessment_db_id}
+  - POST /api/v1/users/me/2fa/disable
+  - POST /api/v1/users/me/2fa/setup
+  - POST /api/v1/users/me/2fa/verify
+  - POST /api/v1/users/me/assessments/{assessment_id}/share
+  - POST /api/v1/users/me/avatar
+  - POST /api/v1/users/me/change-password
+  - POST /api/v1/users/me/checkout
+  - POST /api/v1/users/me/ckd-assessments/{ckd_assessment_id}/share
+  - POST /api/v1/users/me/customer-portal
+  - POST /api/v1/users/me/diet-plans
+  - POST /api/v1/users/me/heart-assessments/{heart_assessment_id}/share
+  - POST /api/v1/users/me/notifications/read-all
+  - POST /api/v1/users/me/notifications/reminder
+  - POST /api/v1/users/me/notifications/{notif_id}/read
+  - POST /api/v1/users/me/subscription/confirm
+  - POST /api/v1/users/me/subscription/sync
+  - POST /api/v1/webauthn/register/complete
+
+💡 Ensure valid authentication credentials are set via --auth or -H
+
+=================================== SUMMARY ====================================
+
+API Operations:
+  Selected: 132/132
+  Tested: 132
+
+Test Phases:
+  ⏭  Examples
+  🚫 Coverage
+  🚫 Fuzzing
+  🚫 Stateful
+
+Failures:
+  ❌ API accepts invalid authentication: 2
+  ❌ API accepts requests without authentication: 5
+  ❌ Server error: 1
+  ❌ Response violates schema: 2
+  ❌ API accepted schema-violating request: 7
+  ❌ API rejected schema-compliant request: 10
+  ❌ Missing header not rejected: 7
+  ❌ Undocumented HTTP status code: 103
+
+Errors:
+  🚫 Failed Health Check: 1
+  🚫 Network Error: 6
+
+Warnings:
+  ⚠️ Missing authentication: 89 operations returned only 401/403 responses
+
+Test cases:
+  1774 generated, 117 found 137 unique failures, 94 skipped
+
+Seed: 246291402058367810674117212627922880336
+
+================ 137 failures, 7 errors, 1 warning in 1459.92s =================

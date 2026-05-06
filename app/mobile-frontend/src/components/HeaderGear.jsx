@@ -1,54 +1,37 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useRef } from 'react';
 
 export default function HeaderGear() {
   const navigation = useNavigation();
-  const { logout } = useAuth();
-  const { t } = useLanguage();
+  const scale = useRef(new Animated.Value(1)).current;
+  const onIn  = () => Animated.spring(scale, { toValue: 0.88, damping: 20, stiffness: 300, useNativeDriver: true }).start();
+  const onOut = () => Animated.spring(scale, { toValue: 1,    damping: 20, stiffness: 300, useNativeDriver: true }).start();
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => logout()}
-        style={styles.button}
-        activeOpacity={0.7}
-        hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
-      >
-        <Text style={styles.signOutText}>{t('home.signOut')}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
+    <Animated.View style={[styles.wrap, { transform: [{ scale }] }]}>
+      <Pressable
         onPress={() => navigation.navigate('Settings')}
-        style={styles.button}
-        activeOpacity={0.7}
-        hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+        onPressIn={onIn}
+        onPressOut={onOut}
+        style={styles.btn}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Ionicons name="settings-outline" size={24} color="#e6edf3" />
-      </TouchableOpacity>
-    </View>
+        <Ionicons name="settings-outline" size={20} color="rgba(237,237,239,0.7)" />
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 4,
-  },
-  button: {
-    minWidth: 44,
-    minHeight: 44,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  signOutText: {
-    fontSize: 15,
-    color: '#e6edf3',
-    fontWeight: '500',
+  wrap: { marginRight: 8 },
+  btn: {
+    width: 36, height: 36, borderRadius: 11,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
 });

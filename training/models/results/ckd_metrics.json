@@ -1,0 +1,122 @@
+{
+  "accuracy": 1.0,
+  "roc_auc": 1.0,
+  "cv_accuracy_mean": 0.99,
+  "cv_accuracy_std": 0.0094,
+  "confusion_matrix": [
+    [
+      38,
+      0
+    ],
+    [
+      0,
+      62
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 38.0
+    },
+    "1": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 62.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 100.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 100.0
+    }
+  },
+  "feature_importances": {
+    "age": 0.007663022257192034,
+    "bp": 0.008513385882630642,
+    "sg": 0.11257135466775234,
+    "al": 0.05747132192859511,
+    "su": 0.0049053870650429005,
+    "rbc": 0.002500127779052244,
+    "pc": 0.0057236227043634715,
+    "pcc": 0.0009616399183803622,
+    "ba": 6.553635534499487e-05,
+    "bgr": 0.0290135483353158,
+    "bu": 0.026333766075048677,
+    "sc": 0.13199551772348814,
+    "sod": 0.02878194906838193,
+    "pot": 0.007160186238419479,
+    "hemo": 0.166333813038419,
+    "pcv": 0.17633186873079976,
+    "wc": 0.00652157640618458,
+    "rc": 0.10364921708196675,
+    "htn": 0.060319521906618746,
+    "dm": 0.05047526934233546,
+    "cad": 0.00044935809981526273,
+    "appet": 0.006855750290364019,
+    "pe": 0.0027240601021977125,
+    "ane": 0.002679199002290589
+  },
+  "n_estimators": 200,
+  "features": [
+    "age",
+    "bp",
+    "sg",
+    "al",
+    "su",
+    "rbc",
+    "pc",
+    "pcc",
+    "ba",
+    "bgr",
+    "bu",
+    "sc",
+    "sod",
+    "pot",
+    "hemo",
+    "pcv",
+    "wc",
+    "rc",
+    "htn",
+    "dm",
+    "cad",
+    "appet",
+    "pe",
+    "ane"
+  ],
+  "user_to_csv_map": {
+    "age": "age",
+    "blood_pressure": "bp",
+    "specific_gravity": "sg",
+    "albumin": "al",
+    "sugar": "su",
+    "red_blood_cells": "rbc",
+    "pus_cell": "pc",
+    "pus_cell_clumps": "pcc",
+    "bacteria": "ba",
+    "blood_glucose_random": "bgr",
+    "blood_urea": "bu",
+    "serum_creatinine": "sc",
+    "sodium": "sod",
+    "potassium": "pot",
+    "hemoglobin": "hemo",
+    "packed_cell_volume": "pcv",
+    "white_blood_cell_count": "wc",
+    "red_blood_cell_count": "rc",
+    "hypertension": "htn",
+    "diabetes_mellitus": "dm",
+    "coronary_artery_disease": "cad",
+    "appetite": "appet",
+    "pedal_edema": "pe",
+    "anemia": "ane"
+  }
+}

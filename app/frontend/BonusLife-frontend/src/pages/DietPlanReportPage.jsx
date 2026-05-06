@@ -31,7 +31,7 @@ export default function DietPlanReportPage({ language }) {
           <p className="text-gray-400 mb-4">{isTr ? 'Diyet planı bulunamadı.' : 'Diet plan not found.'}</p>
           <Link
             to={`${ROUTES.DASHBOARD}?tab=diet-plans`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30 transition"
           >
             <ArrowLeft className="w-4 h-4" />
             {isTr ? 'Diyet planlarıma dön' : 'Back to My Diet Plans'}
@@ -49,7 +49,7 @@ export default function DietPlanReportPage({ language }) {
         <button
           type="button"
           onClick={backToDietPlans}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-violet-500/50"
         >
           <ArrowLeft className="w-4 h-4" />
           {isTr ? 'Diyet planlarıma dön' : 'Back to My Diet Plans'}
@@ -58,8 +58,8 @@ export default function DietPlanReportPage({ language }) {
 
       <div className="p-6 rounded-2xl bg-[#12121f] border border-white/[0.1] shadow-2xl">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/[0.06]">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-            <Salad className="w-5 h-5 text-emerald-400" />
+          <div className="w-11 h-11 rounded-xl bg-violet-500/10 flex items-center justify-center">
+            <Salad className="w-5 h-5 text-violet-400" />
           </div>
           <h1 className="text-lg font-semibold text-white">{dietGoalDisplay(dietPlan.goal, isTr)}</h1>
         </div>
@@ -74,21 +74,21 @@ export default function DietPlanReportPage({ language }) {
 
           {p.overview && (
             <div>
-              <h4 className="text-sm font-semibold text-emerald-400 mb-1">{isTr ? 'Genel Bakış' : 'Overview'}</h4>
+              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isTr ? 'Genel Bakış' : 'Overview'}</h4>
               <p className="text-sm text-gray-300 whitespace-pre-line">{p.overview}</p>
             </div>
           )}
 
           {p.daily_plan && (
             <div>
-              <h4 className="text-sm font-semibold text-emerald-400 mb-1">{isTr ? 'Günlük Öğünler' : 'Daily Meals'}</h4>
+              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isTr ? 'Günlük Öğünler' : 'Daily Meals'}</h4>
               <p className="text-sm text-gray-300 whitespace-pre-line">{p.daily_plan}</p>
             </div>
           )}
 
           {p.grocery_list && (
             <div>
-              <h4 className="text-sm font-semibold text-emerald-400 mb-1">{isTr ? 'Alışveriş Listesi' : 'Grocery List'}</h4>
+              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isTr ? 'Alışveriş Listesi' : 'Grocery List'}</h4>
               <p className="text-sm text-gray-300 whitespace-pre-line">{typeof p.grocery_list === 'string' ? p.grocery_list : JSON.stringify(p.grocery_list, null, 2)}</p>
             </div>
           )}

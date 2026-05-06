@@ -19,8 +19,9 @@ export default function BonusLifeLogo({ size = 'medium' }) {
 
   return (
     <View style={styles.wrap}>
+      {/* Icon box — violet→cyan matches web logo gradient */}
       <LinearGradient
-        colors={['#10b981', '#06b6d4']}
+        colors={['#7C3AED', '#06B6D4']}
         start={{ x: 0, y: 1 }}
         end={{ x: 1, y: 0 }}
         style={[styles.iconBox, { width: boxSize, height: boxSize, borderRadius }]}
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   bonusLife: {
     fontWeight: '800',
     letterSpacing: 0.3,
-    color: '#34d399',
+    color: '#A78BFA',   // violet-light — matches web gradient text
   },
   ai: {
     fontWeight: '800',

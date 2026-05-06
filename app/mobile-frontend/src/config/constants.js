@@ -1,12 +1,19 @@
 /**
  * Bonus Life AI - Mobile Frontend Config
- * Physical device (iPhone): use your PC's IP below (same Wi‑Fi). Run ipconfig to get it.
+ * Physical device (iPhone/Android): use your PC's LAN IP below (same Wi‑Fi). Run ipconfig to get it.
  * Android emulator: use 10.0.2.2. iOS simulator: use localhost.
+ * Web (browser on same PC): automatically uses localhost so CORS is not an issue.
  */
-const DEV_API_HOST = '192.168.1.58';
-const DEV_API_PORT = 8001; // backend runs on 8001 (web proxy same)
+import { Platform } from 'react-native';
+
+const DEV_API_HOST = '192.168.1.58'; // LAN IP for physical devices
+const DEV_API_PORT = 8001;
 const urlFromEnv = process.env.EXPO_PUBLIC_API_URL;
-export const API_BASE_URL = urlFromEnv || `http://${DEV_API_HOST}:${DEV_API_PORT}`;
+
+// Web runs in the browser on the same PC — use localhost. Native uses the LAN IP.
+const autoHost = Platform.OS === 'web' ? 'localhost' : DEV_API_HOST;
+
+export const API_BASE_URL = urlFromEnv || `http://${autoHost}:${DEV_API_PORT}`;
 export const APP_NAME = 'Bonus Life AI';
 
 // Mobile theme – restrained, professional

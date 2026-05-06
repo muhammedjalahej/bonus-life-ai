@@ -19,7 +19,7 @@ from cryptography.hazmat.primitives.asymmetric import utils as asym_utils
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
 from app.database import get_db
-from app.db_models import Assessment, HeartAssessment
+from app.db_models import Assessment, HeartAssessment, BrainMriAnalysis, CKDAssessment
 from app.auth import get_current_user
 from app.db_models import User
 from app.report_signing import get_public_key_pem, sign_digest
@@ -136,6 +136,109 @@ def sign_heart_assessment(
         "report_id": report_id,
         "issued_at": issued_at,
         "assessment_db_id": heart_assessment_db_id,
+        "payload_hash": payload_hash_hex,
+        "signature_b64": signature_b64,
+        "alg": "ES256",
+    }
+
+
+def _canonical_payload_mri(mri_analysis: BrainMriAnalysis) -> dict:
+    """Build stable dict for hashing (mri analysis)."""
+    payload_raw = mri_analysis.payload
+    try:
+        payload_parsed = json.loads(payload_raw) if payload_raw else {}
+    except Exception:
+        payload_parsed = {}
+    return {
+        "assessment_db_id": mri_analysis.id,
+        "assessment_uuid": mri_analysis.assessment_id or "",
+        "created_at": (mri_analysis.created_at.isoformat() if mri_analysis.created_at else ""),
+        "tumor_class": mri_analysis.tumor_class or "",
+        "confidence": mri_analysis.confidence or 0.0,
+        "executive_summary": (mri_analysis.executive_summary or "")[:2000],
+        "payload": payload_parsed,
+    }
+
+
+@router.post("/sign-mri-assessment/{mri_assessment_db_id}")
+def sign_mri_assessment(
+    mri_assessment_db_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Sign an MRI assessment for the current user; returns report_id, payload_hash, signature_b64."""
+    mri_assessment = db.query(BrainMriAnalysis).filter(BrainMriAnalysis.id == mri_assessment_db_id).first()
+    if not mri_assessment:
+        raise HTTPException(status_code=404, detail="MRI assessment not found")
+    if mri_assessment.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your assessment")
+
+    payload = _canonical_payload_mri(mri_assessment)
+    canonical = _canonical_json(payload)
+    digest = hashlib.sha256(canonical.encode("utf-8")).digest()
+    payload_hash_hex = digest.hex()
+
+    sig_der = sign_digest(digest)
+    signature_b64 = base64.b64encode(sig_der).decode("ascii")
+
+    report_id = str(uuid.uuid4())
+    issued_at = datetime.utcnow().isoformat() + "Z"
+
+    return {
+        "report_id": report_id,
+        "issued_at": issued_at,
+        "assessment_db_id": mri_assessment_db_id,
+        "payload_hash": payload_hash_hex,
+        "signature_b64": signature_b64,
+        "alg": "ES256",
+    }
+
+def _canonical_payload_ckd(ckd_assessment: CKDAssessment) -> dict:
+    """Build stable dict for hashing (CKD assessment)."""
+    payload_raw = ckd_assessment.payload
+    try:
+        payload_parsed = json.loads(payload_raw) if payload_raw else {}
+    except Exception:
+        payload_parsed = {}
+    return {
+        "assessment_db_id": ckd_assessment.id,
+        "assessment_uuid": ckd_assessment.assessment_id or "",
+        "created_at": (ckd_assessment.created_at.isoformat() if ckd_assessment.created_at else ""),
+        "prediction": ckd_assessment.prediction or "",
+        "confidence": float(ckd_assessment.confidence) if ckd_assessment.confidence is not None else 0.0,
+        "executive_summary": (ckd_assessment.executive_summary or "")[:2000],
+        "payload": payload_parsed,
+    }
+
+
+@router.post("/sign-ckd-assessment/{ckd_assessment_db_id}")
+def sign_ckd_assessment(
+    ckd_assessment_db_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Sign a CKD assessment for the current user; returns report_id, payload_hash, signature_b64."""
+    ckd_assessment = db.query(CKDAssessment).filter(CKDAssessment.id == ckd_assessment_db_id).first()
+    if not ckd_assessment:
+        raise HTTPException(status_code=404, detail="CKD assessment not found")
+    if ckd_assessment.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your assessment")
+
+    payload = _canonical_payload_ckd(ckd_assessment)
+    canonical = _canonical_json(payload)
+    digest = hashlib.sha256(canonical.encode("utf-8")).digest()
+    payload_hash_hex = digest.hex()
+
+    sig_der = sign_digest(digest)
+    signature_b64 = base64.b64encode(sig_der).decode("ascii")
+
+    report_id = str(uuid.uuid4())
+    issued_at = datetime.utcnow().isoformat() + "Z"
+
+    return {
+        "report_id": report_id,
+        "issued_at": issued_at,
+        "assessment_db_id": ckd_assessment_db_id,
         "payload_hash": payload_hash_hex,
         "signature_b64": signature_b64,
         "alg": "ES256",

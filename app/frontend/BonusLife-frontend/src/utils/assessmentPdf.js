@@ -325,3 +325,235 @@ export async function buildAndDownloadSignedHeartPDF(assessment, user, isTr, api
   a.click();
   URL.revokeObjectURL(url);
 }
+
+/** Section headers we use to split CKD summary. */
+const CKD_PDF_SECTION_HEADERS = [
+  'CKD Assessment Summary',
+  'Clinical Summary:',
+  'Key Findings:',
+  'Key findings:',
+  'Risk Factors:',
+  'Risk factors:',
+  'Recommendations:',
+  'Executive Summary:',
+  'Immediate Actions:',
+];
+
+function parseCKDSummaryForPdf(summary) {
+  const raw = (summary || 'No summary available.').replace(/\*+/g, '');
+  const safe = toPdfSafeText(raw).slice(0, 2000);
+  const sections = [];
+  let remaining = safe;
+  const headers = CKD_PDF_SECTION_HEADERS;
+  while (remaining.length > 0) {
+    let foundIndex = -1;
+    let foundLabel = '';
+    let found = null;
+    for (const h of headers) {
+      const i = remaining.toLowerCase().indexOf(h.toLowerCase());
+      if (i >= 0 && (foundIndex < 0 || i < foundIndex)) {
+        foundIndex = i;
+        foundLabel = remaining.slice(i, i + h.length);
+        found = h;
+      }
+    }
+    if (foundIndex < 0) {
+      if (remaining.trim()) sections.push({ title: null, content: remaining.trim() });
+      break;
+    }
+    if (foundIndex > 0) {
+      const intro = remaining.slice(0, foundIndex).trim();
+      if (intro) sections.push({ title: null, content: intro });
+    }
+    remaining = remaining.slice(foundIndex + foundLabel.length).trim();
+    let nextHeaderIdx = -1;
+    for (const h of headers) {
+      const i = remaining.toLowerCase().indexOf(h.toLowerCase());
+      if (i >= 0 && (nextHeaderIdx < 0 || i < nextHeaderIdx)) nextHeaderIdx = i;
+    }
+    const content = nextHeaderIdx >= 0 ? remaining.slice(0, nextHeaderIdx).trim() : remaining;
+    if (content) sections.push({ title: foundLabel, content });
+    remaining = nextHeaderIdx >= 0 ? remaining.slice(nextHeaderIdx) : '';
+  }
+  return sections;
+}
+
+/**
+ * Build and download signed CKD assessment PDF.
+ * @param {Object} assessment - CKD assessment object (id, prediction, confidence, executive_summary, created_at)
+ * @param {Object} user - current user (full_name, email)
+ * @param {boolean} isTr - Turkish locale
+ * @param {Object} apiService - api service with signCKDAssessmentReport
+ */
+export async function buildAndDownloadSignedCKDPDF(assessment, user, isTr, apiService) {
+  const signResult = await apiService.signCKDAssessmentReport(assessment.id);
+  const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
+  const QRCode = (await import('qrcode')).default;
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const page = doc.addPage([595, 842]);
+  const { width, height } = page.getSize();
+  let y = height - 50;
+
+  page.drawText('Chronic Kidney Disease (CKD) Assessment Report', { x: 50, y, font: fontBold, size: 16, color: rgb(0.0, 0.54, 0.70) });
+  y -= 24;
+  const date = toPdfSafeText(assessment.created_at ? new Date(assessment.created_at).toLocaleString() : 'N/A');
+  page.drawText(`Date: ${date}`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+  y -= 18;
+  page.drawText(`Patient: ${toPdfSafeText(user?.full_name || user?.email || 'N/A')}`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+  y -= 18;
+  const predColor = (assessment.prediction || '').toLowerCase().includes('no') ? rgb(0.05, 0.55, 0.35) : rgb(0.8, 0.1, 0.1);
+  page.drawText(`CKD Status: ${toPdfSafeText(assessment.prediction || 'Unknown')}  |  Confidence: ${((assessment.confidence || 0) * 100).toFixed(1)}%`, { x: 50, y, font, size: 11, color: predColor });
+  y -= 24;
+
+  const leftMargin = 50;
+  const rightMargin = 70;
+  const maxW = width - leftMargin - rightMargin;
+  const lineH = 12;
+  const charsPerLine = 72;
+  const wordBreaks = [' '];
+  const normalText = { font, size: 10, color: rgb(0.3, 0.3, 0.3) };
+  const sectionTitleStyle = { font: fontBold, size: 10, color: rgb(0.0, 0.40, 0.55) };
+
+  const sections = parseCKDSummaryForPdf(assessment.executive_summary);
+  page.drawText('Clinical Summary:', { x: leftMargin, y, font: fontBold, size: 11, color: rgb(0.2, 0.2, 0.2) });
+  y -= 14;
+  for (const { title, content } of sections) {
+    if (!content) continue;
+    if (title) {
+      page.drawText(title, { x: leftMargin, y, ...sectionTitleStyle });
+      y -= lineH;
+    }
+    page.drawText(content, { x: leftMargin, y, ...normalText, maxWidth: maxW, lineHeight: lineH, wordBreaks });
+    y -= Math.max(1, Math.ceil(content.length / charsPerLine)) * lineH;
+    y -= title ? 10 : 6;
+  }
+  y -= 16;
+
+  const qrPayload = JSON.stringify({
+    report_id: signResult.report_id,
+    issued_at: signResult.issued_at,
+    assessment_db_id: signResult.assessment_db_id,
+    payload_hash: signResult.payload_hash,
+    signature_b64: signResult.signature_b64,
+    alg: signResult.alg,
+  });
+  const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 140, margin: 1 });
+  const base64 = qrDataUrl.split(',')[1];
+  const qrBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const qrImage = await doc.embedPng(qrBytes);
+  page.drawImage(qrImage, { x: 50, y: y - 130, width: 120, height: 120 });
+  page.drawText('Scan QR to verify signature', { x: 50, y: y - 142, font, size: 8, color: rgb(0.5, 0.5, 0.5) });
+
+  y -= 165;
+  const medicalStatements = [
+    'This report is for informational purposes only. Clinical decisions should be made in consultation with a qualified healthcare provider.',
+    'Results should be interpreted by a licensed healthcare professional in the context of the full clinical picture.',
+    'This assessment does not replace professional medical advice, diagnosis, or treatment.',
+    'For clinical use only. Interpretation by a qualified healthcare provider is recommended.',
+    'Generated by Bonus Life AI. This tool aids awareness; a healthcare professional should guide any treatment decisions.',
+  ];
+  const statementIndex = signResult.report_id.split('').reduce((acc, c) => (acc + c.charCodeAt(0)) % medicalStatements.length, 0);
+  page.drawText(medicalStatements[statementIndex], { x: 50, y, font, size: 8, color: rgb(0.45, 0.45, 0.5), maxWidth: width - 100 });
+
+  const pdfBytes = await doc.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ckd-assessment-${assessment.id}-signed.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Parse Brain MRI summary
+ */
+export function parseMriSummaryForPdf(summary) {
+  const raw = (summary || 'No summary available.').replace(/\*+/g, '');
+  const safe = toPdfSafeText(raw).slice(0, 2000);
+  // Just split by double newline as sections might not have predictable headers
+  const parts = safe.split(/\n\s*\n/).filter(p => p.trim());
+  return parts.map((content) => ({ title: null, content: content.trim() }));
+}
+
+/**
+ * Build and download signed MRI assessment PDF.
+ */
+export async function buildAndDownloadSignedMriPDF(assessment, user, isTr, apiService) {
+  const signResult = await apiService.signMriAssessmentReport(assessment.id);
+  const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
+  const QRCode = (await import('qrcode')).default;
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const page = doc.addPage([595, 842]);
+  const { width, height } = page.getSize();
+  let y = height - 50;
+
+  page.drawText('Brain Neurological MRI Report', { x: 50, y, font: fontBold, size: 16, color: rgb(0.35, 0.2, 0.6) });
+  y -= 24;
+  const date = toPdfSafeText(assessment.created_at ? new Date(assessment.created_at).toLocaleString() : 'N/A');
+  page.drawText(`Date: ${date}`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+  y -= 18;
+  page.drawText(`Patient: ${toPdfSafeText(user?.full_name || user?.email || 'N/A')}`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+  y -= 18;
+  page.drawText(`AI Classification: ${toPdfSafeText(assessment.tumor_class || 'Unknown')}  |  Confidence: ${assessment.confidence ? ((assessment.confidence || 0) * 100).toFixed(1) + '%' : 'N/A'}`, { x: 50, y, font, size: 11, color: rgb(0.2, 0.2, 0.2) });
+  y -= 24;
+
+  const leftMargin = 50;
+  const rightMargin = 70;
+  const maxW = width - leftMargin - rightMargin;
+  const lineH = 12;
+  const charsPerLine = 72;
+  const wordBreaks = [' '];
+  const normalText = { font, size: 10, color: rgb(0.3, 0.3, 0.3) };
+  
+  const sections = parseMriSummaryForPdf(assessment.executive_summary);
+  page.drawText('Clinical Summary:', { x: leftMargin, y, font: fontBold, size: 11, color: rgb(0.2, 0.2, 0.2) });
+  y -= 14;
+  for (const { content } of sections) {
+    if (!content) continue;
+    page.drawText(content, { x: leftMargin, y, ...normalText, maxWidth: maxW, lineHeight: lineH, wordBreaks });
+    y -= Math.max(1, Math.ceil(content.length / charsPerLine)) * lineH;
+    y -= 6;
+  }
+  y -= 16;
+
+  const qrPayload = JSON.stringify({
+    report_id: signResult.report_id,
+    issued_at: signResult.issued_at,
+    assessment_db_id: signResult.assessment_db_id,
+    payload_hash: signResult.payload_hash,
+    signature_b64: signResult.signature_b64,
+    alg: signResult.alg,
+  });
+  const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 140, margin: 1 });
+  const base64 = qrDataUrl.split(',')[1];
+  const qrBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const qrImage = await doc.embedPng(qrBytes);
+  page.drawImage(qrImage, { x: 50, y: y - 130, width: 120, height: 120 });
+  page.drawText('Scan QR to verify signature', { x: 50, y: y - 142, font, size: 8, color: rgb(0.5, 0.5, 0.5) });
+
+  y -= 165;
+  const medicalStatements = [
+    'This report is for informational purposes only. Clinical decisions should be made in consultation with a qualified healthcare provider.',
+    'Results should be interpreted by a licensed healthcare professional in the context of the full clinical picture.',
+    'This assessment does not replace professional medical advice, diagnosis, or treatment.',
+    'For clinical use only. Interpretation by a qualified healthcare provider is recommended.',
+    'Generated by Bonus Life AI. This tool aids awareness; a healthcare professional should guide any treatment decisions.',
+  ];
+  const statementIndex = signResult.report_id.split('').reduce((acc, c) => (acc + c.charCodeAt(0)) % medicalStatements.length, 0);
+  const medicalStatement = medicalStatements[statementIndex];
+  page.drawText(medicalStatement, { x: 50, y, font, size: 8, color: rgb(0.45, 0.45, 0.5), maxWidth: width - 100 });
+
+  const pdfBytes = await doc.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `brain-mri-${assessment.id}-signed.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+}

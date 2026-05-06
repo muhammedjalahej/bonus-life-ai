@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { QrCode, CheckCircle, XCircle, Upload, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
+import { QrCode, CheckCircle, XCircle, Upload, Loader2, ArrowLeft } from 'lucide-react';
+import { ROUTES } from '../config/constants';
 import { verifyReportSignature } from '../services/api';
 
 export default function VerifyReport({ language, embedded = false }) {
+  const navigate = useNavigate();
   const isTr = language === 'turkish';
   const [status, setStatus] = useState(null); // { valid, report_id, issued_at, alg, assessment_db_id, error }
   const [scanning, setScanning] = useState(false);
@@ -151,8 +155,8 @@ export default function VerifyReport({ language, embedded = false }) {
   const content = (
     <>
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <QrCode className="w-6 h-6 text-emerald-400" />
+            <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center">
+              <QrCode className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">{isTr ? 'Rapor Doğrula' : 'Verify Report'}</h1>
@@ -161,13 +165,13 @@ export default function VerifyReport({ language, embedded = false }) {
           </div>
 
           {!scanning && !status && (
-            <div className="space-y-3">
-              <button type="button" onClick={startCamera} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition font-medium">
-                <QrCode className="w-5 h-5" /> {isTr ? 'Kamerayı Aç' : 'Scan with camera'}
-              </button>
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/[0.06] text-gray-300 border border-white/[0.08] hover:bg-white/[0.08] transition font-medium">
-                <Upload className="w-5 h-5" /> {isTr ? 'QR Görseli Yükle' : 'Upload QR image'}
-              </button>
+            <div className="flex flex-col items-center gap-3">
+              <LiquidMetalButton onClick={startCamera} width={200}>
+                <QrCode className="w-4 h-4" style={{ color: '#fff' }} /> {isTr ? 'Kamerayı Aç' : 'Scan with camera'}
+              </LiquidMetalButton>
+              <LiquidMetalButton onClick={() => fileInputRef.current?.click()} width={200}>
+                <Upload className="w-4 h-4" /> {isTr ? 'QR Görseli Yükle' : 'Upload QR image'}
+              </LiquidMetalButton>
               <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFile} />
             </div>
           )}
@@ -190,10 +194,10 @@ export default function VerifyReport({ language, embedded = false }) {
           )}
 
           {status && !verifying && (
-            <div className={`rounded-xl border p-4 ${status.valid ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+            <div className={`rounded-xl border p-4 ${status.valid ? 'bg-violet-500/10 border-violet-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
               <div className="flex items-center gap-3 mb-3">
-                {status.valid ? <CheckCircle className="w-8 h-8 text-emerald-400" /> : <XCircle className="w-8 h-8 text-red-400" />}
-                <span className={`text-lg font-bold ${status.valid ? 'text-emerald-400' : 'text-red-400'}`}>
+                {status.valid ? <CheckCircle className="w-8 h-8 text-violet-400" /> : <XCircle className="w-8 h-8 text-red-400" />}
+                <span className={`text-lg font-bold ${status.valid ? 'text-violet-400' : 'text-red-400'}`}>
                   {status.valid ? (isTr ? 'GEÇERLİ' : 'VALID') : (status.error || (isTr ? 'GEÇERSİZ' : 'INVALID'))}
                 </span>
               </div>
@@ -227,12 +231,17 @@ export default function VerifyReport({ language, embedded = false }) {
   }
 
   return (
-    <div className="min-h-screen relative">
-      <div className="fixed inset-0 gradient-mesh pointer-events-none" />
-      <div className="fixed inset-0 grid-pattern pointer-events-none" />
+    <div className="min-h-screen relative bg-[#050508]">
+      <div className="fixed inset-0 grid-pattern opacity-20 pointer-events-none" />
       <div className="relative z-10 min-h-screen pt-24 pb-12 px-6 sm:px-8 flex flex-col items-center justify-center">
         <div className="w-full max-w-lg">
-          <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-6">
+          {/* Back to Dashboard */}
+          <button onClick={() => navigate(ROUTES.DASHBOARD)}
+            className="flex items-center gap-2 mb-6 text-sm text-white/70 hover:text-white transition-colors group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            Back to Dashboard
+          </button>
+          <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
             {content}
           </div>
           <p className="text-xs text-gray-600 mt-4 text-center">

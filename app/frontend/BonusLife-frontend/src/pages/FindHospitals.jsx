@@ -2,16 +2,20 @@
  * Nearest hospitals in Turkey (OpenStreetMap). List + map.
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { Navigation, Phone, ExternalLink, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Navigation, Phone, ExternalLink, Loader2, ArrowLeft } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { API_BASE_URL } from '../config/constants';
+import { ROUTES } from '../config/constants';
 import { VOICE_FIND_NEAREST_HOSPITAL } from '../components/VoiceAgent';
+import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
+import { useAuth } from '../context/AuthContext';
 
-const API_BASE = (API_BASE_URL || '').replace(/\/$/, '');
 const TURKEY_CENTER = { lat: 39.0, lon: 32.8 };
 
 export default function FindHospitals({ language }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const isTr = language === 'turkish';
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -26,30 +30,51 @@ export default function FindHospitals({ language }) {
   const fetchHospitals = async (lat, lon) => {
     setLoading(true);
     setError('');
-    try {
-      const url = `${API_BASE}/api/v1/nearby-hospitals?lat=${lat}&lon=${lon}&radius_km=50&limit=25`;
-      const res = await fetch(url);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = data.detail || res.statusText;
-        if (res.status === 404) {
-          throw new Error(isTr ? 'Hastane servisi kullanılamıyor. Lütfen backend\'in çalıştığından emin olun.' : 'Hospitals service unavailable. Please ensure the backend is running.');
-        }
-        if (res.status === 502) {
-          throw new Error(isTr ? 'Harita verisi geçici olarak alınamıyor.' : 'Map data temporarily unavailable.');
-        }
-        if (res.status === 400) {
-          throw new Error(typeof data.detail === 'string' ? data.detail : (isTr ? 'Konum Türkiye sınırları içinde olmalıdır.' : 'Location must be within Turkey.'));
-        }
-        throw new Error(msg);
-      }
-      setHospitals(data.hospitals || []);
-    } catch (e) {
-      setError(e.message || (isTr ? 'Hastane verisi alınamadı.' : 'Could not fetch hospital data.'));
-      setHospitals([]);
-    } finally {
-      setLoading(false);
+    const radiusM = 15000;
+    const query = `[out:json][timeout:25];(node[amenity=hospital](around:${radiusM},${lat},${lon});way[amenity=hospital](around:${radiusM},${lat},${lon}););out center 25;`;
+    const mirrors = [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+    ];
+    let data = null;
+    for (const mirror of mirrors) {
+      try {
+        const res = await fetch(mirror, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `data=${encodeURIComponent(query)}`,
+          signal: AbortSignal.timeout(20000),
+        });
+        if (!res.ok) continue;
+        data = await res.json();
+        break;
+      } catch { continue; }
     }
+    if (!data) {
+      setError(isTr ? 'Harita verisi alınamadı. Lütfen tekrar deneyin.' : 'Could not load hospital data. Please try again.');
+      setHospitals([]);
+      setLoading(false);
+      return;
+    }
+    const haversine = (lat1, lon1, lat2, lon2) => {
+      const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+    const seen = new Set();
+    const results = (data.elements || []).map(el => {
+      const elLat = el.lat ?? el.center?.lat;
+      const elLon = el.lon ?? el.center?.lon;
+      if (!elLat || !elLon) return null;
+      const tags = el.tags || {};
+      const name = tags.name || tags['name:en'] || 'Hospital';
+      const key = `${elLat},${elLon},${name}`;
+      if (seen.has(key)) return null;
+      seen.add(key);
+      return { name, lat: elLat, lon: elLon, phone: tags.phone || tags['contact:phone'] || null, distance_km: Math.round(haversine(lat, lon, elLat, elLon) * 100) / 100 };
+    }).filter(Boolean).sort((a, b) => a.distance_km - b.distance_km).slice(0, 25);
+    setHospitals(results);
+    setLoading(false);
   };
 
   const useMyLocation = () => {
@@ -114,7 +139,7 @@ export default function FindHospitals({ language }) {
       const center = userLocation || TURKEY_CENTER;
       map.setView([center.lat, center.lon], userLocation ? 12 : 6);
       if (userLocation) {
-        const userIcon = L.divIcon({ className: 'user-marker', html: '<div style="width:16px;height:16px;border-radius:50%;background:#10b981;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>' });
+        const userIcon = L.divIcon({ className: 'user-marker', html: '<div style="width:16px;height:16px;border-radius:50%;background:#7C3AED;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>' });
         const m = L.marker([userLocation.lat, userLocation.lon], { icon: userIcon }).addTo(map);
         markersRef.current.push(m);
       }
@@ -138,6 +163,15 @@ export default function FindHospitals({ language }) {
   return (
     <div className="min-h-screen relative">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+        {/* Back to Dashboard — only for logged-in users */}
+        {user && (
+          <button onClick={() => navigate(ROUTES.DASHBOARD)}
+            className="flex items-center gap-2 mb-6 text-sm text-white/70 hover:text-white transition-colors group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            Back to Dashboard
+          </button>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
@@ -147,15 +181,9 @@ export default function FindHospitals({ language }) {
 
         {/* Location CTA */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
-          <button
-            type="button"
-            onClick={useMyLocation}
-            disabled={loading}
-            className="btn-primary text-sm px-5 py-2.5 gap-2"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
-            {loading ? (isTr ? 'Yükleniyor...' : 'Loading...') : (isTr ? 'Konumumu Kullan' : 'Use my location')}
-          </button>
+          <LiquidMetalButton onClick={useMyLocation} disabled={loading} width={200}>
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Yükleniyor...' : 'Loading...'}</> : <><Navigation className="w-4 h-4" /> {isTr ? 'Konumumu Kullan' : 'Use my location'}</>}
+          </LiquidMetalButton>
           {locationError && <p className="text-sm text-amber-400">{locationError}</p>}
           {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
@@ -205,9 +233,9 @@ export default function FindHospitals({ language }) {
                         </p>
                       )}
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0">
-                        <span className="text-[11px] font-medium text-emerald-400/95">{h.distance_km} km</span>
+                        <span className="text-[11px] font-medium" style={{ color: '#9ca3af' }}>{h.distance_km} km</span>
                         {h.phone && (
-                          <a href={`tel:${h.phone}`} className="inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-emerald-400">
+                          <a href={`tel:${h.phone}`} className="inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-violet-400 transition-colors">
                             <Phone className="w-3 h-3 shrink-0" /> {h.phone}
                           </a>
                         )}
@@ -216,7 +244,8 @@ export default function FindHospitals({ language }) {
                     <button
                       type="button"
                       onClick={() => openInMaps(h.lat, h.lon, h.name)}
-                      className="shrink-0 self-start p-2 rounded-lg text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                      className="shrink-0 self-start p-2 rounded-lg text-gray-400 hover:text-gray-200 transition-all"
+                      style={{ background: 'rgba(255,255,255,0.03)' }}
                       title={isTr ? 'Yol tarifi al' : 'Get directions'}
                     >
                       <ExternalLink className="w-4 h-4" />

@@ -96,7 +96,7 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
             <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
               <p className="text-xs text-gray-500 mb-1">{isTr ? 'Risk Seviyesi' : 'Risk Level'}</p>
               <span className={`inline-block px-2 py-1 rounded text-sm font-bold
-                ${(data.risk_level || '').includes('High') ? 'bg-red-500/20 text-red-400' : (data.risk_level || '').includes('Moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                ${(data.risk_level || '').includes('High') ? 'bg-red-500/20 text-red-400' : (data.risk_level || '').includes('Moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-violet-500/20 text-violet-400'}`}>
                 {data.risk_level || 'Unknown'}
               </span>
             </div>

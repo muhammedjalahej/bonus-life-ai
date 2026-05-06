@@ -4,7 +4,7 @@ import logging
 import secrets
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -23,7 +23,8 @@ from app.auth import (
     create_access_token,
     get_current_user,
 )
-from app.email_service import send_temporary_password_email
+from app.email_service import send_password_reset_email
+from app.rate_limit import check_rate_limit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["auth"])
@@ -71,7 +72,8 @@ async def maintenance_status(db: Session = Depends(get_db)):
 
 
 @router.post("/auth/register", response_model=TokenResponse)
-async def register(data: RegisterRequest, db: Session = Depends(get_db)):
+async def register(request: Request, data: RegisterRequest, db: Session = Depends(get_db)):
+    check_rate_limit(f"register:{request.client.host if request.client else 'unknown'}", max_calls=10, window_seconds=600)
     if _is_maintenance(db):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                             detail="Registration is disabled during maintenance.")
@@ -94,7 +96,8 @@ async def register(data: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/auth/login", response_model=TokenResponse)
-async def login(data: LoginRequest, db: Session = Depends(get_db)):
+async def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
+    check_rate_limit(f"login:{request.client.host if request.client else 'unknown'}", max_calls=10, window_seconds=60)
     user = db.query(User).filter(User.email == data.email.lower().strip()).first()
     password = (data.password or "").strip()
     if not user or not verify_password(password, user.hashed_password):
@@ -132,25 +135,25 @@ async def me(user: User = Depends(get_current_user)):
 
 
 @router.post("/auth/forgot-password")
-async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    """Generate a new temporary password and email it to the user. Always returns 200 with same message."""
+async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Generate a time-limited reset token and email the link. Does NOT change the current password."""
+    check_rate_limit(f"forgot:{request.client.host if request.client else 'unknown'}", max_calls=3, window_seconds=300)
     user = db.query(User).filter(User.email == data.email.lower().strip()).first()
     if user and user.is_active:
-        temp_password = secrets.token_urlsafe(12)
-        user.hashed_password = hash_password(temp_password)
-        user.password_reset_token = None
-        user.password_reset_expires = None
+        token = secrets.token_urlsafe(32)
+        user.password_reset_token = token
+        user.password_reset_expires = datetime.utcnow() + timedelta(hours=1)
         db.commit()
-        if not send_temporary_password_email(user.email, temp_password):
-            logger.info("Dev temporary password for %s: %s", user.email, temp_password)
-        logger.info(f"Temporary password sent to {user.email}")
-    return {"message": "If an account exists with this email, you will receive a new temporary password."}
+        if not send_password_reset_email(user.email, token):
+            logger.info("Dev reset link for %s: /reset-password?token=%s", user.email, token)
+        logger.info("Password reset email sent to %s", user.email)
+    return {"message": "If an account exists with this email, you will receive a password reset link."}
 
 
 @router.post("/auth/reset-password")
 async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     """Set new password using the token from the reset link."""
-    if not data.token or not data.new_password or len(data.new_password) < 6:
+    if not data.token or not data.new_password or len(data.new_password) < 8:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset link")
     user = (
         db.query(User)

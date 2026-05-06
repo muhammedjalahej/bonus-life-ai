@@ -1,0 +1,101 @@
+Run started:2026-05-04 20:02:54.736108+00:00
+
+Test results:
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: app/config.py:16:16
+15	    LOG_LEVEL: str = "INFO"
+16	    HOST: str = "0.0.0.0"
+17	    PORT: int = 8000
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle
+   Location: app/main.py:84:27
+83	            with open(model_path, "rb") as f:
+84	                artifact = pickle.load(f)
+85	
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle
+   Location: app/main.py:209:27
+208	            with open(model_path, "rb") as f:
+209	                artifact = pickle.load(f)
+210	            if isinstance(artifact, dict) and "model" in artifact:
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle
+   Location: app/main.py:304:27
+303	            with open(model_path, "rb") as f:
+304	                artifact = pickle.load(f)
+305	            if isinstance(artifact, dict) and "model" in artifact:
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: app/main.py:669:31
+668	        "app.main:app",
+669	        host=os.getenv("HOST", "0.0.0.0"),
+670	        port=int(os.getenv("PORT", 8001)),
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle
+   Location: app/ml_model.py:30:33
+29	                with open(model_path, "rb") as f:
+30	                    self.model = pickle.load(f)
+31	            elif model_path.endswith(".joblib"):
+
+--------------------------------------------------
+>> Issue: [B614:pytorch_load] Use of unsafe PyTorch load
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b614_pytorch_load.html
+   Location: app/services\brain_mri_service.py:110:20
+109	            )
+110	            state = torch.load(model_path, map_location=device)
+111	            model.load_state_dict(state)
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle
+   Location: app/services\symptom_checker.py:76:35
+75	            with open(self.model_path, "rb") as f:
+76	                self._model_data = pickle.load(f)
+77	            self._load_group_to_diseases()
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 7537
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 19
+		Medium: 8
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 5
+		High: 22
+Files skipped (0):

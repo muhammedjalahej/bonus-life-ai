@@ -109,7 +109,15 @@ async def diabetes_assessment(
             "monitoring_schedule": "Regular check-ups recommended",
         }
 
-        if current_user:
+    except Exception as e:
+        logger.error(f"Assessment error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Assessment service temporarily unavailable. Please try again shortly.",
+        )
+
+    if current_user:
+        try:
             payload = {
                 "request": request.dict(),
                 "risk_analysis": risk_analysis,
@@ -132,21 +140,18 @@ async def diabetes_assessment(
                 "Your diabetes risk assessment is ready. View it in your Dashboard.",
                 "success",
             )
+        except Exception as db_err:
+            logger.error(f"Failed to save diabetes assessment to DB: {db_err}")
+            db.rollback()
 
-        return AssessmentResponse(
-            assessment_id=assessment_id,
-            timestamp=datetime.utcnow().isoformat(),
-            executive_summary=llm_insights,
-            risk_analysis=risk_analysis,
-            health_metrics=health_metrics,
-            recommendations=recommendations,
-        )
-    except Exception as e:
-        logger.error(f"Assessment error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Assessment service temporarily unavailable. Please try again shortly.",
-        )
+    return AssessmentResponse(
+        assessment_id=assessment_id,
+        timestamp=datetime.utcnow().isoformat(),
+        executive_summary=llm_insights,
+        risk_analysis=risk_analysis,
+        health_metrics=health_metrics,
+        recommendations=recommendations,
+    )
 
 
 # -- helper functions ---------------------------------------------------------

@@ -9,7 +9,7 @@ import { buildAndDownloadSignedHeartPDF } from '../utils/assessmentPdf';
 
 const getRiskBadgeClasses = (riskLevel) => {
   const r = (riskLevel || '').toLowerCase();
-  if (r.includes('low') || r.includes('minimal')) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+  if (r.includes('low') || r.includes('minimal')) return 'bg-violet-500/20 text-violet-400 border-violet-500/30';
   if (r.includes('medium') || r.includes('moderate')) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
   if (r.includes('high') || r.includes('elevated')) return 'bg-red-500/20 text-red-400 border-red-500/30';
   return 'bg-white/[0.08] text-gray-300 border-white/[0.12]';

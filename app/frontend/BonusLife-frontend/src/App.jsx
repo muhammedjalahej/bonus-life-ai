@@ -1,5 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AlertTriangle, Wrench } from 'lucide-react';
 
 import ErrorBoundary from './components/ErrorBoundary';
@@ -8,6 +8,7 @@ import NotFoundPage from './components/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import VoiceAgent from './components/VoiceAgent';
 import UXSettingsModal from './components/UXSettingsModal';
+import Preloader from './components/ui/Preloader';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UXSettingsProvider, useUXSettings } from './context/UXSettingsContext';
 import { ROUTES } from './config/constants';
@@ -56,7 +57,7 @@ function MaintenancePage() {
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="mt-8 px-6 py-3 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 font-medium transition"
+          className="mt-8 px-6 py-3 rounded-xl bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30 font-medium transition"
         >
           Refresh Page
         </button>
@@ -69,19 +70,35 @@ function MaintenancePage() {
  * Inner app that has access to AuthContext and can check maintenance mode.
  */
 function AppContent({ language, setLanguage }) {
-  const { maintenanceMode, isAdmin } = useAuth();
+  const { maintenanceMode, isAdmin, user, loading } = useAuth();
+  const location = useLocation();
+  const hideVoiceAgent = [ROUTES.LOGIN, ROUTES.REGISTER, ROUTES.CHAT, ROUTES.VOICE_CHAT, ROUTES.LOCAL_AI, ROUTES.ADMIN].includes(location.pathname);
+
+  // Show preloader on every fresh login / signup (user transitions null → non-null)
+  const prevUserRef = useRef('initial'); // 'initial' = sentinel for first mount
+  const [showPreloader, setShowPreloader] = useState(false);
+  useEffect(() => {
+    if (loading) return;
+    const prev = prevUserRef.current;
+    prevUserRef.current = user;
+    // Only trigger after initial auth resolves AND user just became non-null
+    if (prev !== 'initial' && !prev && user) {
+      setShowPreloader(true);
+    }
+  }, [user, loading]);
+  const handlePreloaderComplete = () => setShowPreloader(false);
 
   // If maintenance mode is on and user is NOT admin, show maintenance page
   // but still allow the /login route so an admin can sign in.
   if (maintenanceMode && !isAdmin) {
     return (
-      <div className="flex flex-col min-h-screen noise">
-        <Suspense fallback={<div className="h-20" />}>
-          <Header language={language} setLanguage={setLanguage} />
-        </Suspense>
-        <main className="flex-1 relative">
-          <div className="fixed inset-0 gradient-mesh pointer-events-none" />
-          <div className="fixed inset-0 grid-pattern pointer-events-none" />
+      <div className="min-h-screen noise" style={{ background: '#050508', color: 'white' }}>
+        {!location.pathname.startsWith('/admin') && (
+          <Suspense fallback={null}>
+            <SideNav language={language} setLanguage={setLanguage} />
+          </Suspense>
+        )}
+        <main className="relative">
           <div className="relative z-10">
             <Suspense fallback={<LoadingFallback language={language} />}>
               <Routes>
@@ -97,74 +114,72 @@ function AppContent({ language, setLanguage }) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen noise">
-      <Suspense fallback={<div className="h-20" />}>
-        <Header language={language} setLanguage={setLanguage} />
-      </Suspense>
+    <div className="min-h-screen noise" style={{ background: '#050508', color: 'white' }}>
+      {showPreloader && <Preloader onComplete={handlePreloaderComplete} />}
+      {!location.pathname.startsWith('/admin') && (
+        <Suspense fallback={null}>
+          <SideNav language={language} setLanguage={setLanguage} />
+        </Suspense>
+      )}
 
-      <main className="flex-1 relative">
-        {/* Ambient background mesh */}
-        <div className="fixed inset-0 gradient-mesh pointer-events-none" />
-        <div className="fixed inset-0 grid-pattern pointer-events-none" />
+      <main className="relative">
+        <Suspense fallback={<LoadingFallback language={language} />}>
+          <ErrorBoundary language={language}>
+            <Routes>
+              <Route path={ROUTES.HOME} element={<Home language={language} setLanguage={setLanguage} />} />
+              <Route path={ROUTES.LOGIN} element={<Login language={language} />} />
+              <Route path={ROUTES.REGISTER} element={<Register language={language} />} />
+              <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword language={language} />} />
+              <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword language={language} />} />
 
-        <div className="relative z-10">
-          <Suspense fallback={<LoadingFallback language={language} />}>
-            <ErrorBoundary language={language}>
-              <Routes>
-                <Route path={ROUTES.HOME} element={<Home language={language} />} />
-                <Route path={ROUTES.LOGIN} element={<Login language={language} />} />
-                <Route path={ROUTES.REGISTER} element={<Register language={language} />} />
-                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword language={language} />} />
-                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword language={language} />} />
+              {/* User-only pages: admin gets redirected to /admin */}
+              <Route path={ROUTES.TEST} element={<BlockIfAdmin><DiabetesTest language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.HEART_TEST} element={<BlockIfAdmin><HeartTest language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.CHAT} element={<BlockIfAdmin><ChatBot language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.VOICE_CHAT} element={<BlockIfAdmin><VoiceChat language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.DIET_PLAN} element={<BlockIfAdmin><DietPlan language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.SYMPTOM_CHECKER} element={<BlockIfAdmin><SymptomChecker language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.HOSPITALS} element={<BlockIfAdmin><FindHospitals language={language} /></BlockIfAdmin>} />
+              <Route path={`${ROUTES.DASHBOARD_ASSESSMENT}/:id`} element={<BlockIfAdmin><ProtectedRoute><AssessmentReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
+              <Route path={`${ROUTES.DASHBOARD_HEART_ASSESSMENT}/:id`} element={<BlockIfAdmin><ProtectedRoute><HeartReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
+              <Route path={`${ROUTES.DASHBOARD_CKD_ASSESSMENT}/:id`} element={<BlockIfAdmin><ProtectedRoute><CKDReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
+              <Route path={`${ROUTES.DASHBOARD_DIET_PLAN}/:id`} element={<BlockIfAdmin><ProtectedRoute><DietPlanReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
+              <Route path={ROUTES.DASHBOARD} element={<BlockIfAdmin><ProtectedRoute><Dashboard language={language} /></ProtectedRoute></BlockIfAdmin>} />
 
-                {/* User-only pages: admin gets redirected to /admin */}
-                <Route path={ROUTES.TEST} element={<BlockIfAdmin><DiabetesTest language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.HEART_TEST} element={<BlockIfAdmin><HeartTest language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.CHAT} element={<BlockIfAdmin><ChatBot language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.VOICE_CHAT} element={<BlockIfAdmin><VoiceChat language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.DIET_PLAN} element={<BlockIfAdmin><DietPlan language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.SYMPTOM_CHECKER} element={<BlockIfAdmin><SymptomChecker language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.HOSPITALS} element={<BlockIfAdmin><FindHospitals language={language} /></BlockIfAdmin>} />
-                <Route path={`${ROUTES.DASHBOARD_ASSESSMENT}/:id`} element={<BlockIfAdmin><ProtectedRoute><AssessmentReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
-                <Route path={`${ROUTES.DASHBOARD_HEART_ASSESSMENT}/:id`} element={<BlockIfAdmin><ProtectedRoute><HeartReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
-                <Route path={`${ROUTES.DASHBOARD_DIET_PLAN}/:id`} element={<BlockIfAdmin><ProtectedRoute><DietPlanReportPage language={language} /></ProtectedRoute></BlockIfAdmin>} />
-                <Route path={ROUTES.DASHBOARD} element={<BlockIfAdmin><ProtectedRoute><Dashboard language={language} /></ProtectedRoute></BlockIfAdmin>} />
+              {/* Admin-only pages */}
+              <Route path={ROUTES.STUDIO} element={<ProtectedRoute requireAdmin><MicroInteractionStudio language={language} /></ProtectedRoute>} />
+              <Route path={`${ROUTES.ADMIN}/*`} element={<ProtectedRoute requireAdmin><AdminPanel language={language} /></ProtectedRoute>} />
 
-                {/* Admin-only pages */}
-                <Route path={ROUTES.STUDIO} element={<ProtectedRoute requireAdmin><MicroInteractionStudio language={language} /></ProtectedRoute>} />
-                <Route path={`${ROUTES.ADMIN}/*`} element={<ProtectedRoute requireAdmin><AdminPanel language={language} /></ProtectedRoute>} />
+              {/* Verify signed report (public) */}
+              <Route path={ROUTES.VERIFY} element={<VerifyReport language={language} />} />
+              <Route path={ROUTES.MEAL_PHOTO} element={<BlockIfAdmin><MealPhotoAnalyzer language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.SPORT} element={<BlockIfAdmin><WorkoutVideos language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.LOCAL_AI} element={<BlockIfAdmin><LocalAI language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.PRICING} element={<Pricing language={language} />} />
+              <Route path={ROUTES.BRAIN_MRI} element={<BlockIfAdmin><BrainMRI language={language} /></BlockIfAdmin>} />
+              <Route path={ROUTES.CKD_TEST} element={<BlockIfAdmin><CKDTest language={language} /></BlockIfAdmin>} />
 
-                {/* Verify signed report (public) */}
-                <Route path={ROUTES.VERIFY} element={<VerifyReport language={language} />} />
-                <Route path={ROUTES.MEAL_PHOTO} element={<BlockIfAdmin><MealPhotoAnalyzer language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.SPORT} element={<BlockIfAdmin><WorkoutVideos language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.LOCAL_AI} element={<BlockIfAdmin><LocalAI language={language} /></BlockIfAdmin>} />
-                <Route path={ROUTES.PRICING} element={<Pricing language={language} />} />
+              {/* Public shared assessment views */}
+              <Route path="/shared/heart/:token" element={<SharedHeart language={language} />} />
+              <Route path="/shared/ckd/:token" element={<SharedCKD language={language} />} />
+              <Route path="/shared/:token" element={<SharedAssessment language={language} />} />
 
-                {/* Public shared assessment views */}
-                <Route path="/shared/heart/:token" element={<SharedHeart language={language} />} />
-                <Route path="/shared/:token" element={<SharedAssessment language={language} />} />
-
-                <Route path="*" element={<NotFoundPage language={language} />} />
-              </Routes>
-            </ErrorBoundary>
-          </Suspense>
-        </div>
+              <Route path="*" element={<NotFoundPage language={language} />} />
+            </Routes>
+          </ErrorBoundary>
+        </Suspense>
       </main>
 
-      <Suspense fallback={<div className="h-20" />}>
-        <Footer language={language} />
-      </Suspense>
-
-      <ErrorBoundary language={language}>
-        <VoiceAgent />
-      </ErrorBoundary>
+      {!hideVoiceAgent && (
+        <ErrorBoundary language={language}>
+          <VoiceAgent language={language} />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }
 
-const Header = lazy(() => import('./layout/Header'));
-const Footer = lazy(() => import('./layout/Footer'));
+const SideNav = lazy(() => import('./components/SideNav'));
 const Home = lazy(() => import('./pages/Home'));
 const DiabetesTest = lazy(() => import('./pages/DiabetesTest'));
 const HeartTest = lazy(() => import('./pages/HeartTest'));
@@ -180,8 +195,10 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AssessmentReportPage = lazy(() => import('./pages/AssessmentReportPage'));
 const HeartReportPage = lazy(() => import('./pages/HeartReportPage'));
+const CKDReportPage = lazy(() => import('./pages/CKDReportPage'));
 const DietPlanReportPage = lazy(() => import('./pages/DietPlanReportPage'));
 const SharedHeart = lazy(() => import('./pages/SharedHeart'));
+const SharedCKD = lazy(() => import('./pages/SharedCKD'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const MicroInteractionStudio = lazy(() => import('./pages/MicroInteractionStudio'));
 const SharedAssessment = lazy(() => import('./pages/SharedAssessment'));
@@ -190,6 +207,8 @@ const MealPhotoAnalyzer = lazy(() => import('./pages/MealPhotoAnalyzer'));
 const WorkoutVideos = lazy(() => import('./pages/WorkoutVideos'));
 const LocalAI = lazy(() => import('./pages/LocalAI'));
 const Pricing = lazy(() => import('./pages/Pricing'));
+const BrainMRI = lazy(() => import('./pages/BrainMRI'));
+const CKDTest = lazy(() => import('./pages/CKDTest'));
 
 function App() {
   const [language, setLanguage] = useState('english');
@@ -206,7 +225,7 @@ function App() {
             <AuthProvider>
               <AppContent language={language} setLanguage={setLanguage} />
             </AuthProvider>
-            <TourOverlay />
+            <TourOverlay language={language} />
           </TourProvider>
         </Router>
         <UXSettingsModalGate />

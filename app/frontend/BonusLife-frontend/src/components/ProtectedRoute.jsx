@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-10 h-10 border-2 border-violet-500 border-t-transparent rounded-full" />
       </div>
     );
   }

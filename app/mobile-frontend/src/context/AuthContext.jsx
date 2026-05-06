@@ -4,8 +4,9 @@ import * as api from '../services/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser]     = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   const loadUser = useCallback(async () => {
     try {
@@ -16,6 +17,7 @@ export function AuthProvider({ children }) {
       }
       const me = await api.fetchMe();
       setUser(me);
+      setIsGuest(false);
     } catch {
       await api.setStoredToken(null);
       setUser(null);
@@ -51,6 +53,12 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     await api.setStoredToken(null);
     setUser(null);
+    setIsGuest(false);
+  }, []);
+
+  const continueAsGuest = useCallback(() => {
+    setIsGuest(true);
+    setLoading(false);
   }, []);
 
   const value = {
@@ -59,8 +67,10 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    continueAsGuest,
     refreshUser: loadUser,
     isAuthenticated: !!user,
+    isGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

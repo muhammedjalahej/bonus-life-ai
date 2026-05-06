@@ -264,20 +264,108 @@ class HeartMLModel:
         return risk_label, probability, {fn: 0.08 for fn in self.feature_names}
 
 
+class CKDMLModel:
+    """Load and run the trained CKD model (24-feature RandomForest).
+
+    Bundle keys: model, feature_names (CSV col order), user_to_csv (API field → CSV col).
+    """
+
+    # Maps the 24 user-facing API field names to the CSV column names used by the model
+    USER_TO_CSV = {
+        "age": "age", "blood_pressure": "bp", "specific_gravity": "sg",
+        "albumin": "al", "sugar": "su", "red_blood_cells": "rbc",
+        "pus_cell": "pc", "pus_cell_clumps": "pcc", "bacteria": "ba",
+        "blood_glucose_random": "bgr", "blood_urea": "bu", "serum_creatinine": "sc",
+        "sodium": "sod", "potassium": "pot", "hemoglobin": "hemo",
+        "packed_cell_volume": "pcv", "white_blood_cell_count": "wc",
+        "red_blood_cell_count": "rc", "hypertension": "htn",
+        "diabetes_mellitus": "dm", "coronary_artery_disease": "cad",
+        "appetite": "appet", "pedal_edema": "pe", "anemia": "ane",
+    }
+
+    FEATURE_ORDER = [
+        "age", "bp", "sg", "al", "su", "rbc", "pc", "pcc", "ba",
+        "bgr", "bu", "sc", "sod", "pot", "hemo", "pcv", "wc", "rc",
+        "htn", "dm", "cad", "appet", "pe", "ane",
+    ]
+
+    def __init__(self):
+        self.model = None
+        self.feature_names = list(self.FEATURE_ORDER)
+        self.load_model()
+
+    def load_model(self):
+        model_path = os.getenv("CKD_MODEL_PATH", "data/Kidney.pkl")
+        try:
+            if not os.path.exists(model_path):
+                logger.warning(f"CKD model not found at {model_path}, using rule-based fallback")
+                return
+            with open(model_path, "rb") as f:
+                artifact = pickle.load(f)
+            if isinstance(artifact, dict) and "model" in artifact:
+                self.model = artifact["model"]
+                if artifact.get("feature_names"):
+                    self.feature_names = list(artifact["feature_names"])
+                logger.info(f"CKD model loaded from {model_path}")
+            else:
+                self.model = artifact
+                logger.info(f"CKD model (legacy) loaded from {model_path}")
+        except Exception as e:
+            logger.error(f"CKD model loading failed: {e}")
+            self.model = None
+
+    def predict(self, features: Dict[str, Any]) -> tuple:
+        # Translate user-facing field names to CSV column names
+        csv_features = {self.USER_TO_CSV.get(k, k): v for k, v in features.items()}
+        feature_values = [csv_features.get(fn, 0) for fn in self.feature_names]
+
+        if self.model and hasattr(self.model, "predict_proba"):
+            try:
+                X = np.array([feature_values])
+                probability = float(self.model.predict_proba(X)[0][1])
+                label = "CKD" if probability >= 0.5 else "No CKD"
+                if hasattr(self.model, "feature_importances_"):
+                    fi = dict(zip(self.feature_names, self.model.feature_importances_))
+                else:
+                    fi = {fn: round(1.0 / len(self.feature_names), 3) for fn in self.feature_names}
+                logger.info(f"CKD prediction: {label} (probability: {probability:.3f})")
+                return label, probability, fi
+            except Exception as e:
+                logger.error(f"CKD prediction error: {e}")
+        return self._rule_based(features)
+
+    def _rule_based(self, features: Dict[str, Any]) -> tuple:
+        sc = features.get("serum_creatinine", 1.0)
+        hemo = features.get("hemoglobin", 14.0)
+        htn = features.get("hypertension", 0)
+        al = features.get("albumin", 0)
+        score = 0.0
+        if sc > 1.5: score += 0.4
+        if hemo < 10: score += 0.3
+        if htn == 1: score += 0.15
+        if al >= 2: score += 0.15
+        probability = min(0.95, score)
+        label = "CKD" if probability >= 0.5 else "No CKD"
+        return label, probability, {fn: 0.04 for fn in self.feature_names}
+
+
 # ---------------------------------------------------------------------------
 # Service instantiation
 # ---------------------------------------------------------------------------
 from app.services.ai_specialist import AIDiabetesSpecialist, GPTOSSDiabetesSpecialist
 from app.services.diet import GroqLLMService, ProductionMealPlanningService
 from app.services.voice_chat import VoiceChatService
+from app.services.brain_mri_service import BrainMriService
 
 ai_specialist = AIDiabetesSpecialist()
 gpt_oss_specialist = GPTOSSDiabetesSpecialist()
 diabetes_model = DiabetesMLModel()
 heart_model = HeartMLModel()
+ckd_model = CKDMLModel()
 llm_service = GroqLLMService()
 meal_service = ProductionMealPlanningService(llm_service)
 voice_service = VoiceChatService()
+brain_mri_service = BrainMriService()
 
 
 # ---------------------------------------------------------------------------
@@ -320,6 +408,13 @@ try:
             "ALTER TABLE users ADD COLUMN subscription_tier VARCHAR(50) DEFAULT 'free'",
             "ALTER TABLE users ADD COLUMN subscription_status VARCHAR(50) DEFAULT ''",
             "ALTER TABLE users ADD COLUMN current_period_end DATETIME",
+            # Soft-delete: admin hides assessment without deleting user data
+            "ALTER TABLE assessments ADD COLUMN admin_hidden INTEGER DEFAULT 0",
+            "ALTER TABLE ckd_assessments ADD COLUMN admin_hidden INTEGER DEFAULT 0",
+            "ALTER TABLE heart_assessments ADD COLUMN admin_hidden INTEGER DEFAULT 0",
+            "ALTER TABLE brain_mri_analyses ADD COLUMN admin_hidden INTEGER DEFAULT 0",
+            "ALTER TABLE diet_plan_records ADD COLUMN admin_hidden INTEGER DEFAULT 0",
+            "ALTER TABLE announcements ADD COLUMN expires_at DATETIME",
         ]:
             try:
                 conn.execute(text(col_sql))
@@ -328,6 +423,32 @@ try:
                 pass  # column may already exist
 except Exception as e:
     logger.warning(f"Optional DB migration skipped: {e}")
+
+# Create performance indexes for frequently filtered columns (safe: IF NOT EXISTS)
+try:
+    with engine.connect() as conn:
+        for idx_sql in [
+            "CREATE INDEX IF NOT EXISTS ix_assessments_hidden ON assessments (admin_hidden)",
+            "CREATE INDEX IF NOT EXISTS ix_heart_assessments_hidden ON heart_assessments (admin_hidden)",
+            "CREATE INDEX IF NOT EXISTS ix_ckd_assessments_hidden ON ckd_assessments (admin_hidden)",
+            "CREATE INDEX IF NOT EXISTS ix_brain_mri_hidden ON brain_mri_analyses (admin_hidden)",
+            "CREATE INDEX IF NOT EXISTS ix_diet_plan_hidden ON diet_plan_records (admin_hidden)",
+            "CREATE INDEX IF NOT EXISTS ix_users_is_active ON users (is_active)",
+            "CREATE INDEX IF NOT EXISTS ix_users_role ON users (role)",
+            "CREATE INDEX IF NOT EXISTS ix_notifications_user_read ON notifications (user_id, is_read)",
+            "CREATE INDEX IF NOT EXISTS ix_assessments_user_created ON assessments (user_id, created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS ix_heart_user_created ON heart_assessments (user_id, created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS ix_ckd_user_created ON ckd_assessments (user_id, created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS ix_brain_user_created ON brain_mri_analyses (user_id, created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS ix_diet_user_created ON diet_plan_records (user_id, created_at DESC)",
+        ]:
+            try:
+                conn.execute(text(idx_sql))
+                conn.commit()
+            except Exception:
+                pass
+except Exception as e:
+    logger.warning(f"Index migration skipped: {e}")
 
 # Fix old avatar URLs: normalize /uploads/avatars/ -> /avatars/, then strip http prefix
 try:
@@ -351,6 +472,8 @@ async def lifespan(app: FastAPI):
     logger.info("[START] Starting Bonus Life AI Platform")
     logger.info(f"   LLM Status: {'Connected' if ai_specialist.client else 'Disconnected'}")
     logger.info(f"   ML Model:   {'Loaded' if diabetes_model.model else 'Rule-based fallback'}")
+    # Pre-initialize image analysis models
+    brain_mri_service.initialize()
     yield
     logger.info("[STOP] Shutting down Bonus Life AI Platform")
 
@@ -368,10 +491,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS — only allow known origins; never use wildcard with credentials
+_frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+_CORS_ORIGINS = list({
+    _frontend_url,
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+})
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -406,7 +536,13 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
     # Exact paths allowed (not prefix-matched)
     _ALLOWED_EXACT = ("/api/v1/users/me",)
 
+    # Cached maintenance state — refreshed at most once every 10 seconds
+    _cached_value: bool = False
+    _cached_at: float = 0.0
+    _CACHE_TTL: float = 10.0
+
     async def dispatch(self, request, call_next):
+        import time
         path = request.url.path
 
         # Always allow admin, auth, static, health endpoints, and exact identity endpoint
@@ -415,16 +551,21 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         ):
             return await call_next(request)
 
-        # Check maintenance mode in DB
-        try:
-            db = SessionLocal()
-            row = db.query(SiteSetting).filter(SiteSetting.key == "maintenance_mode").first()
-            is_maintenance = row and row.value.lower() in ("true", "1", "yes")
-            db.close()
-        except Exception:
-            is_maintenance = False
+        # Use cached maintenance state; hit DB only when cache is stale
+        now = time.monotonic()
+        if now - MaintenanceModeMiddleware._cached_at > MaintenanceModeMiddleware._CACHE_TTL:
+            try:
+                db = SessionLocal()
+                row = db.query(SiteSetting).filter(SiteSetting.key == "maintenance_mode").first()
+                MaintenanceModeMiddleware._cached_value = bool(
+                    row and row.value.lower() in ("true", "1", "yes")
+                )
+                MaintenanceModeMiddleware._cached_at = now
+                db.close()
+            except Exception:
+                MaintenanceModeMiddleware._cached_value = False
 
-        if is_maintenance:
+        if MaintenanceModeMiddleware._cached_value:
             return JSONResponse(
                 status_code=503,
                 content={
@@ -455,12 +596,14 @@ def post_tts_endpoint(body: _tts_routes.TTSRequest):
     """Synthesize speech via ElevenLabs. Requires ELEVENLABS_API_KEY in .env."""
     return _tts_routes.post_tts(body)
 
-from app.routes import chat, assessment, diet, health, topics, user, voice_chat, voice_command, tts, hospitals, language, auth, me_routes, admin_routes, reports, meal_photo, webauthn_routes, face_routes, workout_videos, local_ai_routes, stripe_webhook, heart, symptom_checker
+from app.routes import chat, assessment, diet, health, topics, user, voice_chat, voice_command, tts, hospitals, language, auth, me_routes, admin_routes, reports, meal_photo, webauthn_routes, face_routes, workout_videos, local_ai_routes, stripe_webhook, heart, symptom_checker, brain_mri, ckd, agent
 
 # Inject service instances into route modules
 chat.init(ai_specialist)
 assessment.init(ai_specialist, diabetes_model)
 heart.init(ai_specialist, heart_model)
+ckd.init(ai_specialist, ckd_model)
+brain_mri.init(ai_specialist, brain_mri_service)
 diet.init(meal_service)
 health.init(ai_specialist, llm_service, diabetes_model, app_start_time)
 user.init(ai_specialist)
@@ -471,6 +614,8 @@ app.include_router(health.router)                          # /, /health, /api/v1
 app.include_router(chat.router, prefix="/api/v1")          # /api/v1/chat
 app.include_router(assessment.router, prefix="/api/v1")    # /api/v1/diabetes-assessment
 app.include_router(heart.router, prefix="/api/v1")         # /api/v1/heart-assessment
+app.include_router(ckd.router, prefix="/api/v1")           # /api/v1/ckd-assessment
+app.include_router(brain_mri.router, prefix="/api/v1")     # /api/v1/brain-mri-analysis
 app.include_router(diet.router, prefix="/api/v1")           # /api/v1/diet-plan/generate
 app.include_router(symptom_checker.router, prefix="/api/v1")  # /api/v1/symptom-checker/predict
 app.include_router(topics.router, prefix="/api/v1")        # /api/v1/health-topics
@@ -491,6 +636,7 @@ app.include_router(face_routes.router, prefix="/api/v1")  # /api/v1/face-auth/*
 app.include_router(workout_videos.router, prefix="/api/v1/workout-videos")  # GET /api/v1/workout-videos
 app.include_router(local_ai_routes.router, prefix="/api/v1/local-ai")  # Local LLM: term, health-tip, scenario
 app.include_router(stripe_webhook.router, prefix="/api/v1")    # POST /api/v1/webhooks/stripe
+app.include_router(agent.router, prefix="/api/v1")             # POST /api/v1/agent (JARVIS)
 
 # Serve uploaded avatars at /avatars/
 _static_avatars = os.path.join(os.path.dirname(__file__), "..", "static", "avatars")
@@ -509,7 +655,6 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={
             "detail": exc.detail,
             "timestamp": datetime.utcnow().isoformat(),
-            "path": request.url.path,
         },
     )
 

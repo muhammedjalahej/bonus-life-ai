@@ -129,6 +129,22 @@ export async function getMyHeartAssessments(limit = 50) {
   return apiRequest(`/api/v1/users/me/heart-assessments?limit=${limit}`);
 }
 
+export async function getMyBrainMriAnalyses(limit = 50) {
+  return apiRequest(`/api/v1/users/me/brain-mri-analyses?limit=${limit}`);
+}
+
+export async function deleteBrainMriAnalysis(id) {
+  return apiRequest(`/api/v1/users/me/brain-mri-analyses/${id}`, { method: 'DELETE' });
+}
+
+export async function deleteAssessment(id) {
+  return apiRequest(`/api/v1/users/me/assessments/${id}`, { method: 'DELETE' });
+}
+
+export async function deleteHeartAssessment(id) {
+  return apiRequest(`/api/v1/users/me/heart-assessments/${id}`, { method: 'DELETE' });
+}
+
 export async function getMyDietPlans(limit = 50) {
   return apiRequest(`/api/v1/users/me/diet-plans?limit=${limit}`);
 }
@@ -151,6 +167,26 @@ export async function runDiabetesAssessment(body) {
     method: 'POST',
     body: JSON.stringify(body),
   });
+}
+
+// CKD (Chronic Kidney Disease) assessment
+export async function runCKDAssessment(body) {
+  return apiRequest('/api/v1/ckd-assessment', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function getMyCKDAssessments(limit = 20) {
+  return apiRequest(`/api/v1/users/me/ckd-assessments?limit=${limit}`);
+}
+
+export async function signCKDAssessmentReport(ckdAssessmentId) {
+  return apiRequest(`/api/v1/reports/sign-ckd-assessment/${ckdAssessmentId}`, { method: 'POST' });
+}
+
+export async function deleteCKDAssessment(ckdAssessmentId) {
+  return apiRequest(`/api/v1/users/me/ckd-assessments/${ckdAssessmentId}`, { method: 'DELETE' });
 }
 
 // Heart disease risk assessment
@@ -282,3 +318,32 @@ export async function localAIAnswerScenario(scenario, assessment = null, languag
     timeoutMs: LOCAL_AI_TIMEOUT_MS,
   });
 }
+
+// ─── Brain MRI Analysis ────────────────────────────────────────────────────
+/**
+ * Submit a brain MRI image for tumor classification.
+ * formData must be a FormData object with an 'image' file field.
+ */
+export async function runBrainMriAnalysis(formData) {
+  const token = await getStoredToken();
+  const headers = { 'Content-Type': 'multipart/form-data' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  try {
+    const url = `${API_BASE_URL}/api/v1/brain-mri-analysis`;
+    const response = await fetch(url, { method: 'POST', body: formData, headers, signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      const err = await response.text();
+      try { const j = JSON.parse(err); throw new Error(j.detail || `HTTP ${response.status}`); } catch { throw new Error(`HTTP ${response.status}`); }
+    }
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') throw new Error('Brain MRI analysis timed out. Please try again.');
+    throw error;
+  }
+}
+

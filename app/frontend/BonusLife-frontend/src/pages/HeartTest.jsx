@@ -1,38 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
-  AlertTriangle, CheckCircle, Loader2, Heart, Activity, Target, Stethoscope, RotateCcw, Sparkles, LayoutDashboard,
+  AlertTriangle, CheckCircle, Loader2, Heart, Activity, Target, Stethoscope, RotateCcw, Sparkles, LayoutDashboard, ArrowLeft,
 } from 'lucide-react';
 import * as apiService from '../services/api';
 import { haptic } from '../utils/haptics';
 import { useAuth } from '../context/AuthContext';
 import { ROUTES } from '../config/constants';
+import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
+import { AnimatedSelect } from '../components/ui/AnimatedSelect';
 import { VOICE_FILL_EVENT, VOICE_CLEAR_FIELD_EVENT, VOICE_FORM_NEXT_EVENT } from '../components/VoiceAgent';
-
-function FormField({ label, value, onChange, required, hint, placeholder, icon: Icon, error }) {
-  return (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-300">
-        {label} {required && <span className="text-emerald-400">*</span>}
-      </label>
-      <div className="relative">
-        {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />}
-        <input
-          type="number"
-          value={value ?? ''}
-          onChange={onChange}
-          className={`input-field ${Icon ? 'pl-11' : ''} ${error ? 'border-red-500/50' : ''}`}
-          placeholder={placeholder}
-        />
-      </div>
-      {error && <p className="text-[11px] text-red-400 font-medium">{error}</p>}
-      {hint && !error && <p className="text-[11px] text-gray-600">{hint}</p>}
-    </div>
-  );
-}
+import { NumberField as _NumberField } from '../components/ui/NumberField';
+const FormField = (props) => <_NumberField {...props} accentColor="pink" />;
 
 const HeartTest = ({ language = 'english' }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     age: '', sex: '1', cp: '1', trestbps: '', chol: '', fbs: '0', restecg: '0',
@@ -170,11 +153,14 @@ const HeartTest = ({ language = 'english' }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+      {/* Back to Dashboard */}
+      <button onClick={() => navigate(ROUTES.DASHBOARD)}
+        className="flex items-center gap-2 mb-8 text-sm text-white/70 hover:text-white transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back to Dashboard
+      </button>
+
       <div className="text-center mb-10 animate-fade-in-up">
-        <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-full px-5 py-2 mb-5">
-          <Sparkles className="w-4 h-4 text-pink-400" />
-          <span className="text-[11px] font-extrabold text-pink-400 uppercase tracking-[0.15em]">{t.badge}</span>
-        </div>
         <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
         <p className="text-gray-500 max-w-md mx-auto">{t.subtitle}</p>
       </div>
@@ -189,89 +175,102 @@ const HeartTest = ({ language = 'english' }) => {
         <div className="card heart-form-inner p-8 sm:p-10 rounded-[1.25rem]">
           {!submitted || !result ? (
             <>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-pink-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">{t.title}</h2>
-                </div>
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-white">{t.title}</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FormField label={t.age} value={formData.age} onChange={(e) => setFormData(p => ({ ...p, age: e.target.value }))} required placeholder="e.g. 55" icon={Activity} />
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-300">{t.sex}</label>
-                  <select value={formData.sex} onChange={(e) => setFormData(p => ({ ...p, sex: e.target.value }))} className="select-field pr-11">
-                    <option value="0">{t.sex0}</option>
-                    <option value="1">{t.sex1}</option>
-                  </select>
+                  <AnimatedSelect
+                    value={formData.sex}
+                    onChange={(e) => setFormData(p => ({ ...p, sex: e.target.value }))}
+                    options={[{ value: '0', label: t.sex0 }, { value: '1', label: t.sex1 }]}
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-300">{t.cp}</label>
-                  <select value={formData.cp} onChange={(e) => setFormData(p => ({ ...p, cp: e.target.value }))} className="select-field pr-11">
-                    <option value="0">{t.cp0}</option>
-                    <option value="1">{t.cp1}</option>
-                    <option value="2">{t.cp2}</option>
-                    <option value="3">{t.cp3}</option>
-                    <option value="4">{t.cp4}</option>
-                  </select>
+                  <AnimatedSelect
+                    value={formData.cp}
+                    onChange={(e) => setFormData(p => ({ ...p, cp: e.target.value }))}
+                    options={[
+                      { value: '0', label: t.cp0 },
+                      { value: '1', label: t.cp1 },
+                      { value: '2', label: t.cp2 },
+                      { value: '3', label: t.cp3 },
+                      { value: '4', label: t.cp4 },
+                    ]}
+                  />
                 </div>
                 <FormField label={t.trestbps} value={formData.trestbps} onChange={(e) => setFormData(p => ({ ...p, trestbps: e.target.value }))} required hint="80–250 mmHg" placeholder="e.g. 130" />
                 <FormField label={t.chol} value={formData.chol} onChange={(e) => setFormData(p => ({ ...p, chol: e.target.value }))} required placeholder="e.g. 240" />
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-300">{t.fbs}</label>
-                  <select value={formData.fbs} onChange={(e) => setFormData(p => ({ ...p, fbs: e.target.value }))} className="select-field pr-11">
-                    <option value="0">No (0)</option>
-                    <option value="1">Yes (1)</option>
-                  </select>
+                  <AnimatedSelect
+                    value={formData.fbs}
+                    onChange={(e) => setFormData(p => ({ ...p, fbs: e.target.value }))}
+                    options={[{ value: '0', label: 'No' }, { value: '1', label: 'Yes' }]}
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-300">{t.restecg}</label>
-                  <select value={formData.restecg} onChange={(e) => setFormData(p => ({ ...p, restecg: e.target.value }))} className="select-field pr-11">
-                    <option value="0">Normal (0)</option>
-                    <option value="1">ST-T (1)</option>
-                    <option value="2">LVH (2)</option>
-                  </select>
+                  <AnimatedSelect
+                    value={formData.restecg}
+                    onChange={(e) => setFormData(p => ({ ...p, restecg: e.target.value }))}
+                    options={[
+                      { value: '0', label: 'Normal' },
+                      { value: '1', label: 'ST-T Abnormality' },
+                      { value: '2', label: 'LV Hypertrophy' },
+                    ]}
+                  />
                 </div>
                 <FormField label={t.thalach} value={formData.thalach} onChange={(e) => setFormData(p => ({ ...p, thalach: e.target.value }))} required hint="60–220 bpm" placeholder="e.g. 150" />
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-300">{t.exang}</label>
-                  <select value={formData.exang} onChange={(e) => setFormData(p => ({ ...p, exang: e.target.value }))} className="select-field pr-11">
-                    <option value="0">No (0)</option>
-                    <option value="1">Yes (1)</option>
-                  </select>
+                  <AnimatedSelect
+                    value={formData.exang}
+                    onChange={(e) => setFormData(p => ({ ...p, exang: e.target.value }))}
+                    options={[{ value: '0', label: 'No' }, { value: '1', label: 'Yes' }]}
+                  />
                 </div>
                 <FormField label={t.oldpeak} value={formData.oldpeak} onChange={(e) => setFormData(p => ({ ...p, oldpeak: e.target.value }))} hint="0–10" placeholder="0" />
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-300">{t.slope}</label>
-                  <select value={formData.slope} onChange={(e) => setFormData(p => ({ ...p, slope: e.target.value }))} className="select-field pr-11">
-                    <option value="1">{t.slope1} (1)</option>
-                    <option value="2">{t.slope2} (2)</option>
-                    <option value="3">{t.slope3} (3)</option>
-                  </select>
+                  <AnimatedSelect
+                    value={formData.slope}
+                    onChange={(e) => setFormData(p => ({ ...p, slope: e.target.value }))}
+                    options={[
+                      { value: '1', label: t.slope1 },
+                      { value: '2', label: t.slope2 },
+                      { value: '3', label: t.slope3 },
+                    ]}
+                  />
                 </div>
                 <FormField label={t.ca} value={formData.ca} onChange={(e) => setFormData(p => ({ ...p, ca: e.target.value }))} hint="0–4" placeholder="0" />
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-300">{t.thal}</label>
-                  <select value={formData.thal} onChange={(e) => setFormData(p => ({ ...p, thal: e.target.value }))} className="select-field pr-11">
-                    <option value="3">{t.thal3} (3)</option>
-                    <option value="6">{t.thal6} (6)</option>
-                    <option value="7">{t.thal7} (7)</option>
-                  </select>
+                  <AnimatedSelect
+                    value={formData.thal}
+                    onChange={(e) => setFormData(p => ({ ...p, thal: e.target.value }))}
+                    options={[
+                      { value: '3', label: t.thal3 },
+                      { value: '6', label: t.thal6 },
+                      { value: '7', label: t.thal7 },
+                    ]}
+                  />
                 </div>
               </div>
               <div className="mt-8 flex gap-4">
-                <button type="button" onClick={handleSubmit} disabled={loading} className="btn-primary flex items-center gap-2">
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Activity className="w-5 h-5" />}
-                  {loading ? t.loading : t.submit}
-                </button>
+                <LiquidMetalButton onClick={handleSubmit} disabled={loading} width={180}>
+                  {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.loading}</> : <><Activity className="w-4 h-4" /> {t.submit}</>}
+                </LiquidMetalButton>
               </div>
             </>
           ) : (
             <>
               {loading ? (
                 <div className="flex flex-col items-center py-24 gap-6">
-                  <Loader2 className="w-12 h-12 text-emerald-400 animate-spin" />
+                  <Loader2 className="w-12 h-12 text-violet-400 animate-spin" />
                   <p className="text-gray-400 font-medium">{t.loading}</p>
                 </div>
               ) : (
@@ -301,10 +300,10 @@ const HeartTest = ({ language = 'english' }) => {
                     </div>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className={`card p-7 border-2 ${isHigh ? 'border-red-500/20 bg-red-500/[0.04]' : isMod ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-emerald-500/20 bg-emerald-500/[0.04]'}`}>
-                      <Target className={`w-6 h-6 mb-4 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`} />
-                      <div className={`text-5xl font-black mb-2 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`}>{prob}%</div>
-                      <div className={`text-sm font-bold mb-3 ${isHigh ? 'text-red-300' : isMod ? 'text-amber-300' : 'text-emerald-300'}`}>{risk}</div>
+                    <div className={`card p-7 border-2 ${isHigh ? 'border-red-500/20 bg-red-500/[0.04]' : isMod ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-violet-500/20 bg-violet-500/[0.04]'}`}>
+                      <Target className={`w-6 h-6 mb-4 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-violet-400'}`} />
+                      <div className={`text-5xl font-black mb-2 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-violet-400'}`}>{prob}%</div>
+                      <div className={`text-sm font-bold mb-3 ${isHigh ? 'text-red-300' : isMod ? 'text-amber-300' : 'text-violet-300'}`}>{risk}</div>
                       <p className="text-xs text-gray-500">{t.probLabel}</p>
                     </div>
                     <div className="card p-7">
@@ -313,7 +312,7 @@ const HeartTest = ({ language = 'english' }) => {
                         <ul className="space-y-3">
                           {factors.map((f, i) => (
                             <li key={i} className="flex items-start gap-3">
-                              <span className={`badge mt-0.5 ${(f.severity || '').toLowerCase().includes('high') ? 'bg-red-500/20 text-red-400' : (f.severity || '').toLowerCase().includes('moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                              <span className={`badge mt-0.5 ${(f.severity || '').toLowerCase().includes('high') ? 'bg-red-500/20 text-red-400' : (f.severity || '').toLowerCase().includes('moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-violet-500/20 text-violet-400'}`}>
                                 {f.severity || 'Info'}
                               </span>
                               <span className="text-sm text-gray-300">{f.factor}</span>

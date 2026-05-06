@@ -15,13 +15,23 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, Notification
-from app.models import UserMeResponse, ProfileUpdateRequest, ChangePasswordRequest, SaveDietPlanRequest
+from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, Notification, BrainMriAnalysis, CKDAssessment
+from app.models import UserMeResponse, ProfileUpdateRequest, ChangePasswordRequest, SaveDietPlanRequest, TOTPVerifyRequest
 from app.auth import get_current_user, hash_password
 from app.services import stripe_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["users"])
+
+
+def _safe_json(s):
+    """Parse a JSON string, returning None on any error (handles corrupted DB payloads)."""
+    if not s:
+        return None
+    try:
+        return json.loads(s)
+    except Exception:
+        return None
 
 # Directory for avatar uploads (relative to backend app root)
 UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "avatars"
@@ -103,9 +113,17 @@ async def upload_avatar(
         f.write(contents)
     # Store relative path so frontend can prepend its API_BASE_URL and always load from same origin
     avatar_path = f"/avatars/{filename}"
-    user.avatar_url = avatar_path
-    db.commit()
-    db.refresh(user)
+    try:
+        user.avatar_url = avatar_path
+        db.commit()
+        db.refresh(user)
+    except Exception as db_err:
+        logger.error(f"Failed to update avatar_url in DB for user {user.id}: {db_err}")
+        try:
+            filepath.unlink(missing_ok=True)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail="Failed to save avatar. Please try again.")
     logger.info(f"User {user.id} uploaded avatar: {filename}")
     return {"avatar_url": avatar_path}
 
@@ -144,7 +162,7 @@ async def my_assessments(
             "risk_level": r.risk_level,
             "probability": r.probability,
             "executive_summary": r.executive_summary,
-            "payload": json.loads(r.payload) if r.payload else None,
+            "payload": _safe_json(r.payload),
             "created_at": r.created_at.isoformat() if r.created_at else None,
         }
         for r in rows
@@ -171,7 +189,7 @@ async def my_heart_assessments(
             "risk_level": r.risk_level,
             "probability": r.probability,
             "executive_summary": r.executive_summary,
-            "payload": json.loads(r.payload) if r.payload else None,
+            "payload": _safe_json(r.payload),
             "created_at": r.created_at.isoformat() if r.created_at else None,
         }
         for r in rows
@@ -196,7 +214,7 @@ async def my_diet_plans(
             "id": r.id,
             "goal": r.goal,
             "overview": r.overview,
-            "payload": json.loads(r.payload) if r.payload else None,
+            "payload": _safe_json(r.payload),
             "created_at": r.created_at.isoformat() if r.created_at else None,
         }
         for r in rows
@@ -260,7 +278,7 @@ async def export_my_data(
                 "risk_level": a.risk_level,
                 "probability": a.probability,
                 "executive_summary": a.executive_summary,
-                "payload": json.loads(a.payload) if a.payload else None,
+                "payload": _safe_json(a.payload),
                 "created_at": a.created_at.isoformat() if a.created_at else None,
             }
             for a in assessments
@@ -270,7 +288,7 @@ async def export_my_data(
                 "id": d.id,
                 "goal": d.goal,
                 "overview": d.overview,
-                "payload": json.loads(d.payload) if d.payload else None,
+                "payload": _safe_json(d.payload),
                 "created_at": d.created_at.isoformat() if d.created_at else None,
             }
             for d in diet_plans
@@ -387,6 +405,129 @@ async def delete_heart_assessment(
     return {"message": "Heart assessment deleted"}
 
 
+# ---- CKD Assessment history ----
+@router.get("/users/me/ckd-assessments")
+async def my_ckd_assessments(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    limit: int = 50,
+) -> List[dict]:
+    rows = (
+        db.query(CKDAssessment)
+        .filter(CKDAssessment.user_id == user.id)
+        .order_by(CKDAssessment.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "assessment_id": r.assessment_id,
+            "prediction": r.prediction,
+            "confidence": r.confidence,
+            "executive_summary": r.executive_summary,
+            "payload": _safe_json(r.payload),
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "share_token": r.share_token,
+        }
+        for r in rows
+    ]
+
+
+@router.post("/users/me/ckd-assessments/{ckd_assessment_id}/share")
+async def share_ckd_assessment(
+    ckd_assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    a = db.query(CKDAssessment).filter(
+        CKDAssessment.id == ckd_assessment_id, CKDAssessment.user_id == user.id
+    ).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="CKD assessment not found")
+    if not a.share_token:
+        a.share_token = secrets.token_urlsafe(32)
+        db.commit()
+        db.refresh(a)
+    return {"share_token": a.share_token, "assessment_id": a.id}
+
+
+@router.delete("/users/me/ckd-assessments/{ckd_assessment_id}/share")
+async def revoke_ckd_share(
+    ckd_assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    a = db.query(CKDAssessment).filter(
+        CKDAssessment.id == ckd_assessment_id, CKDAssessment.user_id == user.id
+    ).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="CKD assessment not found")
+    a.share_token = None
+    db.commit()
+    return {"message": "Share link revoked"}
+
+
+@router.delete("/users/me/ckd-assessments/{ckd_assessment_id}")
+async def delete_ckd_assessment(
+    ckd_assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    a = db.query(CKDAssessment).filter(
+        CKDAssessment.id == ckd_assessment_id, CKDAssessment.user_id == user.id
+    ).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="CKD assessment not found")
+    db.delete(a)
+    db.commit()
+    return {"message": "CKD assessment deleted"}
+
+
+# ---- Brain MRI Analysis history ----
+@router.get("/users/me/brain-mri-analyses")
+async def my_brain_mri_analyses(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    limit: int = 50,
+) -> List[dict]:
+    rows = (
+        db.query(BrainMriAnalysis)
+        .filter(BrainMriAnalysis.user_id == user.id)
+        .order_by(BrainMriAnalysis.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "assessment_id": r.assessment_id,
+            "tumor_class": r.tumor_class,
+            "confidence": r.confidence,
+            "executive_summary": r.executive_summary,
+            "payload": _safe_json(r.payload),
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.delete("/users/me/brain-mri-analyses/{record_id}")
+async def delete_brain_mri_analysis(
+    record_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    r = db.query(BrainMriAnalysis).filter(
+        BrainMriAnalysis.id == record_id, BrainMriAnalysis.user_id == user.id
+    ).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Brain MRI analysis not found")
+    db.delete(r)
+    db.commit()
+    return {"message": "Brain MRI analysis deleted"}
+
+
 @router.delete("/users/me/diet-plans/{diet_plan_id}")
 async def delete_diet_plan(
     diet_plan_id: int,
@@ -425,11 +566,11 @@ async def setup_2fa(
 
 @router.post("/users/me/2fa/verify")
 async def verify_2fa(
-    code: str,
+    body: TOTPVerifyRequest,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Verify TOTP code and enable 2FA."""
+    """Verify TOTP code and enable 2FA. Accepts code in request body (not query string)."""
     try:
         import pyotp
     except ImportError:
@@ -437,7 +578,7 @@ async def verify_2fa(
     if not user.totp_secret:
         raise HTTPException(status_code=400, detail="No 2FA setup found. Call /2fa/setup first.")
     totp = pyotp.TOTP(user.totp_secret)
-    if not totp.verify(code, valid_window=1):
+    if not totp.verify(body.code, valid_window=1):
         raise HTTPException(status_code=400, detail="Invalid code. Try again.")
     user.totp_enabled = True
     db.commit()
@@ -457,6 +598,28 @@ async def disable_2fa(
 
 
 # ---- Notifications (feature f17) ----
+class CreateReminderRequest(BaseModel):
+    title: str
+    message: str = ""
+
+@router.post("/users/me/notifications/reminder")
+async def create_reminder(
+    body: CreateReminderRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    rec = Notification(
+        user_id=user.id,
+        title=body.title[:255],
+        message=(body.message or "")[:2048],
+        type="reminder",
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return {"id": rec.id, "title": rec.title, "message": rec.message, "type": rec.type, "is_read": rec.is_read}
+
+
 @router.get("/users/me/notifications")
 async def get_notifications(
     user: User = Depends(get_current_user),

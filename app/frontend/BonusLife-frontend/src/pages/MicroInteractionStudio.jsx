@@ -127,7 +127,7 @@ export default function MicroInteractionStudio({ language }) {
             type="checkbox"
             checked={state.enabled}
             onChange={(e) => update('enabled', e.target.checked)}
-            className="w-5 h-5 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/50"
+            className="w-5 h-5 rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50"
           />
         </label>
 
@@ -143,7 +143,7 @@ export default function MicroInteractionStudio({ language }) {
             step="25"
             value={state.duration}
             onChange={(e) => update('duration', Number(e.target.value))}
-            className="w-full h-2 rounded-full bg-white/10 accent-emerald-500"
+            className="w-full h-2 rounded-full bg-white/10 accent-violet-500"
           />
         </div>
 
@@ -155,7 +155,7 @@ export default function MicroInteractionStudio({ language }) {
           <button
             type="button"
             onClick={() => setEaseDropdownOpen((o) => !o)}
-            className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-left"
+            className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/20 text-left"
           >
             <span>{EASE_OPTIONS.find((o) => o.value === state.ease)?.label ?? state.ease}</span>
             <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${easeDropdownOpen ? 'rotate-180' : ''}`} />
@@ -170,7 +170,7 @@ export default function MicroInteractionStudio({ language }) {
                     update('ease', opt.value);
                     setEaseDropdownOpen(false);
                   }}
-                  className={`w-full px-4 py-2.5 text-left text-sm transition ${opt.value === state.ease ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}
+                  className={`w-full px-4 py-2.5 text-left text-sm transition ${opt.value === state.ease ? 'bg-violet-500/20 text-violet-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}
                 >
                   {opt.label}
                 </button>
@@ -191,7 +191,7 @@ export default function MicroInteractionStudio({ language }) {
             step="0.01"
             value={state.hoverScale}
             onChange={(e) => update('hoverScale', Number(e.target.value))}
-            className="w-full h-2 rounded-full bg-white/10 accent-emerald-500"
+            className="w-full h-2 rounded-full bg-white/10 accent-violet-500"
           />
         </div>
 
@@ -207,7 +207,7 @@ export default function MicroInteractionStudio({ language }) {
             step="1"
             value={state.cardLift}
             onChange={(e) => update('cardLift', Number(e.target.value))}
-            className="w-full h-2 rounded-full bg-white/10 accent-emerald-500"
+            className="w-full h-2 rounded-full bg-white/10 accent-violet-500"
           />
         </div>
 

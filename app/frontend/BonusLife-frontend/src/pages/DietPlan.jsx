@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { NumberField } from '../components/ui/NumberField';
+import { AnimatedSelect } from '../components/ui/AnimatedSelect';
+import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
 import {
   Salad, Download, Calculator, Loader2, AlertTriangle, CheckCircle,
   UtensilsCrossed, ShoppingCart, Lightbulb, BarChart3, Clock, Sparkles,
-  Apple, Dumbbell, Save, RotateCcw, ClipboardList,
+  Apple, Dumbbell, Save, RotateCcw, ClipboardList, ArrowLeft,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { API_BASE_URL, ROUTES } from '../config/constants';
 import { getStoredToken, generateDietPlan as apiGenerateDietPlan } from '../services/api';
 
@@ -14,7 +17,7 @@ function FormInput({ label, value, onChange, type = 'text', required, hint, plac
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-300 mb-2">
-        {label} {required && <span className="text-emerald-400">*</span>}
+        {label}
       </label>
       <input
         type={type}
@@ -30,21 +33,24 @@ function FormInput({ label, value, onChange, type = 'text', required, hint, plac
   );
 }
 
-function FormSelect({ label, value, onChange, options, required, selectLabel }) {
+function FormSelect({ label, value, onChange, options, selectLabel }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-300 mb-2">
-        {label} {required && <span className="text-emerald-400">*</span>}
+        {label}
       </label>
-      <select value={value ?? ''} onChange={onChange} className="select-field">
-        <option value="">{selectLabel}</option>
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
+      <AnimatedSelect
+        value={value ?? ''}
+        onChange={onChange}
+        options={options}
+        placeholder={selectLabel}
+      />
     </div>
   );
 }
 
 const DietPlan = ({ language = 'english' }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     age: '', weight: '', height: '', gender: '', dietaryPreference: 'balanced',
     healthConditions: '', activityLevel: 'moderate', goals: 'diabetes_prevention',
@@ -165,26 +171,29 @@ const DietPlan = ({ language = 'english' }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+      {/* Back to Dashboard */}
+      <button onClick={() => navigate(ROUTES.DASHBOARD)}
+        className="flex items-center gap-2 mb-8 text-sm text-white/70 hover:text-white transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back to Dashboard
+      </button>
+
       {/* Header */}
       <div className="text-center mb-14 animate-fade-in-up">
-        <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-5 py-2 mb-5">
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span className="text-[11px] font-extrabold text-amber-400 uppercase tracking-[0.15em]">{t.badge}</span>
-        </div>
         <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
         <p className="text-gray-500 max-w-md mx-auto">{t.subtitle}</p>
       </div>
 
       {error && <div className="flex items-center gap-3 p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm animate-fade-in-up"><AlertTriangle className="w-5 h-5 shrink-0" />{error}</div>}
       {success && (
-        <div className="flex flex-wrap items-center gap-3 p-4 mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm animate-fade-in-up">
+        <div className="flex flex-wrap items-center gap-3 p-4 mb-8 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm animate-fade-in-up">
           <CheckCircle className="w-5 h-5 shrink-0" />
           <span>{success}</span>
           {getStoredToken() && (
             <>
-              <span className="text-emerald-400/80">·</span>
+              <span className="text-violet-400/80">·</span>
               <span className="text-gray-400">{t.savedToDashboard}</span>
-              <Link to={ROUTES.DASHBOARD} className="font-medium text-emerald-400 hover:text-emerald-300 underline">
+              <Link to={ROUTES.DASHBOARD} className="font-medium text-violet-400 hover:text-violet-300 underline">
                 {t.viewInDashboard}
               </Link>
             </>
@@ -203,10 +212,10 @@ const DietPlan = ({ language = 'english' }) => {
               <h2 className="text-lg font-bold text-white">{t.bodyMetrics}</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <FormInput label={t.age} value={formData.age} onChange={(e) => update('age', e.target.value)} type="number" required error={isNegative(formData.age) ? negErr : undefined} />
-              <FormInput label={t.weight} value={formData.weight} onChange={(e) => update('weight', e.target.value)} type="number" required error={isNegative(formData.weight) ? negErr : undefined} />
-              <FormInput label={t.height} value={formData.height} onChange={(e) => update('height', e.target.value)} type="number" required error={isNegative(formData.height) ? negErr : undefined} />
-              <FormSelect label={t.gender} value={formData.gender} onChange={(e) => update('gender', e.target.value)} required options={[{ value: 'male', label: t.male }, { value: 'female', label: t.female }]} selectLabel={t.select} />
+              <NumberField label={t.age} value={formData.age} onChange={(e) => update('age', e.target.value)} min={0} max={120} step={1} placeholder="25" error={isNegative(formData.age) ? negErr : undefined} />
+              <NumberField label={t.weight} value={formData.weight} onChange={(e) => update('weight', e.target.value)} min={0} max={300} step={0.1} placeholder="70" error={isNegative(formData.weight) ? negErr : undefined} />
+              <NumberField label={t.height} value={formData.height} onChange={(e) => update('height', e.target.value)} min={0} max={250} step={1} placeholder="170" error={isNegative(formData.height) ? negErr : undefined} />
+              <FormSelect label={t.gender} value={formData.gender} onChange={(e) => update('gender', e.target.value)} options={[{ value: 'male', label: t.male }, { value: 'female', label: t.female }]} selectLabel={t.select} />
             </div>
           </div>
 
@@ -216,7 +225,7 @@ const DietPlan = ({ language = 'english' }) => {
               {bmi && (
                 <div className="card p-4 text-center">
                   <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-bold mb-1">{t.bmi}</p>
-                  <p className={`text-2xl font-black ${bmiCatKey === 'normal' ? 'text-emerald-400' : bmiCatKey === 'overweight' ? 'text-amber-400' : 'text-red-400'}`}>{bmi}</p>
+                  <p className={`text-2xl font-black ${bmiCatKey === 'normal' ? 'text-violet-400' : bmiCatKey === 'overweight' ? 'text-amber-400' : 'text-red-400'}`}>{bmi}</p>
                   <p className="text-[11px] text-gray-500 mt-0.5">{bmiCat}</p>
                 </div>
               )}
@@ -265,10 +274,9 @@ const DietPlan = ({ language = 'english' }) => {
           </div>
 
           <div className="text-center flex items-center justify-center gap-4">
-            <button onClick={generateDietPlan} disabled={loading || !valid} className="btn-primary text-base px-10 py-4">
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <UtensilsCrossed className="w-5 h-5" />}
-              {loading ? t.generating : t.generate}
-            </button>
+            <LiquidMetalButton onClick={generateDietPlan} disabled={loading || !valid} width={200}>
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.generating}</> : <><UtensilsCrossed className="w-4 h-4" /> {t.generate}</>}
+            </LiquidMetalButton>
             {savedPlans.length > 0 && (
               <button onClick={() => setShowSaved(!showSaved)} className="btn-ghost text-sm">
                 <RotateCcw className="w-4 h-4" /> {isTr ? 'Kayıtlı Planlar' : 'Saved Plans'} ({savedPlans.length})
@@ -298,7 +306,7 @@ const DietPlan = ({ language = 'english' }) => {
                         setShowSaved(false);
                       }
                     }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition shrink-0 ml-3"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 border border-violet-500/20 transition shrink-0 ml-3"
                   >
                     {isTr ? 'Tekrar Kullan' : 'Use Again'}
                   </button>
@@ -315,7 +323,7 @@ const DietPlan = ({ language = 'english' }) => {
           <div className="card p-8 sm:p-10 rounded-[1.25rem]">
             <div className="flex items-center justify-between mb-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
                   <Salad className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -358,7 +366,7 @@ const DietPlan = ({ language = 'english' }) => {
             <div className="space-y-8">
               {dietPlan.overview && (
                 <div>
-                  <div className="flex items-center gap-2.5 mb-3"><BarChart3 className="w-5 h-5 text-emerald-400" /><h3 className="font-bold text-white">{t.overview}</h3></div>
+                  <div className="flex items-center gap-2.5 mb-3"><BarChart3 className="w-5 h-5 text-violet-400" /><h3 className="font-bold text-white">{t.overview}</h3></div>
                   <p className="text-sm text-gray-400 whitespace-pre-line leading-relaxed">{dietPlan.overview}</p>
                 </div>
               )}

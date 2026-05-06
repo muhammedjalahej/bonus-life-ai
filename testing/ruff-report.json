@@ -1,0 +1,2510 @@
+[
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 12,
+      "row": 1
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\llm_chain.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 2
+          },
+          "location": {
+            "column": 1,
+            "row": 1
+          }
+        }
+      ],
+      "message": "Remove unused import: `json`"
+    },
+    "location": {
+      "column": 8,
+      "row": 1
+    },
+    "message": "`json` imported but unused",
+    "noqa_row": 1,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 24,
+      "row": 3
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\llm_chain.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 4
+          },
+          "location": {
+            "column": 1,
+            "row": 3
+          }
+        }
+      ],
+      "message": "Remove unused import"
+    },
+    "location": {
+      "column": 20,
+      "row": 3
+    },
+    "message": "`typing.Dict` imported but unused",
+    "noqa_row": 3,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 30,
+      "row": 3
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\llm_chain.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 4
+          },
+          "location": {
+            "column": 1,
+            "row": 3
+          }
+        }
+      ],
+      "message": "Remove unused import"
+    },
+    "location": {
+      "column": 26,
+      "row": 3
+    },
+    "message": "`typing.List` imported but unused",
+    "noqa_row": 3,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 40,
+      "row": 3
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\llm_chain.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 4
+          },
+          "location": {
+            "column": 1,
+            "row": 3
+          }
+        }
+      ],
+      "message": "Remove unused import"
+    },
+    "location": {
+      "column": 32,
+      "row": 3
+    },
+    "message": "`typing.Optional` imported but unused",
+    "noqa_row": 3,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 35,
+      "row": 13
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from typing import Dict, Any, Optional",
+          "end_location": {
+            "column": 45,
+            "row": 13
+          },
+          "location": {
+            "column": 1,
+            "row": 13
+          }
+        }
+      ],
+      "message": "Remove unused import: `typing.List`"
+    },
+    "location": {
+      "column": 31,
+      "row": 13
+    },
+    "message": "`typing.List` imported but unused",
+    "noqa_row": 13,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 21,
+      "row": 169
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 20,
+      "row": 169
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 169,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 23,
+      "row": 170
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 22,
+      "row": 170
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 170,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 14,
+      "row": 171
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 13,
+      "row": 171
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 171,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 20,
+      "row": 172
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 19,
+      "row": 172
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 172,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 22,
+      "row": 173
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 21,
+      "row": 173
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 173,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 14,
+      "row": 174
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 13,
+      "row": 174
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 174,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 20,
+      "row": 175
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 19,
+      "row": 175
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 175,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 22,
+      "row": 176
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 21,
+      "row": 176
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 176,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 14,
+      "row": 177
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 13,
+      "row": 177
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 177,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 22,
+      "row": 178
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 21,
+      "row": 178
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 178,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 24,
+      "row": 179
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 23,
+      "row": 179
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 179,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 14,
+      "row": 180
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 13,
+      "row": 180
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 180,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 31,
+      "row": 182
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 30,
+      "row": 182
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 182,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 33,
+      "row": 183
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 32,
+      "row": 183
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 183,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 14,
+      "row": 184
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 13,
+      "row": 184
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 184,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 22,
+      "row": 255
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 21,
+      "row": 255
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 255,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 24,
+      "row": 256
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 23,
+      "row": 256
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 256,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 24,
+      "row": 257
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 23,
+      "row": 257
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 257,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 28,
+      "row": 258
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 27,
+      "row": 258
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 258,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 26,
+      "row": 259
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 25,
+      "row": 259
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 259,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 31,
+      "row": 261
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 30,
+      "row": 261
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 261,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 34,
+      "row": 262
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 33,
+      "row": 262
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 262,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 14,
+      "row": 263
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 13,
+      "row": 263
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 263,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 21,
+      "row": 343
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 20,
+      "row": 343
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 343,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 22,
+      "row": 344
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 21,
+      "row": 344
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 344,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 21,
+      "row": 345
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 20,
+      "row": 345
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 345,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 20,
+      "row": 346
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 19,
+      "row": 346
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 346,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 86,
+      "row": 355
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 355
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 355,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 76,
+      "row": 356
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 356
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 356,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 53,
+      "row": 357
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 357
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 357,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 59,
+      "row": 358
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 358
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 358,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 38,
+      "row": 377
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 377
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 377,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 31,
+      "row": 378
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 378
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 378,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 28,
+      "row": 379
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 379
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 379,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 57,
+      "row": 514
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 514
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 514,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 45,
+      "row": 515
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 515
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 515,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "F811",
+    "end_location": {
+      "column": 45,
+      "row": 515
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 33,
+      "row": 515
+    },
+    "message": "Redefinition of unused `JSONResponse` from line 24: `JSONResponse` redefined here",
+    "noqa_row": 515,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/redefined-while-unused"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 38,
+      "row": 516
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 516
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 516,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 38,
+      "row": 517
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 517
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 517,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 42,
+      "row": 586
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 586
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 586,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 299,
+      "row": 599
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\main.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 599
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 599,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 57,
+      "row": 127
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 56,
+      "row": 127
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 127,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 54,
+      "row": 128
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 53,
+      "row": 128
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 128,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 61,
+      "row": 129
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 60,
+      "row": 129
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 129,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 60,
+      "row": 130
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 59,
+      "row": 130
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 130,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 54,
+      "row": 131
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 53,
+      "row": 131
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 131,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 49,
+      "row": 132
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 48,
+      "row": 132
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 132,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 77,
+      "row": 133
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 76,
+      "row": 133
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 133,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "E701",
+    "end_location": {
+      "column": 50,
+      "row": 134
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\ml_model.py",
+    "fix": null,
+    "location": {
+      "column": 49,
+      "row": 134
+    },
+    "message": "Multiple statements on one line (colon)",
+    "noqa_row": 134,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/multiple-statements-on-one-line-colon"
+  },
+  {
+    "cell": null,
+    "code": "F841",
+    "end_location": {
+      "column": 8,
+      "row": 22
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\report_signing.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 11,
+            "row": 22
+          },
+          "location": {
+            "column": 5,
+            "row": 22
+          }
+        }
+      ],
+      "message": "Remove assignment to unused variable `pem`"
+    },
+    "location": {
+      "column": 5,
+      "row": 22
+    },
+    "message": "Local variable `pem` is assigned to but never used",
+    "noqa_row": 22,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 15,
+      "row": 4
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 5
+          },
+          "location": {
+            "column": 1,
+            "row": 4
+          }
+        }
+      ],
+      "message": "Remove unused import: `secrets`"
+    },
+    "location": {
+      "column": 8,
+      "row": 4
+    },
+    "message": "`secrets` imported but unused",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 69,
+      "row": 19
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 19
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 19,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 69,
+      "row": 19
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from fastapi import APIRouter, Depends, Query, HTTPException",
+          "end_location": {
+            "column": 69,
+            "row": 19
+          },
+          "location": {
+            "column": 1,
+            "row": 19
+          }
+        }
+      ],
+      "message": "Remove unused import: `fastapi.status`"
+    },
+    "location": {
+      "column": 63,
+      "row": 19
+    },
+    "message": "`fastapi.status` imported but unused",
+    "noqa_row": 19,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 47,
+      "row": 20
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 20
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 20,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 28,
+      "row": 21
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 21
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 21,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 32,
+      "row": 23
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 23
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 23,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 146,
+      "row": 24
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 24
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 24,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 50,
+      "row": 25
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 25
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 25,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 66,
+      "row": 26
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 26
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 26,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 2,
+      "row": 31
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 27
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 27,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 45,
+      "row": 227
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from datetime import datetime",
+          "end_location": {
+            "column": 45,
+            "row": 227
+          },
+          "location": {
+            "column": 5,
+            "row": 227
+          }
+        }
+      ],
+      "message": "Remove unused import: `datetime.timedelta`"
+    },
+    "location": {
+      "column": 36,
+      "row": 227
+    },
+    "message": "`datetime.timedelta` imported but unused",
+    "noqa_row": 227,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 79,
+      "row": 234
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "User.is_active",
+          "end_location": {
+            "column": 79,
+            "row": 234
+          },
+          "location": {
+            "column": 57,
+            "row": 234
+          }
+        }
+      ],
+      "message": "Replace with `User.is_active`"
+    },
+    "location": {
+      "column": 57,
+      "row": 234
+    },
+    "message": "Avoid equality comparisons to `True`; use `User.is_active:` for truth checks",
+    "noqa_row": 234,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E711",
+    "end_location": {
+      "column": 77,
+      "row": 319
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "User.subscription_tier is None",
+          "end_location": {
+            "column": 77,
+            "row": 319
+          },
+          "location": {
+            "column": 47,
+            "row": 319
+          }
+        }
+      ],
+      "message": "Replace with `cond is None`"
+    },
+    "location": {
+      "column": 73,
+      "row": 319
+    },
+    "message": "Comparison to `None` should be `cond is None`",
+    "noqa_row": 319,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/none-comparison"
+  },
+  {
+    "cell": null,
+    "code": "F811",
+    "end_location": {
+      "column": 11,
+      "row": 339
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 339
+    },
+    "message": "Redefinition of unused `status` from line 19: `status` redefined here",
+    "noqa_row": 339,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/redefined-while-unused"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 49,
+      "row": 377
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not Assessment.admin_hidden",
+          "end_location": {
+            "column": 49,
+            "row": 377
+          },
+          "location": {
+            "column": 17,
+            "row": 377
+          }
+        }
+      ],
+      "message": "Replace with `not Assessment.admin_hidden`"
+    },
+    "location": {
+      "column": 17,
+      "row": 377
+    },
+    "message": "Avoid equality comparisons to `False`; use `not Assessment.admin_hidden:` for false checks",
+    "noqa_row": 377,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 52,
+      "row": 406
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not CKDAssessment.admin_hidden",
+          "end_location": {
+            "column": 52,
+            "row": 406
+          },
+          "location": {
+            "column": 17,
+            "row": 406
+          }
+        }
+      ],
+      "message": "Replace with `not CKDAssessment.admin_hidden`"
+    },
+    "location": {
+      "column": 17,
+      "row": 406
+    },
+    "message": "Avoid equality comparisons to `False`; use `not CKDAssessment.admin_hidden:` for false checks",
+    "noqa_row": 406,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 65,
+      "row": 443
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not Assessment.admin_hidden",
+          "end_location": {
+            "column": 65,
+            "row": 443
+          },
+          "location": {
+            "column": 33,
+            "row": 443
+          }
+        }
+      ],
+      "message": "Replace with `not Assessment.admin_hidden`"
+    },
+    "location": {
+      "column": 33,
+      "row": 443
+    },
+    "message": "Avoid equality comparisons to `False`; use `not Assessment.admin_hidden:` for false checks",
+    "noqa_row": 443,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 71,
+      "row": 467
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not CKDAssessment.admin_hidden",
+          "end_location": {
+            "column": 71,
+            "row": 467
+          },
+          "location": {
+            "column": 36,
+            "row": 467
+          }
+        }
+      ],
+      "message": "Replace with `not CKDAssessment.admin_hidden`"
+    },
+    "location": {
+      "column": 36,
+      "row": 467
+    },
+    "message": "Avoid equality comparisons to `False`; use `not CKDAssessment.admin_hidden:` for false checks",
+    "noqa_row": 467,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 54,
+      "row": 483
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not HeartAssessment.admin_hidden",
+          "end_location": {
+            "column": 54,
+            "row": 483
+          },
+          "location": {
+            "column": 17,
+            "row": 483
+          }
+        }
+      ],
+      "message": "Replace with `not HeartAssessment.admin_hidden`"
+    },
+    "location": {
+      "column": 17,
+      "row": 483
+    },
+    "message": "Avoid equality comparisons to `False`; use `not HeartAssessment.admin_hidden:` for false checks",
+    "noqa_row": 483,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 75,
+      "row": 518
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not HeartAssessment.admin_hidden",
+          "end_location": {
+            "column": 75,
+            "row": 518
+          },
+          "location": {
+            "column": 38,
+            "row": 518
+          }
+        }
+      ],
+      "message": "Replace with `not HeartAssessment.admin_hidden`"
+    },
+    "location": {
+      "column": 38,
+      "row": 518
+    },
+    "message": "Avoid equality comparisons to `False`; use `not HeartAssessment.admin_hidden:` for false checks",
+    "noqa_row": 518,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 55,
+      "row": 534
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not BrainMriAnalysis.admin_hidden",
+          "end_location": {
+            "column": 55,
+            "row": 534
+          },
+          "location": {
+            "column": 17,
+            "row": 534
+          }
+        }
+      ],
+      "message": "Replace with `not BrainMriAnalysis.admin_hidden`"
+    },
+    "location": {
+      "column": 17,
+      "row": 534
+    },
+    "message": "Avoid equality comparisons to `False`; use `not BrainMriAnalysis.admin_hidden:` for false checks",
+    "noqa_row": 534,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 77,
+      "row": 570
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not BrainMriAnalysis.admin_hidden",
+          "end_location": {
+            "column": 77,
+            "row": 570
+          },
+          "location": {
+            "column": 39,
+            "row": 570
+          }
+        }
+      ],
+      "message": "Replace with `not BrainMriAnalysis.admin_hidden`"
+    },
+    "location": {
+      "column": 39,
+      "row": 570
+    },
+    "message": "Avoid equality comparisons to `False`; use `not BrainMriAnalysis.admin_hidden:` for false checks",
+    "noqa_row": 570,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 53,
+      "row": 586
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not DietPlanRecord.admin_hidden",
+          "end_location": {
+            "column": 53,
+            "row": 586
+          },
+          "location": {
+            "column": 17,
+            "row": 586
+          }
+        }
+      ],
+      "message": "Replace with `not DietPlanRecord.admin_hidden`"
+    },
+    "location": {
+      "column": 17,
+      "row": 586
+    },
+    "message": "Avoid equality comparisons to `False`; use `not DietPlanRecord.admin_hidden:` for false checks",
+    "noqa_row": 586,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 73,
+      "row": 620
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not DietPlanRecord.admin_hidden",
+          "end_location": {
+            "column": 73,
+            "row": 620
+          },
+          "location": {
+            "column": 37,
+            "row": 620
+          }
+        }
+      ],
+      "message": "Replace with `not DietPlanRecord.admin_hidden`"
+    },
+    "location": {
+      "column": 37,
+      "row": 620
+    },
+    "message": "Avoid equality comparisons to `False`; use `not DietPlanRecord.admin_hidden:` for false checks",
+    "noqa_row": 620,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 59,
+      "row": 811
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from sqlalchemy import inspect as sa_inspect",
+          "end_location": {
+            "column": 59,
+            "row": 811
+          },
+          "location": {
+            "column": 9,
+            "row": 811
+          }
+        }
+      ],
+      "message": "Remove unused import: `sqlalchemy.text`"
+    },
+    "location": {
+      "column": 55,
+      "row": 811
+    },
+    "message": "`sqlalchemy.text` imported but unused",
+    "noqa_row": 811,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F841",
+    "end_location": {
+      "column": 26,
+      "row": 824
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 26,
+            "row": 824
+          },
+          "location": {
+            "column": 21,
+            "row": 824
+          }
+        }
+      ],
+      "message": "Remove assignment to unused variable `e`"
+    },
+    "location": {
+      "column": 25,
+      "row": 824
+    },
+    "message": "Local variable `e` is assigned to but never used",
+    "noqa_row": 824,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 57,
+      "row": 914
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "User.is_active",
+          "end_location": {
+            "column": 57,
+            "row": 914
+          },
+          "location": {
+            "column": 35,
+            "row": 914
+          }
+        }
+      ],
+      "message": "Replace with `User.is_active`"
+    },
+    "location": {
+      "column": 35,
+      "row": 914
+    },
+    "message": "Avoid equality comparisons to `True`; use `User.is_active:` for truth checks",
+    "noqa_row": 914,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 43,
+      "row": 971
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "Announcement.is_active",
+          "end_location": {
+            "column": 43,
+            "row": 971
+          },
+          "location": {
+            "column": 13,
+            "row": 971
+          }
+        }
+      ],
+      "message": "Replace with `Announcement.is_active`"
+    },
+    "location": {
+      "column": 13,
+      "row": 971
+    },
+    "message": "Avoid equality comparisons to `True`; use `Announcement.is_active:` for truth checks",
+    "noqa_row": 971,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E711",
+    "end_location": {
+      "column": 45,
+      "row": 972
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\admin_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "Announcement.expires_at is None",
+          "end_location": {
+            "column": 45,
+            "row": 972
+          },
+          "location": {
+            "column": 14,
+            "row": 972
+          }
+        }
+      ],
+      "message": "Replace with `cond is None`"
+    },
+    "location": {
+      "column": 41,
+      "row": 972
+    },
+    "message": "Comparison to `None` should be `cond is None`",
+    "noqa_row": 972,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/none-comparison"
+  },
+  {
+    "cell": null,
+    "code": "E711",
+    "end_location": {
+      "column": 48,
+      "row": 162
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\auth.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "User.password_reset_expires is not None",
+          "end_location": {
+            "column": 48,
+            "row": 162
+          },
+          "location": {
+            "column": 13,
+            "row": 162
+          }
+        }
+      ],
+      "message": "Replace with `cond is not None`"
+    },
+    "location": {
+      "column": 44,
+      "row": 162
+    },
+    "message": "Comparison to `None` should be `cond is not None`",
+    "noqa_row": 162,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/none-comparison"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 54,
+      "row": 6
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\chat.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from fastapi import APIRouter, HTTPException, BackgroundTasks",
+          "end_location": {
+            "column": 71,
+            "row": 6
+          },
+          "location": {
+            "column": 1,
+            "row": 6
+          }
+        }
+      ],
+      "message": "Remove unused import: `fastapi.Depends`"
+    },
+    "location": {
+      "column": 47,
+      "row": 6
+    },
+    "message": "`fastapi.Depends` imported but unused",
+    "noqa_row": 6,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 81,
+      "row": 78
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\face_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "FaceEnrollment.enabled",
+          "end_location": {
+            "column": 81,
+            "row": 78
+          },
+          "location": {
+            "column": 51,
+            "row": 78
+          }
+        }
+      ],
+      "message": "Replace with `FaceEnrollment.enabled`"
+    },
+    "location": {
+      "column": 51,
+      "row": 78
+    },
+    "message": "Avoid equality comparisons to `True`; use `FaceEnrollment.enabled:` for truth checks",
+    "noqa_row": 78,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 10,
+      "row": 5
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\me_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 6
+          },
+          "location": {
+            "column": 1,
+            "row": 5
+          }
+        }
+      ],
+      "message": "Remove unused import: `re`"
+    },
+    "location": {
+      "column": 8,
+      "row": 5
+    },
+    "message": "`re` imported but unused",
+    "noqa_row": 5,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 34,
+      "row": 10
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\me_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from typing import List",
+          "end_location": {
+            "column": 34,
+            "row": 10
+          },
+          "location": {
+            "column": 1,
+            "row": 10
+          }
+        }
+      ],
+      "message": "Remove unused import: `typing.Optional`"
+    },
+    "location": {
+      "column": 26,
+      "row": 10
+    },
+    "message": "`typing.Optional` imported but unused",
+    "noqa_row": 10,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 43,
+      "row": 13
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\me_routes.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 14
+          },
+          "location": {
+            "column": 1,
+            "row": 13
+          }
+        }
+      ],
+      "message": "Remove unused import: `fastapi.responses.JSONResponse`"
+    },
+    "location": {
+      "column": 31,
+      "row": 13
+    },
+    "message": "`fastapi.responses.JSONResponse` imported but unused",
+    "noqa_row": 13,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "E712",
+    "end_location": {
+      "column": 71,
+      "row": 671
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\me_routes.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "not Notification.is_read",
+          "end_location": {
+            "column": 71,
+            "row": 671
+          },
+          "location": {
+            "column": 42,
+            "row": 671
+          }
+        }
+      ],
+      "message": "Replace with `not Notification.is_read`"
+    },
+    "location": {
+      "column": 42,
+      "row": 671
+    },
+    "message": "Avoid equality comparisons to `False`; use `not Notification.is_read:` for false checks",
+    "noqa_row": 671,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/true-false-comparison"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 23,
+      "row": 12
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\voice_command.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from typing import List, Optional",
+          "end_location": {
+            "column": 39,
+            "row": 12
+          },
+          "location": {
+            "column": 1,
+            "row": 12
+          }
+        }
+      ],
+      "message": "Remove unused import: `typing.Any`"
+    },
+    "location": {
+      "column": 20,
+      "row": 12
+    },
+    "message": "`typing.Any` imported but unused",
+    "noqa_row": 12,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 45,
+      "row": 14
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\voice_command.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from fastapi import APIRouter",
+          "end_location": {
+            "column": 45,
+            "row": 14
+          },
+          "location": {
+            "column": 1,
+            "row": 14
+          }
+        }
+      ],
+      "message": "Remove unused import: `fastapi.HTTPException`"
+    },
+    "location": {
+      "column": 32,
+      "row": 14
+    },
+    "message": "`fastapi.HTTPException` imported but unused",
+    "noqa_row": 14,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 68,
+      "row": 136
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\webauthn_routes.py",
+    "fix": null,
+    "location": {
+      "column": 46,
+      "row": 136
+    },
+    "message": "`webauthn.helpers.structs.RegistrationCredential` imported but unused; consider using `importlib.util.find_spec` to test for availability",
+    "noqa_row": 136,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 75,
+      "row": 253
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\routes\\webauthn_routes.py",
+    "fix": null,
+    "location": {
+      "column": 46,
+      "row": 253
+    },
+    "message": "`webauthn.helpers.structs.PublicKeyCredentialDescriptor` imported but unused; consider using `importlib.util.find_spec` to test for availability",
+    "noqa_row": 253,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 39,
+      "row": 12
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\services\\brain_mri_service.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from typing import Dict, Any",
+          "end_location": {
+            "column": 46,
+            "row": 12
+          },
+          "location": {
+            "column": 1,
+            "row": 12
+          }
+        }
+      ],
+      "message": "Remove unused import"
+    },
+    "location": {
+      "column": 31,
+      "row": 12
+    },
+    "message": "`typing.Optional` imported but unused",
+    "noqa_row": 12,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 46,
+      "row": 12
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\services\\brain_mri_service.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from typing import Dict, Any",
+          "end_location": {
+            "column": 46,
+            "row": 12
+          },
+          "location": {
+            "column": 1,
+            "row": 12
+          }
+        }
+      ],
+      "message": "Remove unused import"
+    },
+    "location": {
+      "column": 41,
+      "row": 12
+    },
+    "message": "`typing.Tuple` imported but unused",
+    "noqa_row": 12,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 19,
+      "row": 14
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\services\\brain_mri_service.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 15
+          },
+          "location": {
+            "column": 1,
+            "row": 14
+          }
+        }
+      ],
+      "message": "Remove unused import: `numpy`"
+    },
+    "location": {
+      "column": 17,
+      "row": 14
+    },
+    "message": "`numpy` imported but unused",
+    "noqa_row": 14,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 12,
+      "row": 7
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\services\\jarvis_agent.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 8
+          },
+          "location": {
+            "column": 1,
+            "row": 7
+          }
+        }
+      ],
+      "message": "Remove unused import: `json`"
+    },
+    "location": {
+      "column": 8,
+      "row": 7
+    },
+    "message": "`json` imported but unused",
+    "noqa_row": 7,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 13,
+      "row": 10
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\services\\jarvis_agent.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 11
+          },
+          "location": {
+            "column": 1,
+            "row": 10
+          }
+        }
+      ],
+      "message": "Remove unused import: `httpx`"
+    },
+    "location": {
+      "column": 8,
+      "row": 10
+    },
+    "message": "`httpx` imported but unused",
+    "noqa_row": 10,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 15,
+      "row": 8
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\services\\meal_photo.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 9
+          },
+          "location": {
+            "column": 1,
+            "row": 8
+          }
+        }
+      ],
+      "message": "Remove unused import: `asyncio`"
+    },
+    "location": {
+      "column": 8,
+      "row": 8
+    },
+    "message": "`asyncio` imported but unused",
+    "noqa_row": 8,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 39,
+      "row": 10
+    },
+    "filename": "C:\\Users\\moham\\OneDrive\\Desktop\\Bonus Life Ai\\app\\backend\\app\\services\\meal_photo.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "from typing import Dict, Any",
+          "end_location": {
+            "column": 39,
+            "row": 10
+          },
+          "location": {
+            "column": 1,
+            "row": 10
+          }
+        }
+      ],
+      "message": "Remove unused import: `typing.Optional`"
+    },
+    "location": {
+      "column": 31,
+      "row": 10
+    },
+    "message": "`typing.Optional` imported but unused",
+    "noqa_row": 10,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  }
+]

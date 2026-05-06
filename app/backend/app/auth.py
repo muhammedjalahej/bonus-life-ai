@@ -26,6 +26,13 @@ SECRET_KEY = os.getenv("JWT_SECRET", "morelife-dev-secret-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
+if SECRET_KEY == "morelife-dev-secret-change-in-production":
+    import logging as _logging
+    _logging.getLogger(__name__).critical(
+        "SECURITY: JWT_SECRET is using insecure default. "
+        "Set JWT_SECRET=<random 64-char hex> in app/backend/.env before any deployment."
+    )
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
 
@@ -35,7 +42,10 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return pwd_context.verify(plain, hashed)
+    except Exception:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -65,7 +75,10 @@ def get_current_user(
     payload = decode_token(credentials.credentials)
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    user_id = int(payload["sub"])
+    try:
+        user_id = int(payload["sub"])
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")

@@ -21,7 +21,7 @@ ELEVENLABS_BASE = "https://api.elevenlabs.io/v1"
 DEFAULT_VOICE_ID = "wWWn96OtTHu1sn8SRGEr"
 # If your voice returns 404, we try this premade voice (Bella - usually available on all plans).
 FALLBACK_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
-# eleven_multilingual_v2 works on all plans. Set ELEVENLABS_MODEL_ID=eleven_v3 for best quality if your plan has it.
+# eleven_multilingual_v2 works on all plans.
 DEFAULT_MODEL = "eleven_multilingual_v2"
 FALLBACK_MODEL = "eleven_multilingual_v2"
 
@@ -95,40 +95,43 @@ def get_tts_voices_route():
     return list_voices()
 
 
+def _gtts_synthesize(text: str) -> bytes:
+    """Google TTS fallback — free, no API key, natural voice."""
+    try:
+        from gtts import gTTS
+        import io
+        tts = gTTS(text=text, lang="en", slow=False)
+        buf = io.BytesIO()
+        tts.write_to_fp(buf)
+        buf.seek(0)
+        return buf.read()
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"gTTS failed: {e}")
+
+
 @router.post("/tts")
 def post_tts(req: TTSRequest) -> Response:
     """
-    Synthesize speech using ElevenLabs. Uses voice tnSpp4vdxKPjI9w0GnoV by default.
-    Set ELEVENLABS_API_KEY in .env. Optional: ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL_ID.
+    Synthesize speech. Tries ElevenLabs first; falls back to Google TTS (free) on any error.
+    Set ELEVENLABS_API_KEY in .env for premium voice. gTTS works with no keys.
     """
     if not (req.text and req.text.strip()):
         raise HTTPException(status_code=400, detail="text is required")
-    voice_id = (req.voice_id and req.voice_id.strip()) or (os.getenv("ELEVENLABS_VOICE_ID", "").strip()) or DEFAULT_VOICE_ID
-    model_id = (os.getenv("ELEVENLABS_MODEL_ID", "").strip() or DEFAULT_MODEL)
-    logger.info("TTS request: voice_id=%s model_id=%s", voice_id, model_id)
 
-    try:
-        audio_bytes = _synthesize_sync(req.text.strip(), voice_id, model_id)
-    except ValueError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    except HTTPException as e:
-        detail = (e.detail or "") if hasattr(e, "detail") else ""
-        # If ElevenLabs returned 404 (voice not found), try premade voice so at least TTS works
-        if "404" in str(detail) and voice_id == DEFAULT_VOICE_ID:
-            try:
-                logger.info("Voice %s not found in your account, trying premade voice %s", voice_id, FALLBACK_VOICE_ID)
-                audio_bytes = _synthesize_sync(req.text.strip(), FALLBACK_VOICE_ID, model_id)
-            except HTTPException:
-                raise
-        elif model_id == DEFAULT_MODEL:
-            try:
-                logger.info("Trying fallback model %s", FALLBACK_MODEL)
-                audio_bytes = _synthesize_sync(req.text.strip(), voice_id, FALLBACK_MODEL)
-            except HTTPException:
-                raise
-        else:
-            raise
-    except Exception:
-        logger.exception("TTS failed")
-        raise HTTPException(status_code=502, detail="TTS service error")
+    text = req.text.strip()
+    voice_id = (req.voice_id and req.voice_id.strip()) or (os.getenv("ELEVENLABS_VOICE_ID", "").strip()) or DEFAULT_VOICE_ID
+    model_id = os.getenv("ELEVENLABS_MODEL_ID", "").strip() or DEFAULT_MODEL
+
+    # Try ElevenLabs if key is configured
+    api_key_present = bool(os.getenv("ELEVENLABS_API_KEY", "").strip())
+    if api_key_present:
+        try:
+            audio_bytes = _synthesize_sync(text, voice_id, model_id)
+            return Response(content=audio_bytes, media_type="audio/mpeg")
+        except Exception as e:
+            logger.warning("ElevenLabs failed (%s), falling back to gTTS", e)
+
+    # Fallback: Google TTS (free, no API key)
+    logger.info("Using gTTS fallback for TTS")
+    audio_bytes = _gtts_synthesize(text)
     return Response(content=audio_bytes, media_type="audio/mpeg")

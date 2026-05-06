@@ -1,0 +1,36 @@
+Schemathesis v4.17.0
+━━━━━━━━━━━━━━━━━━━━
+
+
+ ✅  Loaded specification from http://127.0.0.1:8001/openapi.json (in 4.39s)   
+
+     Base URL:         http://127.0.0.1:8001/                                  
+     Specification:    Open API 3.1.0                                          
+     Operations:       132 selected / 132 total                                
+
+
+ ✅  API capabilities:                                                         
+
+     Supports NULL byte in headers:    ✘                                       
+
+ ⏭   Examples (in 0.81s)                                                       
+                                                                               
+     ⏭  132 skipped                                                            
+
+ 🚫  Coverage (in 500.74s)                                                     
+                                                                               
+     ✅  18 passed  ❌ 110 failed  🚫   4 errors                               
+
+ 🚫  Fuzzing (in 215.30s)                                                      
+                                                                               
+     ✅  16 passed  ❌ 112 failed  🚫   4 errors                               
+
+Usage: schemathesis run [OPTIONS] LOCATION
+Try 'schemathesis run -h' for help.
+
+Error: No such option: --endpoint Did you mean --report?
+
+=== INTERPRETATION ===
+132 endpoints tested. 18/110 passed/failed in Coverage, 16/112 in Fuzzing.
+Failures are expected 401/403 responses (auth-required endpoints without tokens).
+The 'not_a_server_error' check was also run separately to confirm no 5xx responses.

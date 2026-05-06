@@ -16,6 +16,18 @@ export default {
         'orbit': 'orbit 20s linear infinite',
         'fade-in-up': 'fade-in-up 0.7s ease-out both',
         'float': 'float 6s ease-in-out infinite',
+        'star-btn': 'star-btn calc(var(--duration, 3) * 1s) linear infinite',
+      },
+      keyframes: {
+        'star-btn': {
+          '0%':   { offsetDistance: '0%' },
+          '100%': { offsetDistance: '100%' },
+        },
+        'shine-pulse': {
+          '0%':   { 'background-position': '0% 0%' },
+          '50%':  { 'background-position': '100% 100%' },
+          '100%': { 'background-position': '0% 0%' },
+        },
       },
     },
   },

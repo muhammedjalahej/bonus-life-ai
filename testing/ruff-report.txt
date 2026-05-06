@@ -1,0 +1,1169 @@
+F401 [*] `json` imported but unused
+ --> app\llm_chain.py:1:8
+  |
+1 | import json
+  |        ^^^^
+2 | import logging
+3 | from typing import Dict, List, Optional
+  |
+help: Remove unused import: `json`
+
+F401 [*] `typing.Dict` imported but unused
+ --> app\llm_chain.py:3:20
+  |
+1 | import json
+2 | import logging
+3 | from typing import Dict, List, Optional
+  |                    ^^^^
+4 | from langchain_groq import ChatGroq
+5 | from langchain_core.prompts import PromptTemplate
+  |
+help: Remove unused import
+
+F401 [*] `typing.List` imported but unused
+ --> app\llm_chain.py:3:26
+  |
+1 | import json
+2 | import logging
+3 | from typing import Dict, List, Optional
+  |                          ^^^^
+4 | from langchain_groq import ChatGroq
+5 | from langchain_core.prompts import PromptTemplate
+  |
+help: Remove unused import
+
+F401 [*] `typing.Optional` imported but unused
+ --> app\llm_chain.py:3:32
+  |
+1 | import json
+2 | import logging
+3 | from typing import Dict, List, Optional
+  |                                ^^^^^^^^
+4 | from langchain_groq import ChatGroq
+5 | from langchain_core.prompts import PromptTemplate
+  |
+help: Remove unused import
+
+F401 [*] `typing.List` imported but unused
+  --> app\main.py:13:31
+   |
+11 | import numpy as np
+12 | from datetime import datetime
+13 | from typing import Dict, Any, List, Optional
+   |                               ^^^^
+14 | from contextlib import asynccontextmanager
+   |
+help: Remove unused import: `typing.List`
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:169:20
+    |
+167 |         bp = features.get("BloodPressure", 120)
+168 |         risk_score = 0.0
+169 |         if g >= 126:    risk_score += 0.6
+    |                    ^
+170 |         elif g >= 100:  risk_score += 0.3
+171 |         else:           risk_score += 0.1
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:170:22
+    |
+168 |         risk_score = 0.0
+169 |         if g >= 126:    risk_score += 0.6
+170 |         elif g >= 100:  risk_score += 0.3
+    |                      ^
+171 |         else:           risk_score += 0.1
+172 |         if b >= 30:     risk_score += 0.5
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:171:13
+    |
+169 |         if g >= 126:    risk_score += 0.6
+170 |         elif g >= 100:  risk_score += 0.3
+171 |         else:           risk_score += 0.1
+    |             ^
+172 |         if b >= 30:     risk_score += 0.5
+173 |         elif b >= 25:   risk_score += 0.3
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:172:19
+    |
+170 |         elif g >= 100:  risk_score += 0.3
+171 |         else:           risk_score += 0.1
+172 |         if b >= 30:     risk_score += 0.5
+    |                   ^
+173 |         elif b >= 25:   risk_score += 0.3
+174 |         else:           risk_score += 0.1
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:173:21
+    |
+171 |         else:           risk_score += 0.1
+172 |         if b >= 30:     risk_score += 0.5
+173 |         elif b >= 25:   risk_score += 0.3
+    |                     ^
+174 |         else:           risk_score += 0.1
+175 |         if a >= 45:     risk_score += 0.3
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:174:13
+    |
+172 |         if b >= 30:     risk_score += 0.5
+173 |         elif b >= 25:   risk_score += 0.3
+174 |         else:           risk_score += 0.1
+    |             ^
+175 |         if a >= 45:     risk_score += 0.3
+176 |         elif a >= 35:   risk_score += 0.2
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:175:19
+    |
+173 |         elif b >= 25:   risk_score += 0.3
+174 |         else:           risk_score += 0.1
+175 |         if a >= 45:     risk_score += 0.3
+    |                   ^
+176 |         elif a >= 35:   risk_score += 0.2
+177 |         else:           risk_score += 0.1
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:176:21
+    |
+174 |         else:           risk_score += 0.1
+175 |         if a >= 45:     risk_score += 0.3
+176 |         elif a >= 35:   risk_score += 0.2
+    |                     ^
+177 |         else:           risk_score += 0.1
+178 |         if bp >= 140:   risk_score += 0.4
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:177:13
+    |
+175 |         if a >= 45:     risk_score += 0.3
+176 |         elif a >= 35:   risk_score += 0.2
+177 |         else:           risk_score += 0.1
+    |             ^
+178 |         if bp >= 140:   risk_score += 0.4
+179 |         elif bp >= 130: risk_score += 0.2
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:178:21
+    |
+176 |         elif a >= 35:   risk_score += 0.2
+177 |         else:           risk_score += 0.1
+178 |         if bp >= 140:   risk_score += 0.4
+    |                     ^
+179 |         elif bp >= 130: risk_score += 0.2
+180 |         else:           risk_score += 0.1
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:179:23
+    |
+177 |         else:           risk_score += 0.1
+178 |         if bp >= 140:   risk_score += 0.4
+179 |         elif bp >= 130: risk_score += 0.2
+    |                       ^
+180 |         else:           risk_score += 0.1
+181 |         probability = min(0.95, risk_score / 2.0)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:180:13
+    |
+178 |         if bp >= 140:   risk_score += 0.4
+179 |         elif bp >= 130: risk_score += 0.2
+180 |         else:           risk_score += 0.1
+    |             ^
+181 |         probability = min(0.95, risk_score / 2.0)
+182 |         if probability >= 0.7:   risk_label = "High Risk"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:182:30
+    |
+180 |         else:           risk_score += 0.1
+181 |         probability = min(0.95, risk_score / 2.0)
+182 |         if probability >= 0.7:   risk_label = "High Risk"
+    |                              ^
+183 |         elif probability >= 0.4: risk_label = "Moderate Risk"
+184 |         else:                    risk_label = "Low Risk"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:183:32
+    |
+181 |         probability = min(0.95, risk_score / 2.0)
+182 |         if probability >= 0.7:   risk_label = "High Risk"
+183 |         elif probability >= 0.4: risk_label = "Moderate Risk"
+    |                                ^
+184 |         else:                    risk_label = "Low Risk"
+185 |         return risk_label, probability, {"Glucose": 0.3, "BMI": 0.25, "Age": 0.2, "BloodPressure": 0.25}
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:184:13
+    |
+182 |         if probability >= 0.7:   risk_label = "High Risk"
+183 |         elif probability >= 0.4: risk_label = "Moderate Risk"
+184 |         else:                    risk_label = "Low Risk"
+    |             ^
+185 |         return risk_label, probability, {"Glucose": 0.3, "BMI": 0.25, "Age": 0.2, "BloodPressure": 0.25}
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:255:21
+    |
+253 |         thalach = features.get("thalach", 150)
+254 |         score = 0.0
+255 |         if age >= 55: score += 0.3
+    |                     ^
+256 |         elif age >= 45: score += 0.2
+257 |         if chol >= 240: score += 0.25
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:256:23
+    |
+254 |         score = 0.0
+255 |         if age >= 55: score += 0.3
+256 |         elif age >= 45: score += 0.2
+    |                       ^
+257 |         if chol >= 240: score += 0.25
+258 |         if trestbps >= 140: score += 0.25
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:257:23
+    |
+255 |         if age >= 55: score += 0.3
+256 |         elif age >= 45: score += 0.2
+257 |         if chol >= 240: score += 0.25
+    |                       ^
+258 |         if trestbps >= 140: score += 0.25
+259 |         if thalach < 120: score += 0.2
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:258:27
+    |
+256 |         elif age >= 45: score += 0.2
+257 |         if chol >= 240: score += 0.25
+258 |         if trestbps >= 140: score += 0.25
+    |                           ^
+259 |         if thalach < 120: score += 0.2
+260 |         probability = min(0.9, score)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:259:25
+    |
+257 |         if chol >= 240: score += 0.25
+258 |         if trestbps >= 140: score += 0.25
+259 |         if thalach < 120: score += 0.2
+    |                         ^
+260 |         probability = min(0.9, score)
+261 |         if probability >= 0.6: risk_label = "High Risk"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:261:30
+    |
+259 |         if thalach < 120: score += 0.2
+260 |         probability = min(0.9, score)
+261 |         if probability >= 0.6: risk_label = "High Risk"
+    |                              ^
+262 |         elif probability >= 0.35: risk_label = "Moderate Risk"
+263 |         else: risk_label = "Low Risk"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:262:33
+    |
+260 |         probability = min(0.9, score)
+261 |         if probability >= 0.6: risk_label = "High Risk"
+262 |         elif probability >= 0.35: risk_label = "Moderate Risk"
+    |                                 ^
+263 |         else: risk_label = "Low Risk"
+264 |         return risk_label, probability, {fn: 0.08 for fn in self.feature_names}
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:263:13
+    |
+261 |         if probability >= 0.6: risk_label = "High Risk"
+262 |         elif probability >= 0.35: risk_label = "Moderate Risk"
+263 |         else: risk_label = "Low Risk"
+    |             ^
+264 |         return risk_label, probability, {fn: 0.08 for fn in self.feature_names}
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:343:20
+    |
+341 |         al = features.get("albumin", 0)
+342 |         score = 0.0
+343 |         if sc > 1.5: score += 0.4
+    |                    ^
+344 |         if hemo < 10: score += 0.3
+345 |         if htn == 1: score += 0.15
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:344:21
+    |
+342 |         score = 0.0
+343 |         if sc > 1.5: score += 0.4
+344 |         if hemo < 10: score += 0.3
+    |                     ^
+345 |         if htn == 1: score += 0.15
+346 |         if al >= 2: score += 0.15
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:345:20
+    |
+343 |         if sc > 1.5: score += 0.4
+344 |         if hemo < 10: score += 0.3
+345 |         if htn == 1: score += 0.15
+    |                    ^
+346 |         if al >= 2: score += 0.15
+347 |         probability = min(0.95, score)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\main.py:346:19
+    |
+344 |         if hemo < 10: score += 0.3
+345 |         if htn == 1: score += 0.15
+346 |         if al >= 2: score += 0.15
+    |                   ^
+347 |         probability = min(0.95, score)
+348 |         label = "CKD" if probability >= 0.5 else "No CKD"
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:355:1
+    |
+353 | # Service instantiation
+354 | # ---------------------------------------------------------------------------
+355 | from app.services.ai_specialist import AIDiabetesSpecialist, GPTOSSDiabetesSpecialist
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+356 | from app.services.diet import GroqLLMService, ProductionMealPlanningService
+357 | from app.services.voice_chat import VoiceChatService
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:356:1
+    |
+354 | # ---------------------------------------------------------------------------
+355 | from app.services.ai_specialist import AIDiabetesSpecialist, GPTOSSDiabetesSpecialist
+356 | from app.services.diet import GroqLLMService, ProductionMealPlanningService
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+357 | from app.services.voice_chat import VoiceChatService
+358 | from app.services.brain_mri_service import BrainMriService
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:357:1
+    |
+355 | from app.services.ai_specialist import AIDiabetesSpecialist, GPTOSSDiabetesSpecialist
+356 | from app.services.diet import GroqLLMService, ProductionMealPlanningService
+357 | from app.services.voice_chat import VoiceChatService
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+358 | from app.services.brain_mri_service import BrainMriService
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:358:1
+    |
+356 | from app.services.diet import GroqLLMService, ProductionMealPlanningService
+357 | from app.services.voice_chat import VoiceChatService
+358 | from app.services.brain_mri_service import BrainMriService
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+359 |
+360 | ai_specialist = AIDiabetesSpecialist()
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:377:1
+    |
+375 | # Database (create tables on startup)
+376 | # ---------------------------------------------------------------------------
+377 | from app.database import engine, Base
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+378 | from app import db_models as _  # noqa: F401 - ensure models are registered
+379 | from sqlalchemy import text
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:378:1
+    |
+376 | # ---------------------------------------------------------------------------
+377 | from app.database import engine, Base
+378 | from app import db_models as _  # noqa: F401 - ensure models are registered
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+379 | from sqlalchemy import text
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:379:1
+    |
+377 | from app.database import engine, Base
+378 | from app import db_models as _  # noqa: F401 - ensure models are registered
+379 | from sqlalchemy import text
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380 |
+381 | Base.metadata.create_all(bind=engine)
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:514:1
+    |
+512 | # Maintenance-mode middleware
+513 | # ---------------------------------------------------------------------------
+514 | from starlette.middleware.base import BaseHTTPMiddleware
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+515 | from starlette.responses import JSONResponse
+516 | from app.database import SessionLocal
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:515:1
+    |
+513 | # ---------------------------------------------------------------------------
+514 | from starlette.middleware.base import BaseHTTPMiddleware
+515 | from starlette.responses import JSONResponse
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+516 | from app.database import SessionLocal
+517 | from app.db_models import SiteSetting
+    |
+
+F811 Redefinition of unused `JSONResponse` from line 24
+   --> app\main.py:515:33
+    |
+513 | # ---------------------------------------------------------------------------
+514 | from starlette.middleware.base import BaseHTTPMiddleware
+515 | from starlette.responses import JSONResponse
+    |                                 ^^^^^^^^^^^^ `JSONResponse` redefined here
+516 | from app.database import SessionLocal
+517 | from app.db_models import SiteSetting
+    |
+   ::: app\main.py:24:31
+    |
+ 22 | from fastapi import FastAPI, HTTPException, Request
+ 23 | from fastapi.middleware.cors import CORSMiddleware
+ 24 | from fastapi.responses import JSONResponse
+    |                               ------------ previous definition of `JSONResponse` here
+ 25 | from fastapi.staticfiles import StaticFiles
+    |
+help: Remove definition: `JSONResponse`
+
+E402 Module level import not at top of file
+   --> app\main.py:516:1
+    |
+514 | from starlette.middleware.base import BaseHTTPMiddleware
+515 | from starlette.responses import JSONResponse
+516 | from app.database import SessionLocal
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+517 | from app.db_models import SiteSetting
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:517:1
+    |
+515 | from starlette.responses import JSONResponse
+516 | from app.database import SessionLocal
+517 | from app.db_models import SiteSetting
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:586:1
+    |
+584 | # ---------------------------------------------------------------------------
+585 | # Register TTS routes on the app first so they are never shadowed (fixes 404 → robot voice)
+586 | from app.routes import tts as _tts_routes
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+587 |
+588 | @app.get("/api/v1/voices", tags=["tts"])
+    |
+
+E402 Module level import not at top of file
+   --> app\main.py:599:1
+    |
+597 |     return _tts_routes.post_tts(body)
+598 |
+599 | from app.routes import chat, assessment, diet, health, topics, user, voice_chat, voice_command, tts, hospitals, language, auth, me_routes, admin_routes, reports, meal_photo, webauthn_routes, face_routes, workout_videos, local_ai_routes, stripe_webhook, heart, symptom_checker, brain_mri, ckd, agent
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+600 |
+601 | # Inject service instances into route modules
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:127:56
+    |
+125 |                     return False
+126 |
+127 |             if not (0 <= features["pregnancies"] <= 20): return False
+    |                                                        ^
+128 |             if not (0 <= features["glucose"] <= 200): return False
+129 |             if not (0 <= features["blood_pressure"] <= 122): return False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:128:53
+    |
+127 |             if not (0 <= features["pregnancies"] <= 20): return False
+128 |             if not (0 <= features["glucose"] <= 200): return False
+    |                                                     ^
+129 |             if not (0 <= features["blood_pressure"] <= 122): return False
+130 |             if not (0 <= features["skin_thickness"] <= 99): return False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:129:60
+    |
+127 |             if not (0 <= features["pregnancies"] <= 20): return False
+128 |             if not (0 <= features["glucose"] <= 200): return False
+129 |             if not (0 <= features["blood_pressure"] <= 122): return False
+    |                                                            ^
+130 |             if not (0 <= features["skin_thickness"] <= 99): return False
+131 |             if not (0 <= features["insulin"] <= 846): return False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:130:59
+    |
+128 |             if not (0 <= features["glucose"] <= 200): return False
+129 |             if not (0 <= features["blood_pressure"] <= 122): return False
+130 |             if not (0 <= features["skin_thickness"] <= 99): return False
+    |                                                           ^
+131 |             if not (0 <= features["insulin"] <= 846): return False
+132 |             if not (0 <= features["bmi"] <= 50): return False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:131:53
+    |
+129 |             if not (0 <= features["blood_pressure"] <= 122): return False
+130 |             if not (0 <= features["skin_thickness"] <= 99): return False
+131 |             if not (0 <= features["insulin"] <= 846): return False
+    |                                                     ^
+132 |             if not (0 <= features["bmi"] <= 50): return False
+133 |             if not (0.08 <= features["diabetes_pedigree_function"] <= 2.42): return False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:132:48
+    |
+130 |             if not (0 <= features["skin_thickness"] <= 99): return False
+131 |             if not (0 <= features["insulin"] <= 846): return False
+132 |             if not (0 <= features["bmi"] <= 50): return False
+    |                                                ^
+133 |             if not (0.08 <= features["diabetes_pedigree_function"] <= 2.42): return False
+134 |             if not (21 <= features["age"] <= 81): return False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:133:76
+    |
+131 |             if not (0 <= features["insulin"] <= 846): return False
+132 |             if not (0 <= features["bmi"] <= 50): return False
+133 |             if not (0.08 <= features["diabetes_pedigree_function"] <= 2.42): return False
+    |                                                                            ^
+134 |             if not (21 <= features["age"] <= 81): return False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\ml_model.py:134:49
+    |
+132 |             if not (0 <= features["bmi"] <= 50): return False
+133 |             if not (0.08 <= features["diabetes_pedigree_function"] <= 2.42): return False
+134 |             if not (21 <= features["age"] <= 81): return False
+    |                                                 ^
+135 |
+136 |             return True
+    |
+
+F841 Local variable `pem` is assigned to but never used
+  --> app\report_signing.py:22:5
+   |
+20 |     """Generate a new ECDSA P-256 key pair (for demo when env not set)."""
+21 |     key = ec.generate_private_key(ec.SECP256R1(), default_backend())
+22 |     pem = key.private_bytes(
+   |     ^^^
+23 |         encoding=serialization.Encoding.PEM,
+24 |         format=serialization.PrivateFormat.PKCS8,
+   |
+help: Remove assignment to unused variable `pem`
+
+F401 [*] `secrets` imported but unused
+ --> app\routes\admin_routes.py:4:8
+  |
+3 | import json
+4 | import secrets
+  |        ^^^^^^^
+5 | import logging
+6 | from typing import List, Optional
+  |
+help: Remove unused import: `secrets`
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:19:1
+   |
+17 |         return None
+18 |
+19 | from fastapi import APIRouter, Depends, Query, HTTPException, status
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+20 | from sqlalchemy.orm import Session, joinedload
+21 | from sqlalchemy import func
+   |
+
+F401 [*] `fastapi.status` imported but unused
+  --> app\routes\admin_routes.py:19:63
+   |
+17 |         return None
+18 |
+19 | from fastapi import APIRouter, Depends, Query, HTTPException, status
+   |                                                               ^^^^^^
+20 | from sqlalchemy.orm import Session, joinedload
+21 | from sqlalchemy import func
+   |
+help: Remove unused import: `fastapi.status`
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:20:1
+   |
+19 | from fastapi import APIRouter, Depends, Query, HTTPException, status
+20 | from sqlalchemy.orm import Session, joinedload
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 | from sqlalchemy import func
+   |
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:21:1
+   |
+19 | from fastapi import APIRouter, Depends, Query, HTTPException, status
+20 | from sqlalchemy.orm import Session, joinedload
+21 | from sqlalchemy import func
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 |
+23 | from app.database import get_db
+   |
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:23:1
+   |
+21 | from sqlalchemy import func
+22 |
+23 | from app.database import get_db
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, AuditLog, Announcement, SiteSetting, BrainMriAnalysis, CK…
+25 | from app.auth import require_admin, hash_password
+   |
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:24:1
+   |
+23 | from app.database import get_db
+24 | from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, AuditLog, Announcement, SiteSetting, BrainMriAnalysis, CKDAssessment
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 | from app.auth import require_admin, hash_password
+26 | from app.services.notification_service import create_notification
+   |
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:25:1
+   |
+23 | from app.database import get_db
+24 | from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, AuditLog, Announcement, SiteSetting, BrainMriAnalysis, CK…
+25 | from app.auth import require_admin, hash_password
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 | from app.services.notification_service import create_notification
+27 | from app.models import (
+   |
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:26:1
+   |
+24 | from app.db_models import User, Assessment, HeartAssessment, DietPlanRecord, AuditLog, Announcement, SiteSetting, BrainMriAnalysis, CK…
+25 | from app.auth import require_admin, hash_password
+26 | from app.services.notification_service import create_notification
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+27 | from app.models import (
+28 |     AdminUserUpdateRequest, AdminCreateUserRequest, AdminBulkActionRequest,
+   |
+
+E402 Module level import not at top of file
+  --> app\routes\admin_routes.py:27:1
+   |
+25 |   from app.auth import require_admin, hash_password
+26 |   from app.services.notification_service import create_notification
+27 | / from app.models import (
+28 | |     AdminUserUpdateRequest, AdminCreateUserRequest, AdminBulkActionRequest,
+29 | |     AnnouncementRequest, SiteSettingUpdate, AdminSendEmailRequest,
+30 | |     AdminBulkEmailRequest, AdminUserNotesRequest, AdminResetPasswordRequest,
+31 | | )
+   | |_^
+32 |
+33 |   logger = logging.getLogger(__name__)
+   |
+
+F401 [*] `datetime.timedelta` imported but unused
+   --> app\routes\admin_routes.py:227:36
+    |
+225 | @router.get("/stats")
+226 | async def admin_stats(admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> dict:
+227 |     from datetime import datetime, timedelta
+    |                                    ^^^^^^^^^
+228 |     total_users = db.query(func.count(User.id)).filter(User.role == "user").scalar() or 0
+229 |     total_assessments = db.query(func.count(Assessment.id)).scalar() or 0
+    |
+help: Remove unused import: `datetime.timedelta`
+
+E712 Avoid equality comparisons to `True`; use `User.is_active:` for truth checks
+   --> app\routes\admin_routes.py:234:57
+    |
+232 |     total_ckd = db.query(func.count(CKDAssessment.id)).scalar() or 0
+233 |     total_heart = db.query(func.count(HeartAssessment.id)).scalar() or 0
+234 |     active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^
+235 |     admin_count = db.query(func.count(User.id)).filter(User.role == "admin").scalar() or 0
+236 |     # New this month
+    |
+help: Replace with `User.is_active`
+
+E711 Comparison to `None` should be `cond is None`
+   --> app\routes\admin_routes.py:319:73
+    |
+317 |     total = db.query(func.count(User.id)).scalar() or 0
+318 |     free = db.query(func.count(User.id)).filter(
+319 |         (User.subscription_tier == "free") | (User.subscription_tier == None)
+    |                                                                         ^^^^
+320 |     ).scalar() or 0
+321 |     pro_monthly = db.query(func.count(User.id)).filter(User.subscription_tier == "pro_monthly").scalar() or 0
+    |
+help: Replace with `cond is None`
+
+F811 Redefinition of unused `status` from line 19
+   --> app\routes\admin_routes.py:339:5
+    |
+337 | async def admin_list_subscriptions(
+338 |     admin: User = Depends(require_admin), db: Session = Depends(get_db),
+339 |     status: Optional[str] = Query(None, description="Filter by subscription_status"),
+    |     ^^^^^^ `status` redefined here
+340 |     tier: Optional[str] = Query(None, description="Filter by subscription_tier"),
+341 |     skip: int = 0, limit: int = 500,
+    |
+   ::: app\routes\admin_routes.py:19:63
+    |
+ 17 |         return None
+ 18 |
+ 19 | from fastapi import APIRouter, Depends, Query, HTTPException, status
+    |                                                               ------ previous definition of `status` here
+ 20 | from sqlalchemy.orm import Session, joinedload
+ 21 | from sqlalchemy import func
+    |
+help: Remove definition: `status`
+
+E712 Avoid equality comparisons to `False`; use `not Assessment.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:377:17
+    |
+375 |         db.query(Assessment)
+376 |         .options(joinedload(Assessment.user))
+377 |         .filter(Assessment.admin_hidden == False)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+378 |         .order_by(Assessment.created_at.desc())
+379 |         .offset(skip).limit(limit).all()
+    |
+help: Replace with `not Assessment.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not CKDAssessment.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:406:17
+    |
+404 |         db.query(CKDAssessment)
+405 |         .options(joinedload(CKDAssessment.user))
+406 |         .filter(CKDAssessment.admin_hidden == False)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+407 |         .order_by(CKDAssessment.created_at.desc())
+408 |         .offset(skip).limit(limit).all()
+    |
+help: Replace with `not CKDAssessment.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not Assessment.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:443:33
+    |
+441 | ):
+442 |     """Soft-delete all: hide all from admin view but preserve user data."""
+443 |     db.query(Assessment).filter(Assessment.admin_hidden == False).update({"admin_hidden": True})
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+444 |     db.commit()
+445 |     return {"ok": True}
+    |
+help: Replace with `not Assessment.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not CKDAssessment.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:467:36
+    |
+465 | ):
+466 |     """Soft-delete all: hide all from admin view but preserve user data."""
+467 |     db.query(CKDAssessment).filter(CKDAssessment.admin_hidden == False).update({"admin_hidden": True})
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+468 |     db.commit()
+469 |     return {"ok": True}
+    |
+help: Replace with `not CKDAssessment.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not HeartAssessment.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:483:17
+    |
+481 |         db.query(HeartAssessment)
+482 |         .options(joinedload(HeartAssessment.user))
+483 |         .filter(HeartAssessment.admin_hidden == False)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484 |         .order_by(HeartAssessment.created_at.desc())
+485 |         .offset(skip).limit(limit).all()
+    |
+help: Replace with `not HeartAssessment.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not HeartAssessment.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:518:38
+    |
+516 |     admin: User = Depends(require_admin), db: Session = Depends(get_db),
+517 | ):
+518 |     db.query(HeartAssessment).filter(HeartAssessment.admin_hidden == False).update({"admin_hidden": True})
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+519 |     db.commit()
+520 |     return {"ok": True}
+    |
+help: Replace with `not HeartAssessment.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not BrainMriAnalysis.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:534:17
+    |
+532 |         db.query(BrainMriAnalysis)
+533 |         .options(joinedload(BrainMriAnalysis.user))
+534 |         .filter(BrainMriAnalysis.admin_hidden == False)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+535 |         .order_by(BrainMriAnalysis.created_at.desc())
+536 |         .offset(skip).limit(limit).all()
+    |
+help: Replace with `not BrainMriAnalysis.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not BrainMriAnalysis.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:570:39
+    |
+568 |     admin: User = Depends(require_admin), db: Session = Depends(get_db),
+569 | ):
+570 |     db.query(BrainMriAnalysis).filter(BrainMriAnalysis.admin_hidden == False).update({"admin_hidden": True})
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+571 |     db.commit()
+572 |     return {"ok": True}
+    |
+help: Replace with `not BrainMriAnalysis.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not DietPlanRecord.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:586:17
+    |
+584 |         db.query(DietPlanRecord)
+585 |         .options(joinedload(DietPlanRecord.user))
+586 |         .filter(DietPlanRecord.admin_hidden == False)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+587 |         .order_by(DietPlanRecord.created_at.desc())
+588 |         .offset(skip).limit(limit).all()
+    |
+help: Replace with `not DietPlanRecord.admin_hidden`
+
+E712 Avoid equality comparisons to `False`; use `not DietPlanRecord.admin_hidden:` for false checks
+   --> app\routes\admin_routes.py:620:37
+    |
+618 |     admin: User = Depends(require_admin), db: Session = Depends(get_db),
+619 | ):
+620 |     db.query(DietPlanRecord).filter(DietPlanRecord.admin_hidden == False).update({"admin_hidden": True})
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+621 |     db.commit()
+622 |     return {"ok": True}
+    |
+help: Replace with `not DietPlanRecord.admin_hidden`
+
+F401 [*] `sqlalchemy.text` imported but unused
+   --> app\routes\admin_routes.py:811:55
+    |
+809 |     total_assessments = 0
+810 |     try:
+811 |         from sqlalchemy import inspect as sa_inspect, text
+    |                                                       ^^^^
+812 |         from app.database import engine
+813 |         from app.db_models import Assessment, CKDAssessment, HeartAssessment, BrainMriAnalysis, DietPlanRecord
+    |
+help: Remove unused import: `sqlalchemy.text`
+
+F841 [*] Local variable `e` is assigned to but never used
+   --> app\routes\admin_routes.py:824:25
+    |
+822 |             (db.query(func.count(DietPlanRecord.id)).scalar() or 0)
+823 |         )
+824 |     except Exception as e:
+    |                         ^
+825 |         pass
+    |
+help: Remove assignment to unused variable `e`
+
+E712 Avoid equality comparisons to `True`; use `User.is_active:` for truth checks
+   --> app\routes\admin_routes.py:914:35
+    |
+913 |     # Build recipient list
+914 |     query = db.query(User).filter(User.is_active == True)
+    |                                   ^^^^^^^^^^^^^^^^^^^^^^
+915 |     if data.user_ids:
+916 |         query = query.filter(User.id.in_(data.user_ids))
+    |
+help: Replace with `User.is_active`
+
+E712 Avoid equality comparisons to `True`; use `Announcement.is_active:` for truth checks
+   --> app\routes\admin_routes.py:971:13
+    |
+969 |         db.query(Announcement)
+970 |         .filter(
+971 |             Announcement.is_active == True,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+972 |             (Announcement.expires_at == None) | (Announcement.expires_at > now),
+973 |         )
+    |
+help: Replace with `Announcement.is_active`
+
+E711 Comparison to `None` should be `cond is None`
+   --> app\routes\admin_routes.py:972:41
+    |
+970 |         .filter(
+971 |             Announcement.is_active == True,
+972 |             (Announcement.expires_at == None) | (Announcement.expires_at > now),
+    |                                         ^^^^
+973 |         )
+974 |         .order_by(Announcement.created_at.desc())
+    |
+help: Replace with `cond is None`
+
+E711 Comparison to `None` should be `cond is not None`
+   --> app\routes\auth.py:162:44
+    |
+160 |         .filter(
+161 |             User.password_reset_token == data.token,
+162 |             User.password_reset_expires != None,
+    |                                            ^^^^
+163 |             User.password_reset_expires > datetime.utcnow(),
+164 |         )
+    |
+help: Replace with `cond is not None`
+
+F401 [*] `fastapi.Depends` imported but unused
+ --> app\routes\chat.py:6:47
+  |
+4 | from datetime import datetime
+5 |
+6 | from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+  |                                               ^^^^^^^
+7 |
+8 | from app.models import ChatRequest, ChatResponse
+  |
+help: Remove unused import: `fastapi.Depends`
+
+E712 Avoid equality comparisons to `True`; use `FaceEnrollment.enabled:` for truth checks
+  --> app\routes\face_routes.py:78:51
+   |
+76 |             detail=f"Embedding must be 32–{MAX_EMBEDDING_DIM} dimensions",
+77 |         )
+78 |     enrollments = db.query(FaceEnrollment).filter(FaceEnrollment.enabled == True).all()
+   |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+79 |     best_score = -1.0
+80 |     best_user = None
+   |
+help: Replace with `FaceEnrollment.enabled`
+
+F401 [*] `re` imported but unused
+ --> app\routes\me_routes.py:5:8
+  |
+3 | import json
+4 | import logging
+5 | import re
+  |        ^^
+6 | import secrets
+7 | import time
+  |
+help: Remove unused import: `re`
+
+F401 [*] `typing.Optional` imported but unused
+  --> app\routes\me_routes.py:10:26
+   |
+ 8 | from datetime import datetime
+ 9 | from pathlib import Path
+10 | from typing import List, Optional
+   |                          ^^^^^^^^
+11 |
+12 | from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+   |
+help: Remove unused import: `typing.Optional`
+
+F401 [*] `fastapi.responses.JSONResponse` imported but unused
+  --> app\routes\me_routes.py:13:31
+   |
+12 | from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+13 | from fastapi.responses import JSONResponse
+   |                               ^^^^^^^^^^^^
+14 | from pydantic import BaseModel
+15 | from sqlalchemy.orm import Session
+   |
+help: Remove unused import: `fastapi.responses.JSONResponse`
+
+E712 Avoid equality comparisons to `False`; use `not Notification.is_read:` for false checks
+   --> app\routes\me_routes.py:671:42
+    |
+669 | ):
+670 |     db.query(Notification).filter(
+671 |         Notification.user_id == user.id, Notification.is_read == False
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+672 |     ).update({"is_read": True}, synchronize_session=False)
+673 |     db.commit()
+    |
+help: Replace with `not Notification.is_read`
+
+F401 [*] `typing.Any` imported but unused
+  --> app\routes\voice_command.py:12:20
+   |
+10 | import logging
+11 | import re
+12 | from typing import Any, List, Optional
+   |                    ^^^
+13 |
+14 | from fastapi import APIRouter, HTTPException
+   |
+help: Remove unused import: `typing.Any`
+
+F401 [*] `fastapi.HTTPException` imported but unused
+  --> app\routes\voice_command.py:14:32
+   |
+12 | from typing import Any, List, Optional
+13 |
+14 | from fastapi import APIRouter, HTTPException
+   |                                ^^^^^^^^^^^^^
+15 | from pydantic import BaseModel
+   |
+help: Remove unused import: `fastapi.HTTPException`
+
+F401 `webauthn.helpers.structs.RegistrationCredential` imported but unused; consider using `importlib.util.find_spec` to test for availability
+   --> app\routes\webauthn_routes.py:136:46
+    |
+134 |         from webauthn import verify_registration_response
+135 |         from webauthn.helpers import parse_registration_credential_json
+136 |         from webauthn.helpers.structs import RegistrationCredential
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^
+137 |     except ImportError:
+138 |         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="WebAuthn not available")
+    |
+help: Remove unused import: `webauthn.helpers.structs.RegistrationCredential`
+
+F401 `webauthn.helpers.structs.PublicKeyCredentialDescriptor` imported but unused; consider using `importlib.util.find_spec` to test for availability
+   --> app\routes\webauthn_routes.py:253:46
+    |
+251 |         from webauthn import verify_authentication_response
+252 |         from webauthn.helpers import parse_authentication_credential_json
+253 |         from webauthn.helpers.structs import PublicKeyCredentialDescriptor
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+254 |     except ImportError:
+255 |         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="WebAuthn not available")
+    |
+help: Remove unused import: `webauthn.helpers.structs.PublicKeyCredentialDescriptor`
+
+F401 [*] `typing.Optional` imported but unused
+  --> app\services\brain_mri_service.py:12:31
+   |
+10 | import os
+11 | import logging
+12 | from typing import Dict, Any, Optional, Tuple
+   |                               ^^^^^^^^
+13 |
+14 | import numpy as np
+   |
+help: Remove unused import
+
+F401 [*] `typing.Tuple` imported but unused
+  --> app\services\brain_mri_service.py:12:41
+   |
+10 | import os
+11 | import logging
+12 | from typing import Dict, Any, Optional, Tuple
+   |                                         ^^^^^
+13 |
+14 | import numpy as np
+   |
+help: Remove unused import
+
+F401 [*] `numpy` imported but unused
+  --> app\services\brain_mri_service.py:14:17
+   |
+12 | from typing import Dict, Any, Optional, Tuple
+13 |
+14 | import numpy as np
+   |                 ^^
+15 |
+16 | logger = logging.getLogger(__name__)
+   |
+help: Remove unused import: `numpy`
+
+F401 [*] `json` imported but unused
+ --> app\services\jarvis_agent.py:7:8
+  |
+5 | import os
+6 | import re
+7 | import json
+  |        ^^^^
+8 | import logging
+9 | import asyncio
+  |
+help: Remove unused import: `json`
+
+F401 [*] `httpx` imported but unused
+  --> app\services\jarvis_agent.py:10:8
+   |
+ 8 | import logging
+ 9 | import asyncio
+10 | import httpx
+   |        ^^^^^
+11 | from datetime import date
+   |
+help: Remove unused import: `httpx`
+
+F401 [*] `asyncio` imported but unused
+  --> app\services\meal_photo.py:8:8
+   |
+ 7 | import os
+ 8 | import asyncio
+   |        ^^^^^^^
+ 9 | import logging
+10 | from typing import Dict, Any, Optional
+   |
+help: Remove unused import: `asyncio`
+
+F401 [*] `typing.Optional` imported but unused
+  --> app\services\meal_photo.py:10:31
+   |
+ 8 | import asyncio
+ 9 | import logging
+10 | from typing import Dict, Any, Optional
+   |                               ^^^^^^^^
+11 |
+12 | logger = logging.getLogger(__name__)
+   |
+help: Remove unused import: `typing.Optional`
+
+Found 102 errors.
+[*] 23 fixable with the `--fix` option (19 hidden fixes can be enabled with the `--unsafe-fixes` option).

@@ -30,10 +30,14 @@ class ErrorBoundary extends React.Component {
             <h2 className="text-xl font-bold text-white">{title}</h2>
             <p className="text-gray-500 text-sm">{message}</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href="/" className="btn-secondary">
+              <a href="/"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:-translate-y-0.5"
+                style={{ background: 'linear-gradient(180deg,#1e1e1e 0%,#080808 100%)', border: '1px solid rgba(255,255,255,0.15)', color: '#999' }}>
                 <Home className="w-4 h-4" /> {goHome}
               </a>
-              <button onClick={() => window.location.reload()} className="btn-primary">
+              <button onClick={() => window.location.reload()}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:-translate-y-0.5"
+                style={{ background: 'linear-gradient(180deg,#1e1e1e 0%,#080808 100%)', border: '1px solid rgba(255,255,255,0.15)', color: '#999' }}>
                 <RotateCcw className="w-4 h-4" /> {reload}
               </button>
             </div>

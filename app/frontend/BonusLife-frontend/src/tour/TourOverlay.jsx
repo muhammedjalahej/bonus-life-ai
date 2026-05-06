@@ -71,7 +71,8 @@ function getTooltipPosition(targetRect) {
   return { top: clampedTop, left, above, arrowX };
 }
 
-export default function TourOverlay() {
+export default function TourOverlay({ language }) {
+  const isTr = language === 'turkish';
   const { active, currentStep, currentIndex, steps, next, back, skip } = useTour();
   const [targetRect, setTargetRect] = useState(null);
   const tooltipRef = useRef(null);
@@ -152,7 +153,7 @@ export default function TourOverlay() {
       {/* Spotlight ring around the target so the explained feature is obvious */}
       {targetRect && (
         <div
-          className="absolute z-[10002] rounded-lg pointer-events-none ring-2 ring-emerald-400/90 ring-offset-2 ring-offset-transparent shadow-[0_0_20px_rgba(34,197,94,0.4)]"
+          className="absolute z-[10002] rounded-lg pointer-events-none ring-2 ring-violet-400/90 ring-offset-2 ring-offset-transparent shadow-[0_0_20px_rgba(124,58,237,0.4)]"
           style={{
             left: targetRect.left - 4,
             top: targetRect.top - 4,
@@ -166,7 +167,7 @@ export default function TourOverlay() {
         className="absolute z-10 w-[384px] max-w-[calc(100vw-32px)] rounded-xl p-5 overflow-visible
           bg-[#1a1a28]/95 backdrop-blur-xl
           border border-white/20
-          shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset,0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_80px_-20px_rgba(34,197,94,0.15)]
+          shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset,0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_80px_-20px_rgba(124,58,237,0.15)]
           before:absolute before:inset-0 before:rounded-xl before:pointer-events-none
           before:bg-gradient-to-b before:from-white/10 before:via-transparent before:to-transparent before:opacity-60"
         style={{
@@ -177,12 +178,12 @@ export default function TourOverlay() {
       >
         {pos.above ? (
           <div
-            className="absolute w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-emerald-500 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+            className="absolute w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-violet-500 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
             style={{ left: pos.arrowX, bottom: -ARROW_SIZE, top: 'auto', transform: 'translateX(-50%)' }}
           />
         ) : (
           <div
-            className="absolute w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-emerald-500 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+            className="absolute w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-violet-500 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
             style={{ left: pos.arrowX, top: -ARROW_SIZE, bottom: 'auto', transform: 'translateX(-50%)' }}
           />
         )}
@@ -193,10 +194,10 @@ export default function TourOverlay() {
             type="button"
             onClick={toggleSpeech}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/20 text-gray-400 text-sm hover:bg-white/5 hover:text-white"
-            title={speechOn ? 'Turn tour voice off' : 'Turn tour voice on'}
+            title={speechOn ? (isTr ? 'Tur sesini kapat' : 'Turn tour voice off') : (isTr ? 'Tur sesini aç' : 'Turn tour voice on')}
           >
             {speechOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            <span>{speechOn ? 'Sound on' : 'Sound off'}</span>
+            <span>{speechOn ? (isTr ? 'Ses açık' : 'Sound on') : (isTr ? 'Ses kapalı' : 'Sound off')}</span>
           </button>
           <button
             type="button"
@@ -204,21 +205,21 @@ export default function TourOverlay() {
             disabled={isFirst}
             className="px-4 py-2 rounded-lg border border-white/20 text-white text-sm hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none"
           >
-            Back
+            {isTr ? 'Geri' : 'Back'}
           </button>
           <button
             type="button"
             onClick={skip}
             className="px-4 py-2 rounded-lg border border-white/20 text-white text-sm hover:bg-white/5"
           >
-            Skip
+            {isTr ? 'Atla' : 'Skip'}
           </button>
           <button
             type="button"
             onClick={next}
-            className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-500 px-5"
+            className="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm hover:bg-violet-500 px-5"
           >
-            {isLast ? 'Done' : 'Next'}
+            {isLast ? (isTr ? 'Bitti' : 'Done') : (isTr ? 'İleri' : 'Next')}
           </button>
         </div>
       </div>

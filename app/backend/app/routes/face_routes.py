@@ -20,20 +20,45 @@ from app.routes.auth import _user_to_response
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["face-auth"])
 
-# Cosine similarity threshold (0..1). Tune for security vs convenience.
-FACE_MATCH_THRESHOLD = 0.5
+# face-api.js recommends Euclidean distance < 0.6 for the same person.
+# For unit vectors: cos = 1 - (L2² / 2), so L2=0.6 → cos ≈ 0.82.
+# 0.82 is strict enough to separate close relatives (parent/child).
+FACE_MATCH_THRESHOLD = 0.82
+# L2 guard aligned to the same 0.6 recommended distance.
+FACE_L2_THRESHOLD = 0.60
 MAX_EMBEDDING_DIM = 256
+
+
+def _l2_norm(v: list[float]) -> float:
+    return math.sqrt(sum(x * x for x in v)) or 1.0
+
+
+def _normalize(v: list[float]) -> list[float]:
+    n = _l2_norm(v)
+    return [x / n for x in v]
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
     if len(a) != len(b) or not a:
         return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
-    na = math.sqrt(sum(x * x for x in a))
-    nb = math.sqrt(sum(y * y for y in b))
-    if na == 0 or nb == 0:
-        return 0.0
-    return dot / (na * nb)
+    an, bn = _normalize(a), _normalize(b)
+    return sum(x * y for x, y in zip(an, bn))
+
+
+def _euclidean_distance(a: list[float], b: list[float]) -> float:
+    if len(a) != len(b) or not a:
+        return float('inf')
+    an, bn = _normalize(a), _normalize(b)
+    return math.sqrt(sum((x - y) ** 2 for x, y in zip(an, bn)))
+
+
+def _face_matches(query: list[float], stored: list[float]) -> tuple[bool, float]:
+    """Return (match, cosine_score). Both cosine AND L2 must pass."""
+    cos = _cosine_similarity(query, stored)
+    if cos < FACE_MATCH_THRESHOLD:
+        return False, cos
+    l2 = _euclidean_distance(query, stored)
+    return l2 < FACE_L2_THRESHOLD, cos
 
 
 class EnrollBody(BaseModel):
@@ -56,7 +81,9 @@ async def face_enroll(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Embedding must be 32–{MAX_EMBEDDING_DIM} dimensions",
         )
-    embedding_json = json.dumps([round(x, 6) for x in body.embedding])
+    # Store unit-normalised so cosine = dot product and scale drift is prevented.
+    normed = _normalize(body.embedding)
+    embedding_json = json.dumps([round(x, 8) for x in normed])
     existing = db.query(FaceEnrollment).filter(FaceEnrollment.user_id == user.id).first()
     if existing:
         existing.embedding = embedding_json
@@ -85,13 +112,13 @@ async def face_verify(body: VerifyBody, db: Session = Depends(get_db)):
             continue
         if len(stored) != len(body.embedding):
             continue
-        score = _cosine_similarity(body.embedding, stored)
-        if score > best_score:
+        matched, score = _face_matches(body.embedding, stored)
+        if matched and score > best_score:
             best_score = score
             user = db.query(User).filter(User.id == en.user_id).first()
             if user and user.is_active:
                 best_user = user
-    if not best_user or best_score < FACE_MATCH_THRESHOLD:
+    if not best_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No matching face found or confidence too low",
@@ -124,7 +151,6 @@ async def face_toggle_enabled(
     en = db.query(FaceEnrollment).filter(FaceEnrollment.user_id == user.id).first()
     if not en:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Face not enrolled")
-    # Use raw SQL so the update works even if the ORM column was added later
     try:
         db.execute(
             text("UPDATE face_enrollments SET enabled = :e WHERE user_id = :u"),

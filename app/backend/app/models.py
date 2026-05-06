@@ -80,6 +80,51 @@ class HeartAssessmentResponse(BaseModel):
 
 
 # ---------------------------------------------------------------
+# CKD Assessment (Chronic Kidney Disease)
+# ---------------------------------------------------------------
+class CKDAssessmentRequest(BaseModel):
+    # Patient Info
+    age: float = Field(..., ge=1, le=120, description="Age in years")
+    blood_pressure: float = Field(..., ge=40, le=200, description="Diastolic blood pressure (mmHg)")
+    # Urine Tests
+    specific_gravity: float = Field(1.020, ge=1.000, le=1.030, description="Urine specific gravity")
+    albumin: int = Field(0, ge=0, le=5, description="Albumin in urine (0–5 scale)")
+    sugar: int = Field(0, ge=0, le=5, description="Sugar in urine (0–5 scale)")
+    red_blood_cells: int = Field(0, ge=0, le=1, description="RBC in urine (0=normal, 1=abnormal)")
+    pus_cell: int = Field(0, ge=0, le=1, description="Pus cell (0=normal, 1=abnormal)")
+    pus_cell_clumps: int = Field(0, ge=0, le=1, description="Pus cell clumps (0=not present, 1=present)")
+    bacteria: int = Field(0, ge=0, le=1, description="Bacteria (0=not present, 1=present)")
+    # Blood Tests
+    blood_glucose_random: float = Field(120.0, ge=50, le=500, description="Random blood glucose (mg/dL)")
+    blood_urea: float = Field(25.0, ge=5, le=200, description="Blood urea (mg/dL)")
+    serum_creatinine: float = Field(1.0, ge=0.1, le=20.0, description="Serum creatinine (mg/dL)")
+    sodium: float = Field(140.0, ge=100, le=160, description="Serum sodium (mEq/L)")
+    potassium: float = Field(4.5, ge=2.0, le=10.0, description="Serum potassium (mEq/L)")
+    hemoglobin: float = Field(13.0, ge=3.0, le=20.0, description="Hemoglobin (g/dL)")
+    packed_cell_volume: float = Field(40.0, ge=10, le=60, description="Packed cell volume (%)")
+    white_blood_cell_count: float = Field(7800.0, ge=2000, le=30000, description="WBC count (cells/mm³)")
+    red_blood_cell_count: float = Field(5.0, ge=1.0, le=8.0, description="RBC count (millions/mm³)")
+    # Medical History
+    hypertension: int = Field(0, ge=0, le=1, description="Hypertension (0=no, 1=yes)")
+    diabetes_mellitus: int = Field(0, ge=0, le=1, description="Diabetes mellitus (0=no, 1=yes)")
+    coronary_artery_disease: int = Field(0, ge=0, le=1, description="Coronary artery disease (0=no, 1=yes)")
+    appetite: int = Field(1, ge=0, le=1, description="Appetite (0=poor, 1=good)")
+    pedal_edema: int = Field(0, ge=0, le=1, description="Pedal edema (0=no, 1=yes)")
+    anemia: int = Field(0, ge=0, le=1, description="Anemia (0=no, 1=yes)")
+    language: Optional[str] = Field("english", description="Response language")
+
+
+class CKDAssessmentResponse(BaseModel):
+    assessment_id: str
+    timestamp: str
+    prediction: str          # "CKD" | "No CKD"
+    confidence: float        # 0.0 – 1.0
+    executive_summary: str
+    risk_analysis: Dict[str, Any]
+    recommendations: Dict[str, Any]
+
+
+# ---------------------------------------------------------------
 # Diet Plan
 # ---------------------------------------------------------------
 class DietPlanRequest(BaseModel):
@@ -256,7 +301,7 @@ class ErrorResponse(BaseModel):
 # ---------------------------------------------------------------
 class RegisterRequest(BaseModel):
     email: str
-    password: str
+    password: str = Field(..., min_length=8, max_length=128)
     full_name: str = ""
 
 
@@ -314,7 +359,7 @@ class AdminUserUpdateRequest(BaseModel):
 
 class ChangePasswordRequest(BaseModel):
     current_password: str
-    new_password: str
+    new_password: str = Field(..., min_length=8, max_length=128)
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -323,7 +368,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    new_password: str
+    new_password: str = Field(..., min_length=8, max_length=128)
 
 
 # ---------------------------------------------------------------
@@ -343,6 +388,11 @@ class AnnouncementRequest(BaseModel):
     title: str
     message: str
     is_active: bool = True
+    expires_at: Optional[str] = None  # ISO datetime string or None
+
+
+class AdminResetPasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=8, max_length=128)
 
 class SiteSettingUpdate(BaseModel):
     key: str

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
   AlertTriangle, CheckCircle, Loader2, ArrowRight, ArrowLeft, RotateCcw,
@@ -8,32 +9,12 @@ import {
 import * as apiService from '../services/api';
 import { VOICE_FILL_EVENT, VOICE_CLEAR_FIELD_EVENT, VOICE_FORM_NEXT_EVENT, VOICE_FORM_BACK_EVENT } from '../components/VoiceAgent';
 import { haptic } from '../utils/haptics';
-
-/* Stable field component so number inputs keep focus while typing */
-function FormField({ label, value, onChange, required, hint, placeholder, icon: Icon, error }) {
-  const isNegativeError = !!error;
-  return (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-300">
-        {label} {required && <span className="text-emerald-400">*</span>}
-      </label>
-      <div className="relative">
-        {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />}
-        <input
-          type="number"
-          value={value ?? ''}
-          onChange={onChange}
-          className={`input-field ${Icon ? 'pl-11' : ''} ${isNegativeError ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' : ''} ${required && !value ? 'border-red-500/20' : ''}`}
-          placeholder={placeholder || `Enter ${(label || '').toLowerCase()}`}
-        />
-      </div>
-      {isNegativeError && <p className="text-[11px] text-red-400 font-medium">{error}</p>}
-      {hint && !isNegativeError && <p className="text-[11px] text-gray-600">{hint}</p>}
-    </div>
-  );
-}
+import { ROUTES } from '../config/constants';
+import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
+import { NumberField as FormField } from '../components/ui/NumberField';
 
 const DiabetesTest = ({ language = 'english' }) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({
     pregnancies: '', glucose: '', blood_pressure: '', skin_thickness: '',
@@ -205,12 +186,15 @@ const DiabetesTest = ({ language = 'english' }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+      {/* Back to Dashboard */}
+      <button onClick={() => navigate(ROUTES.DASHBOARD)}
+        className="flex items-center gap-2 mb-8 text-sm text-white/70 hover:text-white transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back to Dashboard
+      </button>
+
       {/* Top section */}
       <div className="text-center mb-14 animate-fade-in-up">
-        <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-5 py-2 mb-5">
-          <Sparkles className="w-4 h-4 text-blue-400" />
-          <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-[0.15em]">{t.badge}</span>
-        </div>
         <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">{t.title}</h1>
         <p className="text-gray-500 max-w-md mx-auto">{t.subtitle}</p>
 
@@ -219,16 +203,25 @@ const DiabetesTest = ({ language = 'english' }) => {
           {t.steps.map((s, i) => (
             <React.Fragment key={i}>
               <div className="flex items-center gap-2.5">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-500
-                  ${i < step ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' :
-                    i === step ? 'bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/30 scale-110' :
-                    'bg-white/[0.04] text-gray-600 border border-white/[0.08]'}`}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-500"
+                  style={i < step ? {
+                    background: 'linear-gradient(180deg,#2a2a2a,#111)',
+                    color: '#aaa', border: '1px solid rgba(255,255,255,0.25)',
+                    boxShadow: '0 0 0 1px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.5)',
+                  } : i === step ? {
+                    background: 'linear-gradient(180deg,#252525,#0a0a0a)',
+                    color: '#ccc', border: '1px solid rgba(255,255,255,0.35)',
+                    boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.6)', transform: 'scale(1.1)',
+                  } : {
+                    background: 'rgba(255,255,255,0.03)', color: '#4B5563', border: '1px solid rgba(255,255,255,0.06)',
+                  }}>
                   {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
                 </div>
-                <span className={`text-sm font-medium hidden sm:block ${i <= step ? 'text-white' : 'text-gray-600'}`}>{s}</span>
+                <span className={`text-sm font-medium hidden sm:block ${i <= step ? 'text-white/80' : 'text-gray-600'}`}>{s}</span>
               </div>
               {i < t.steps.length - 1 && (
-                <div className={`w-16 h-[2px] rounded-full transition-all duration-500 ${i < step ? 'bg-emerald-500' : 'bg-white/[0.06]'}`} />
+                <div className="w-16 h-[1px] rounded-full transition-all duration-500"
+                  style={{ background: i < step ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.06)' }} />
               )}
             </React.Fragment>
           ))}
@@ -246,14 +239,9 @@ const DiabetesTest = ({ language = 'english' }) => {
         <div className="card p-8 sm:p-10 rounded-[1.25rem]">
           {step === 0 && (
             <div className="space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/10 flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-pink-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">{t.step0Title}</h2>
-                  <p className="text-sm text-gray-500">{t.step0Sub}</p>
-                </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{t.step0Title}</h2>
+                <p className="text-sm text-gray-500">{t.step0Sub}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FormField label={t.pregnancies} value={formData.pregnancies} onChange={(e) => setFormData(prev => ({ ...prev, pregnancies: e.target.value }))} hint={t.pregnanciesHint} placeholder={t.pregnanciesPlaceholder} icon={Users} error={isNegative(formData.pregnancies) ? negErr : undefined} />
@@ -264,14 +252,9 @@ const DiabetesTest = ({ language = 'english' }) => {
 
           {step === 1 && (
             <div className="space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/10 flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-blue-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">{t.step1Title}</h2>
-                  <p className="text-sm text-gray-500">{t.step1Sub}</p>
-                </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{t.step1Title}</h2>
+                <p className="text-sm text-gray-500">{t.step1Sub}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FormField label={t.glucose} value={formData.glucose} onChange={(e) => setFormData(prev => ({ ...prev, glucose: e.target.value }))} required hint={t.glucoseHint} placeholder={t.glucosePlaceholder} icon={Droplets} error={isNegative(formData.glucose) ? negErr : undefined} />
@@ -292,9 +275,9 @@ const DiabetesTest = ({ language = 'english' }) => {
               {loading ? (
                 <div className="flex flex-col items-center py-24 gap-6">
                   <div className="relative w-20 h-20">
-                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-                    <div className="absolute inset-2 rounded-full border-2 border-cyan-500/10 border-b-cyan-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-                    <div className="absolute inset-0 flex items-center justify-center"><Activity className="w-7 h-7 text-emerald-400 animate-pulse" /></div>
+                    <div className="absolute inset-0 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(124,58,237,0.2)', borderTopColor: '#7C3AED' }} />
+                    <div className="absolute inset-2 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(6,182,212,0.1)', borderBottomColor: '#06B6D4', animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                    <div className="absolute inset-0 flex items-center justify-center"><Activity className="w-7 h-7 text-violet-400 animate-pulse" /></div>
                   </div>
                   <p className="text-gray-400 font-medium">{t.loading}</p>
                 </div>
@@ -305,8 +288,9 @@ const DiabetesTest = ({ language = 'english' }) => {
                     <div className="gradient-border animate-fade-in-up">
                       <div className="card p-6 rounded-[1.25rem] bg-white/[0.02]">
                         <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <Stethoscope className="w-5 h-5 text-emerald-400" />
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                            style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                            <Stethoscope className="w-5 h-5 text-violet-400" />
                           </div>
                           <div>
                             <h3 className="font-bold text-white mb-2 text-lg">{t.execSummary}</h3>
@@ -331,10 +315,10 @@ const DiabetesTest = ({ language = 'english' }) => {
 
                   {/* Risk + Factors */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className={`card p-7 border-2 animate-fade-in-up ${isHigh ? 'border-red-500/20 bg-red-500/[0.04]' : isMod ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-emerald-500/20 bg-emerald-500/[0.04]'}`}>
-                      <Target className={`w-6 h-6 mb-4 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`} />
-                      <div className={`text-5xl font-black mb-2 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}`}>{prob}%</div>
-                      <div className={`text-sm font-bold mb-3 ${isHigh ? 'text-red-300' : isMod ? 'text-amber-300' : 'text-emerald-300'}`}>{risk}</div>
+                    <div className={`card p-7 border-2 animate-fade-in-up ${isHigh ? 'border-red-500/20 bg-red-500/[0.04]' : isMod ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-violet-500/20 bg-violet-500/[0.04]'}`}>
+                      <Target className={`w-6 h-6 mb-4 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-violet-400'}`} />
+                      <div className={`text-5xl font-black mb-2 ${isHigh ? 'text-red-400' : isMod ? 'text-amber-400' : 'text-violet-400'}`}>{prob}%</div>
+                      <div className={`text-sm font-bold mb-3 ${isHigh ? 'text-red-300' : isMod ? 'text-amber-300' : 'text-violet-300'}`}>{risk}</div>
                       <p className="text-xs text-gray-500">{t.probLabel}</p>
                     </div>
 
@@ -347,7 +331,7 @@ const DiabetesTest = ({ language = 'english' }) => {
                             const sev = (f.severity || '').toLowerCase();
                             return (
                               <li key={i} className="flex items-start gap-3">
-                                <span className={`badge mt-0.5 ${sev.includes('high') ? 'bg-red-500/20 text-red-400' : sev.includes('moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                <span className={`badge mt-0.5 ${sev.includes('high') ? 'bg-red-500/20 text-red-400' : sev.includes('moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-violet-500/20 text-violet-400'}`}>
                                   {f.severity || (isTr ? 'Bilgi' : 'Info')}
                                 </span>
                                 <span className="text-sm text-gray-300">{f.factor}</span>
@@ -370,8 +354,8 @@ const DiabetesTest = ({ language = 'english' }) => {
                         <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] mb-3 font-bold">{m.label}</p>
                         <p className="text-3xl font-black gradient-text">{m.value}</p>
                         {m.bar !== undefined && (
-                          <div className="w-full bg-white/[0.04] rounded-full h-1.5 mt-4">
-                            <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-1000" style={{ width: `${m.bar}%` }} />
+                          <div className="w-full rounded-full h-1.5 mt-4" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                            <div className="h-1.5 rounded-full transition-all duration-1000" style={{ width: `${m.bar}%`, background: 'linear-gradient(90deg, #7C3AED, #06B6D4)' }} />
                           </div>
                         )}
                         {!m.bar && <p className="text-xs text-gray-500 mt-1">{m.sub}</p>}
@@ -382,15 +366,17 @@ const DiabetesTest = ({ language = 'english' }) => {
                   {/* Recommendations */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up">
                     <div className="card p-6">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
-                        <Apple className="w-5 h-5 text-emerald-400" />
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                        style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                        <Apple className="w-5 h-5 text-violet-400" />
                       </div>
                       <h4 className="font-bold text-white mb-2">{t.nutrition}</h4>
                       <p className="text-sm text-gray-400 leading-relaxed">{t.nutritionDesc}</p>
                     </div>
                     <div className="card p-6">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
-                        <Dumbbell className="w-5 h-5 text-blue-400" />
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                        style={{ background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)' }}>
+                        <Dumbbell className="w-5 h-5 text-cyan-400" />
                       </div>
                       <h4 className="font-bold text-white mb-2">{t.fitness}</h4>
                       <p className="text-sm text-gray-400 leading-relaxed">{t.fitnessDesc}</p>
@@ -448,16 +434,14 @@ const DiabetesTest = ({ language = 'english' }) => {
 
       {/* Nav buttons */}
       {step < 2 && (
-        <div className="flex justify-between mt-8">
-          <button onClick={() => setStep(s => s - 1)} disabled={step === 0} className="btn-ghost disabled:opacity-20">
-            <ArrowLeft className="w-4 h-4" /> {t.back}
-          </button>
-          <button onClick={step === 1 ? handleSubmit : () => setStep(s => s + 1)}
-            disabled={loading || (step === 0 && !canNext0) || (step === 1 && !canNext1)} className="btn-primary">
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {step === 1 ? (loading ? t.loading : t.submit) : t.next}
-            {!loading && <ArrowRight className="w-4 h-4" />}
-          </button>
+        <div className="flex justify-end mt-8">
+          <LiquidMetalButton
+            onClick={step === 1 ? handleSubmit : () => setStep(s => s + 1)}
+            disabled={loading || (step === 0 && !canNext0) || (step === 1 && !canNext1)}
+            width={160}
+          >
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.loading}</> : <>{step === 1 ? t.submit : t.next} <ArrowRight className="w-4 h-4" /></>}
+          </LiquidMetalButton>
         </div>
       )}
     </div>

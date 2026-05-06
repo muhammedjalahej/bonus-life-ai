@@ -55,7 +55,7 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
   if (loading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -66,7 +66,7 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
         <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <h1 className="text-xl font-bold text-white mb-2">{isTr ? 'Değerlendirme Bulunamadı' : 'Assessment Not Found'}</h1>
         <p className="text-gray-400 text-sm mb-6">{error}</p>
-        <Link to={ROUTES.HOME} className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300">
+        <Link to={ROUTES.HOME} className="inline-flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300">
           <ArrowLeft className="w-4 h-4" /> {isTr ? 'Ana sayfaya dön' : 'Back to Home'}
         </Link>
       </div>
@@ -78,8 +78,8 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
       <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <Activity className="w-5 h-5 text-emerald-400" />
+            <div className="w-11 h-11 rounded-xl bg-violet-500/10 flex items-center justify-center">
+              <Activity className="w-5 h-5 text-violet-400" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white">{isTr ? 'Paylaşılan Değerlendirme' : 'Shared Assessment'}</h1>
@@ -96,7 +96,7 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
             <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
               <p className="text-xs text-gray-500 mb-1">{isTr ? 'Risk Seviyesi' : 'Risk Level'}</p>
               <span className={`inline-block px-2 py-1 rounded text-sm font-bold
-                ${(data.risk_level || '').includes('High') ? 'bg-red-500/20 text-red-400' : (data.risk_level || '').includes('Moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                ${(data.risk_level || '').includes('High') ? 'bg-red-500/20 text-red-400' : (data.risk_level || '').includes('Moderate') ? 'bg-amber-500/20 text-amber-400' : 'bg-violet-500/20 text-violet-400'}`}>
                 {data.risk_level || 'Unknown'}
               </span>
             </div>

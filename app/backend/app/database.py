@@ -12,14 +12,22 @@ DB_DIR = os.getenv("DB_DIR", os.path.join(os.path.dirname(os.path.dirname(os.pat
 os.makedirs(DB_DIR, exist_ok=True)
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(DB_DIR, 'morelife.db')}")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    pool_pre_ping=True,
+)
 
 
 @event.listens_for(engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, connection_record):
-    """Enable foreign key enforcement in SQLite."""
+    """Enable foreign keys, WAL journal, and relaxed fsync for better SQLite performance."""
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA journal_mode=WAL")        # concurrent reads during writes
+    cursor.execute("PRAGMA synchronous=NORMAL")      # safe with WAL; halves fsync overhead
+    cursor.execute("PRAGMA cache_size=-8000")         # 8 MB page cache per connection
+    cursor.execute("PRAGMA temp_store=MEMORY")        # temp tables in RAM
     cursor.close()
 
 
