@@ -95,11 +95,15 @@ def get_nearby_hospitals(
         f");"
         f"out center meta;"
     )
+    _headers = {
+        "User-Agent": "BonusLifeAI/1.0 (health platform)",
+        "Accept": "application/json, */*",
+    }
     data = None
     for mirror in OVERPASS_MIRRORS:
         try:
             with httpx.Client(timeout=20.0) as client:
-                r = client.post(mirror, data={"data": query})
+                r = client.post(mirror, data={"data": query}, headers=_headers)
             r.raise_for_status()
             data = r.json()
             break
