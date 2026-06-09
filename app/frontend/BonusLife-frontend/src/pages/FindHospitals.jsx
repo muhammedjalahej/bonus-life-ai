@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Navigation, Phone, ExternalLink, Loader2, ArrowLeft } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ROUTES } from '../config/constants';
+import { ROUTES, API_BASE_URL } from '../config/constants';
 import { VOICE_FIND_NEAREST_HOSPITAL } from '../components/VoiceAgent';
 import { LiquidMetalButton } from '../components/ui/LiquidMetalButton';
 import { useAuth } from '../context/AuthContext';
@@ -30,51 +30,18 @@ export default function FindHospitals({ language }) {
   const fetchHospitals = async (lat, lon) => {
     setLoading(true);
     setError('');
-    const radiusM = 15000;
-    const query = `[out:json][timeout:25];(node[amenity=hospital](around:${radiusM},${lat},${lon});way[amenity=hospital](around:${radiusM},${lat},${lon}););out center 25;`;
-    const mirrors = [
-      'https://overpass-api.de/api/interpreter',
-      'https://overpass.kumi.systems/api/interpreter',
-    ];
-    let data = null;
-    for (const mirror of mirrors) {
-      try {
-        const res = await fetch(mirror, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `data=${encodeURIComponent(query)}`,
-          signal: AbortSignal.timeout(20000),
-        });
-        if (!res.ok) continue;
-        data = await res.json();
-        break;
-      } catch { continue; }
-    }
-    if (!data) {
+    try {
+      const url = `${API_BASE_URL}/api/v1/nearby-hospitals?lat=${lat}&lon=${lon}&radius_km=15&limit=25`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setHospitals(data.hospitals || []);
+    } catch {
       setError(isTr ? 'Harita verisi alınamadı. Lütfen tekrar deneyin.' : 'Could not load hospital data. Please try again.');
       setHospitals([]);
+    } finally {
       setLoading(false);
-      return;
     }
-    const haversine = (lat1, lon1, lat2, lon2) => {
-      const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    };
-    const seen = new Set();
-    const results = (data.elements || []).map(el => {
-      const elLat = el.lat ?? el.center?.lat;
-      const elLon = el.lon ?? el.center?.lon;
-      if (!elLat || !elLon) return null;
-      const tags = el.tags || {};
-      const name = tags.name || tags['name:en'] || 'Hospital';
-      const key = `${elLat},${elLon},${name}`;
-      if (seen.has(key)) return null;
-      seen.add(key);
-      return { name, lat: elLat, lon: elLon, phone: tags.phone || tags['contact:phone'] || null, distance_km: Math.round(haversine(lat, lon, elLat, elLon) * 100) / 100 };
-    }).filter(Boolean).sort((a, b) => a.distance_km - b.distance_km).slice(0, 25);
-    setHospitals(results);
-    setLoading(false);
   };
 
   const useMyLocation = () => {
