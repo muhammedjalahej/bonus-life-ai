@@ -3,33 +3,42 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   X, Home, MapPin, LayoutDashboard, Shield,
-  LogIn, LogOut, Sparkles, ArrowRight, ChevronDown,
+  LogIn, LogOut, Sparkles, ArrowRight, ChevronDown, Moon, Sun
 } from 'lucide-react';
 import { ROUTES, getAvatarUrl } from '../config/constants';
 import { useAuth } from '../context/AuthContext';
+import { useUXSettings } from '../context/UXSettingsContext';
 
 const LANGS = [
   { value: 'english', label: 'English', code: 'US' },
   { value: 'turkish', label: 'Türkçe',  code: 'TR' },
+  { value: 'arabic',  label: 'العربية',  code: 'AR' },
 ];
 
-const NAV_ITEMS_PUBLIC = (isTr) => [
-  { label: isTr ? 'Ana Sayfa'       : 'Home',           Icon: Home,            route: ROUTES.HOME },
-  { label: isTr ? 'Hastane Bul'     : 'Find Hospitals', Icon: MapPin,          route: ROUTES.HOSPITALS },
-  { label: isTr ? 'Fiyatlandırma'   : 'Pricing',        Icon: Shield,          route: ROUTES.PRICING },
-];
+const NAV_ITEMS_PUBLIC = (lang) => {
+  const isAr = lang === 'arabic', isTr = lang === 'turkish';
+  return [
+    { label: isAr ? 'الرئيسية' : isTr ? 'Ana Sayfa' : 'Home', Icon: Home, route: ROUTES.HOME },
+    { label: isAr ? 'ابحث عن مستشفى' : isTr ? 'Hastane Bul' : 'Find Hospitals', Icon: MapPin, route: ROUTES.HOSPITALS },
+    { label: isAr ? 'الأسعار' : isTr ? 'Fiyatlandırma' : 'Pricing', Icon: Shield, route: ROUTES.PRICING },
+  ];
+};
 
-const NAV_ITEMS_USER = (isTr) => [
-  { label: isTr ? 'Ana Sayfa'       : 'Home',           Icon: Home,            route: ROUTES.HOME },
-  { label: isTr ? 'Hastane Bul'     : 'Find Hospitals', Icon: MapPin,          route: ROUTES.HOSPITALS },
-  { label: isTr ? 'Kontrol Paneli'  : 'Dashboard',      Icon: LayoutDashboard, route: ROUTES.DASHBOARD },
-  { label: isTr ? 'Fiyatlandırma'   : 'Pricing',        Icon: Shield,          route: ROUTES.PRICING },
-];
+const NAV_ITEMS_USER = (lang) => {
+  const isAr = lang === 'arabic', isTr = lang === 'turkish';
+  return [
+    { label: isAr ? 'الرئيسية' : isTr ? 'Ana Sayfa' : 'Home', Icon: Home, route: ROUTES.HOME },
+    { label: isAr ? 'ابحث عن مستشفى' : isTr ? 'Hastane Bul' : 'Find Hospitals', Icon: MapPin, route: ROUTES.HOSPITALS },
+    { label: isAr ? 'لوحة التحكم' : isTr ? 'Kontrol Paneli' : 'Dashboard', Icon: LayoutDashboard, route: ROUTES.DASHBOARD },
+    { label: isAr ? 'الأسعار' : isTr ? 'Fiyatlandırma' : 'Pricing', Icon: Shield, route: ROUTES.PRICING },
+  ];
+};
 
 export default function SideNav({ language, setLanguage }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAdmin, logout, allowSignups } = useAuth();
+  const { theme, setTheme } = useUXSettings();
   const [open,     setOpen]     = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef(null);
@@ -43,6 +52,7 @@ export default function SideNav({ language, setLanguage }) {
 
   const go = (route) => { navigate(route); setOpen(false); };
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
 
   // Inline language section — collapsed shows trigger, expanded replaces trigger with both options
   const LangSection = () => {
@@ -94,14 +104,14 @@ export default function SideNav({ language, setLanguage }) {
     ham: { position:'fixed', left:'1.4rem', top:'50%', transform:'translateY(-50%)', zIndex:1000, cursor:'pointer', padding:'0.65rem', borderRadius:'0.75rem', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', gap:'5px', transition:'all 0.2s', backdropFilter:'blur(10px)' },
     line: { width:'20px', height:'1.5px', background:'rgba(255,255,255,0.7)', borderRadius:'999px' },
     bg: { position:'fixed', inset:0, zIndex:1001, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(4px)' },
-    panel: (open) => ({ position:'fixed', left:0, top:0, height:'100vh', width:'min(300px,82vw)', zIndex:1002, background:'linear-gradient(160deg, rgba(38,38,38,0.72) 0%, rgba(8,8,8,0.88) 45%, rgba(28,28,28,0.75) 100%)', backdropFilter:'blur(48px) saturate(180%) brightness(1.05)', WebkitBackdropFilter:'blur(48px) saturate(180%) brightness(1.05)', borderRight:'1px solid rgba(255,255,255,0.12)', boxShadow:'inset 0 1px 0 rgba(255,255,255,0.1), inset -1px 0 0 rgba(255,255,255,0.04), 6px 0 40px rgba(0,0,0,0.6)', display:'flex', flexDirection:'column', transform: open ? 'translateX(0)' : 'translateX(-100%)', transition:'transform 0.35s cubic-bezier(0.23,1,0.32,1)', fontFamily:"'Figtree','Inter',sans-serif", overflow:'hidden' }),
+    panel: (open) => ({ position:'fixed', left: language === 'arabic' ? 'auto' : 0, right: language === 'arabic' ? 0 : 'auto', top:0, height:'100vh', width:'min(300px,82vw)', zIndex:1002, background:'linear-gradient(160deg, rgba(38,38,38,0.72) 0%, rgba(8,8,8,0.88) 45%, rgba(28,28,28,0.75) 100%)', backdropFilter:'blur(48px) saturate(180%) brightness(1.05)', WebkitBackdropFilter:'blur(48px) saturate(180%) brightness(1.05)', borderRight: language === 'arabic' ? 'none' : '1px solid rgba(255,255,255,0.12)', borderLeft: language === 'arabic' ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow:'inset 0 1px 0 rgba(255,255,255,0.1), inset -1px 0 0 rgba(255,255,255,0.04), 6px 0 40px rgba(0,0,0,0.6)', display:'flex', flexDirection:'column', transform: open ? 'translateX(0)' : (language === 'arabic' ? 'translateX(100%)' : 'translateX(-100%)'), transition:'transform 0.35s cubic-bezier(0.23,1,0.32,1)', fontFamily: language === 'arabic' ? "'Tajawal','Figtree','Inter',sans-serif" : "'Figtree','Inter',sans-serif", overflow:'hidden', direction: language === 'arabic' ? 'rtl' : 'ltr' }),
     closeBtn: { padding:'0.4rem', borderRadius:8, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', cursor:'pointer', color:'rgba(255,255,255,0.6)', display:'flex' },
   };
 
   return (
     <>
       {/* Hamburger button */}
-      <button style={S.ham} onClick={() => setOpen(true)} aria-label={isTr ? 'Menüyü aç' : 'Open menu'}
+      <button style={{...S.ham, left: isAr ? 'auto' : '1.4rem', right: isAr ? '1.4rem' : 'auto'}} onClick={() => setOpen(true)} aria-label={isAr ? 'افتح القائمة' : isTr ? 'Menüyü aç' : 'Open menu'}
         onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; }}
         onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; }}>
         <div style={S.line} />
@@ -131,7 +141,7 @@ export default function SideNav({ language, setLanguage }) {
 
         {/* Nav items */}
         <div style={{ position:'relative', zIndex:1, flex:1, overflowY:'auto', padding:'0.8rem 0' }}>
-          {(user && !isAdmin ? NAV_ITEMS_USER(isTr) : NAV_ITEMS_PUBLIC(isTr)).map(({ label, Icon, route }) => {
+          {(user && !isAdmin ? NAV_ITEMS_USER(language) : NAV_ITEMS_PUBLIC(language)).map(({ label, Icon, route }) => {
             const isActive = location.pathname === route;
             return (
               <motion.div
@@ -197,6 +207,18 @@ export default function SideNav({ language, setLanguage }) {
 
               <div style={{ height:1, background:'rgba(255,255,255,0.06)' }} />
 
+              {/* Theme Toggle */}
+              <button onClick={() => setTheme(theme === 'light' ? 'default' : 'light')}
+                style={{ width:'100%', display:'flex', alignItems:'center', gap:'0.65rem', padding:'0.6rem 0.75rem', background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:'0.83rem', fontWeight:600, transition:'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.03)'}
+                onMouseLeave={e => e.currentTarget.style.background='none'}
+              >
+                {theme === 'light' ? <Moon style={{ width:13, height:13 }} /> : <Sun style={{ width:13, height:13 }} />}
+                {isAr ? (theme === 'light' ? 'الوضع الداكن' : 'الوضع الفاتح') : (theme === 'light' ? 'Dark Mode' : 'Light Mode')}
+              </button>
+
+              <div style={{ height:1, background:'rgba(255,255,255,0.06)' }} />
+
               {/* Sign out */}
               <button onClick={() => { logout(); navigate(ROUTES.HOME); setOpen(false); }}
                 style={{ width:'100%', display:'flex', alignItems:'center', gap:'0.65rem', padding:'0.6rem 0.75rem', background:'none', border:'none', cursor:'pointer', color:'rgba(248,113,113,0.7)', fontSize:'0.83rem', fontWeight:600, transition:'background 0.15s' }}
@@ -204,7 +226,7 @@ export default function SideNav({ language, setLanguage }) {
                 onMouseLeave={e => e.currentTarget.style.background='none'}
               >
                 <LogOut style={{ width:13, height:13 }} />
-                {language === 'turkish' ? 'Çıkış Yap' : 'Sign out'}
+                {isAr ? 'تسجيل الخروج' : isTr ? 'Çıkış Yap' : 'Sign out'}
               </button>
             </div>
 
@@ -213,7 +235,7 @@ export default function SideNav({ language, setLanguage }) {
               <button onClick={() => go(ROUTES.LOGIN)}
                 style={{ width:'100%', display:'flex', alignItems:'center', gap:'0.65rem', padding:'0.65rem 0.75rem', background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:'0.83rem', fontWeight:600 }}>
                 <LogIn style={{ width:13, height:13 }} />
-                {isTr ? 'Giriş Yap' : 'Login'}
+                {isAr ? 'تسجيل الدخول' : isTr ? 'Giriş Yap' : 'Login'}
               </button>
               {allowSignups && (
                 <>
@@ -221,7 +243,7 @@ export default function SideNav({ language, setLanguage }) {
                   <button onClick={() => go(ROUTES.REGISTER)}
                     style={{ width:'100%', display:'flex', alignItems:'center', gap:'0.65rem', padding:'0.65rem 0.75rem', background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:'0.83rem', fontWeight:700 }}>
                     <Sparkles style={{ width:13, height:13 }} />
-                    {isTr ? 'Ücretsiz Başla' : 'Get Started Free'}
+                    {isAr ? 'ابدأ مجاناً' : isTr ? 'Ücretsiz Başla' : 'Get Started Free'}
                   </button>
                 </>
               )}
@@ -231,6 +253,15 @@ export default function SideNav({ language, setLanguage }) {
                   <LangSection />
                 </>
               )}
+              <div style={{ height:1, background:'rgba(255,255,255,0.06)' }} />
+              <button onClick={() => setTheme(theme === 'light' ? 'default' : 'light')}
+                style={{ width:'100%', display:'flex', alignItems:'center', gap:'0.65rem', padding:'0.6rem 0.75rem', background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:'0.83rem', fontWeight:600, transition:'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.03)'}
+                onMouseLeave={e => e.currentTarget.style.background='none'}
+              >
+                {theme === 'light' ? <Moon style={{ width:13, height:13 }} /> : <Sun style={{ width:13, height:13 }} />}
+                {isAr ? (theme === 'light' ? 'الوضع الداكن' : 'الوضع الفاتح') : (theme === 'light' ? 'Dark Mode' : 'Light Mode')}
+              </button>
             </div>
           )}
         </div>

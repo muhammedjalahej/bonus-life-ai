@@ -34,6 +34,7 @@ function resizeAndGetBase64(file, maxSize = 1200) {
 export default function MealPhotoAnalyzer({ language }) {
   const navigate = useNavigate();
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [result, setResult] = useState(null);
@@ -68,7 +69,7 @@ export default function MealPhotoAnalyzer({ language }) {
     const file = e.target?.files?.[0]; if (!file) return;
     e.target.value = ''; setError('');
     try { const { base64, dataUrl } = await resizeAndGetBase64(file); setImageBase64(base64); setImageDataUrl(dataUrl); setResult(null); }
-    catch (err) { setError(err.message || (isTr ? 'Görsel yüklenemedi' : 'Failed to load image')); }
+    catch (err) { setError(err.message || (isAr ? 'فشل تحميل الصورة' : isTr ? 'Görsel yüklenemedi' : 'Failed to load image')); }
   };
 
   const startCamera = async () => {
@@ -93,13 +94,13 @@ export default function MealPhotoAnalyzer({ language }) {
   };
 
   const analyze = async (saveToLog = false) => {
-    if (!imageBase64) { setError(isTr ? 'Önce bir fotoğraf ekleyin veya çekin.' : 'Please add or take a photo first.'); return; }
+    if (!imageBase64) { setError(isAr ? 'يرجى إضافة أو التقاط صورة أولاً.' : isTr ? 'Önce bir fotoğraf ekleyin veya çekin.' : 'Please add or take a photo first.'); return; }
     setLoading(true); setError(''); setResult(null);
     try {
       const data = await analyzeMealPhoto(imageBase64, saveToLog);
       setResult(data);
       if (saveToLog && data.saved_to_log) loadLog();
-    } catch (err) { setError(err.message || (isTr ? 'Analiz başarısız.' : 'Analysis failed.')); }
+    } catch (err) { setError(err.message || (isAr ? 'فشل التحليل.' : isTr ? 'Analiz başarısız.' : 'Analysis failed.')); }
     finally { setLoading(false); }
   };
 
@@ -111,9 +112,9 @@ export default function MealPhotoAnalyzer({ language }) {
 
   const carbLabel = (level) => {
     const l = (level || '').toLowerCase();
-    if (l === 'low') return isTr ? 'Düşük' : 'Low';
-    if (l === 'high') return isTr ? 'Yüksek' : 'High';
-    return isTr ? 'Orta' : 'Medium';
+    if (l === 'low') return isAr ? 'منخفض' : isTr ? 'Düşük' : 'Low';
+    if (l === 'high') return isAr ? 'مرتفع' : isTr ? 'Yüksek' : 'High';
+    return isAr ? 'متوسط' : isTr ? 'Orta' : 'Medium';
   };
 
   const cardStyle = {
@@ -145,21 +146,21 @@ export default function MealPhotoAnalyzer({ language }) {
             <div className="p-8 sm:p-10">
               <div className="flex items-center gap-4 mb-3">
                 <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-                  {isTr ? 'Öğün Analizi' : 'Meal Analyzer'}
+                  {isAr ? 'محلل الوجبات' : isTr ? 'Öğün Analizi' : 'Meal Analyzer'}
                 </h1>
               </div>
               <p className="text-gray-500 text-sm mb-8 max-w-xl">
-                {isTr ? 'Yemek fotoğrafı yükleyin veya çekin; öğün adı, karbonhidrat seviyesi ve daha sağlıklı alternatifler gösterilir.' : 'Upload or take a meal photo to get meal name, carb level, and healthier swap suggestions.'}
+                {isAr ? 'قم بتحميل أو التقاط صورة لوجبة للحصول على اسمها، ومستوى الكربوهيدرات، واقتراحات بديلة صحية.' : isTr ? 'Yemek fotoğrafı yükleyin veya çekin; öğün adı, karbonhidrat seviyesi ve daha sağlıklı alternatifler gösterilir.' : 'Upload or take a meal photo to get meal name, carb level, and healthier swap suggestions.'}
               </p>
 
               {/* Capture / Upload */}
               {!cameraMode && !imageDataUrl && (
                 <div className="flex gap-4 mb-6 justify-center flex-wrap">
                   <LiquidMetalButton onClick={startCamera} width={190}>
-                    <Camera className="w-4 h-4" /> {isTr ? 'Fotoğraf çek' : 'Take photo'}
+                    <Camera className="w-4 h-4" /> {isAr ? 'التقاط صورة' : isTr ? 'Fotoğraf çek' : 'Take photo'}
                   </LiquidMetalButton>
                   <LiquidMetalButton onClick={() => fileInputRef.current?.click()} width={190}>
-                    <Upload className="w-4 h-4" /> {isTr ? 'Yükle' : 'Upload'}
+                    <Upload className="w-4 h-4" /> {isAr ? 'تحميل' : isTr ? 'Yükle' : 'Upload'}
                   </LiquidMetalButton>
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                 </div>
@@ -171,12 +172,12 @@ export default function MealPhotoAnalyzer({ language }) {
                   <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-xl bg-black aspect-video object-cover" />
                   <div className="flex gap-2 mt-3">
                     <LiquidMetalButton onClick={captureFromCamera} width={120}>
-                      {isTr ? 'Çek' : 'Capture'}
+                      {isAr ? 'التقاط' : isTr ? 'Çek' : 'Capture'}
                     </LiquidMetalButton>
                     <button type="button" onClick={stopCamera}
                       className="py-3 px-5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white transition-colors"
                       style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      {isTr ? 'İptal' : 'Cancel'}
+                      {isAr ? 'إلغاء' : isTr ? 'İptal' : 'Cancel'}
                     </button>
                   </div>
                 </div>
@@ -188,21 +189,21 @@ export default function MealPhotoAnalyzer({ language }) {
                   <img src={imageDataUrl} alt="Meal" className="w-full rounded-xl object-cover max-h-56 bg-black/40" />
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <LiquidMetalButton onClick={() => analyze(false)} disabled={loading} width={140}>
-                      {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Analiz...' : 'Analyzing...'}</> : <><ImageIcon className="w-4 h-4" /> {isTr ? 'Analiz et' : 'Analyze'}</>}
+                      {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isAr ? 'جارِ التحليل...' : isTr ? 'Analiz...' : 'Analyzing...'}</> : <><ImageIcon className="w-4 h-4" /> {isAr ? 'تحليل' : isTr ? 'Analiz et' : 'Analyze'}</>}
                     </LiquidMetalButton>
                     {hasToken && (
                       <button type="button" onClick={() => analyze(true)} disabled={loading}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-50"
                         style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#D1D5DB' }}>
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                        {isTr ? 'Analiz et ve kaydet' : 'Analyze & save to log'}
+                        {isAr ? 'تحليل وحفظ في السجل' : isTr ? 'Analiz et ve kaydet' : 'Analyze & save to log'}
                       </button>
                     )}
                     <button type="button" onClick={reset}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:text-red-400 transition-colors"
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                       <X className="w-4 h-4" />
-                      {isTr ? 'Temizle' : 'Clear'}
+                      {isAr ? 'مسح' : isTr ? 'Temizle' : 'Clear'}
                     </button>
                   </div>
                 </div>
@@ -221,13 +222,13 @@ export default function MealPhotoAnalyzer({ language }) {
                   style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.18)' }}>
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                      {isTr ? 'Öğün' : 'Meal'}
+                      {isAr ? 'الوجبة' : isTr ? 'Öğün' : 'Meal'}
                     </p>
                     <span className="font-bold text-white text-sm">{result.meal_name}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                      {isTr ? 'Karbonhidrat' : 'Carb level'}
+                      {isAr ? 'مستوى الكربوهيدرات' : isTr ? 'Karbonhidrat' : 'Carb level'}
                     </p>
                     <span className="text-sm font-bold" style={{ color: carbColor(result.carb_level) }}>
                       {carbLabel(result.carb_level)}
@@ -235,18 +236,18 @@ export default function MealPhotoAnalyzer({ language }) {
                   </div>
                   <div>
                     <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-1">
-                      {isTr ? 'Daha sağlıklı alternatifler' : 'Healthier swaps'}
+                      {isAr ? 'بدائل صحية أكثر' : isTr ? 'Daha sağlıklı alternatifler' : 'Healthier swaps'}
                     </p>
                     <p className="text-sm text-gray-300">{result.healthier_swaps}</p>
                   </div>
                   {result.saved_to_log && (
                     <p className="text-xs flex items-center gap-1.5 pt-1" style={{ color: '#34D399' }}>
                       <CheckCircle className="w-3.5 h-3.5" />
-                      {isTr ? 'Günlüğe kaydedildi.' : 'Saved to your log.'}
+                      {isAr ? 'تم الحفظ في سجلك.' : isTr ? 'Günlüğe kaydedildi.' : 'Saved to your log.'}
                     </p>
                   )}
                   <p className="text-xs text-gray-600 pt-1">
-                    {isTr ? 'Başka öğün analiz etmek için Temizle\'ye tıklayın.' : 'Click Clear to analyze another meal.'}
+                    {isAr ? 'انقر على مسح لتحليل وجبة أخرى.' : isTr ? 'Başka öğün analiz etmek için Temizle\'ye tıklayın.' : 'Click Clear to analyze another meal.'}
                   </p>
                 </div>
               )}
@@ -262,14 +263,14 @@ export default function MealPhotoAnalyzer({ language }) {
                 <div className="flex items-center justify-between gap-2 mb-5">
                   <h2 className="text-sm font-bold text-gray-300 flex items-center gap-2">
                     <History className="w-4 h-4 text-violet-400" />
-                    {isTr ? 'Öğün geçmişi' : 'Meal history'}
+                    {isAr ? 'سجل الوجبات' : isTr ? 'Öğün geçmişi' : 'Meal history'}
                   </h2>
                   {log.length > 0 && (
                     <button type="button"
                       onClick={async () => {
                         setClearLogLoading(true);
                         try { await clearMealLog(); await loadLog(); }
-                        catch (e) { setError(e.message || (isTr ? 'Geçmiş silinemedi.' : 'Could not clear history.')); }
+                        catch (e) { setError(e.message || (isAr ? 'تعذر مسح السجل.' : isTr ? 'Geçmiş silinemedi.' : 'Could not clear history.')); }
                         finally { setClearLogLoading(false); }
                       }}
                       disabled={clearLogLoading}
@@ -282,10 +283,10 @@ export default function MealPhotoAnalyzer({ language }) {
                 {logLoading ? (
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    {isTr ? 'Yükleniyor...' : 'Loading...'}
+                    {isAr ? 'جارِ التحميل...' : isTr ? 'Yükleniyor...' : 'Loading...'}
                   </div>
                 ) : log.length === 0 ? (
-                  <p className="text-sm text-gray-600">{isTr ? 'Henüz kayıtlı öğün yok.' : 'No meals saved yet.'}</p>
+                  <p className="text-sm text-gray-600">{isAr ? 'لم يتم حفظ وجبات بعد.' : isTr ? 'Henüz kayıtlı öğün yok.' : 'No meals saved yet.'}</p>
                 ) : (
                   <ul className="space-y-3 max-h-80 overflow-y-auto">
                     {log.map((entry) => (

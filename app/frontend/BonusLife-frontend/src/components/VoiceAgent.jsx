@@ -379,6 +379,7 @@ function playBeep(kind = 'start') {
 
 function VoiceAgent({ language }) {
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const navigate = useNavigate();
   const { logout: authLogout } = useAuth();
   const [listeningState, setListeningState] = useState(false);
@@ -432,7 +433,7 @@ function VoiceAgent({ language }) {
     } else if (action === 'form_back') {
       window.dispatchEvent(new CustomEvent(VOICE_FORM_BACK_EVENT));
     } else if (action === 'help') {
-      const msg = payload?.message || (isTr ? 'Şunları söyleyebilirsiniz: Ana sayfa, Test aç, Yaş 35 doldur, İleri veya Geri, Yazdır, Çıkış yap, veya durdurmak için Teşekkürler deyin.' : 'You can say things like: Go home, Open assessment, Fill age 35, Continue or Back, Print, Log out, or say Thank you to stop.');
+      const msg = payload?.message || (isAr ? 'يمكنك قول أشياء مثل: اذهب للرئيسية، افتح التقييم، املأ العمر 35، متابعة أو رجوع، طباعة، تسجيل الخروج، أو قل شكراً للتوقف.' : isTr ? 'Şunları söyleyebilirsiniz: Ana sayfa, Test aç, Yaş 35 doldur, İleri veya Geri, Yazdır, Çıkış yap, veya durdurmak için Teşekkürler deyin.' : 'You can say things like: Go home, Open assessment, Fill age 35, Continue or Back, Print, Log out, or say Thank you to stop.');
       speak(msg);
       announce(msg);
     } else if (action === 'logout') {
@@ -477,7 +478,7 @@ function VoiceAgent({ language }) {
         return;
       } else if (/\b(no|cancel|nevermind|never mind|nope|nah)\b/.test(lower)) {
         pendingConfirmRef.current = null;
-        speak(isTr ? 'Tamam, iptal edildi.' : 'No problem, cancelled.');
+        speak(isAr ? 'لا مشكلة، تم الإلغاء.' : isTr ? 'Tamam, iptal edildi.' : 'No problem, cancelled.');
         setLoading(false);
         return;
       } else {
@@ -514,9 +515,9 @@ function VoiceAgent({ language }) {
     if (hardcoded) {
       setTranscript(raw);
       if (hardcoded.action === 'logout') {
-        pendingConfirmRef.current = { action: 'logout', payload: {}, reply: isTr ? 'Çıkış yapılıyor.' : 'Logging out.' };
-        speak(isTr ? 'Çıkış yapmak istediğinizden emin misiniz?' : 'Are you sure you want to log out?');
-        announce(isTr ? 'Çıkış yapmak istediğinizden emin misiniz?' : 'Are you sure you want to log out?');
+        pendingConfirmRef.current = { action: 'logout', payload: {}, reply: isAr ? 'تسجيل الخروج.' : isTr ? 'Çıkış yapılıyor.' : 'Logging out.' };
+        speak(isAr ? 'هل أنت متأكد أنك تريد تسجيل الخروج؟' : isTr ? 'Çıkış yapmak istediğinizden emin misiniz?' : 'Are you sure you want to log out?');
+        announce(isAr ? 'هل أنت متأكد أنك تريد تسجيل الخروج؟' : isTr ? 'Çıkış yapmak istediğinizden emin misiniz?' : 'Are you sure you want to log out?');
         return;
       }
       if (hardcoded.reply && hardcoded.action === 'help') {
@@ -542,7 +543,7 @@ function VoiceAgent({ language }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.detail || `Backend ${res.status}`);
-        speak(isTr ? 'Sunucuya ulaşılamadı.' : "I couldn't reach the server.");
+        speak(isAr ? 'لم أتمكن من الوصول إلى الخادم.' : isTr ? 'Sunucuya ulaşılamadı.' : "I couldn't reach the server.");
         return;
       }
       if (data.reply) {
@@ -590,7 +591,7 @@ function VoiceAgent({ language }) {
       }, 12000);
     } catch (err) {
       setError(err.message || 'Network error.');
-      speak(isTr ? 'Bağlantı hatası.' : "Connection error.");
+      speak(isAr ? 'خطأ في الاتصال.' : isTr ? 'Bağlantı hatası.' : "Connection error.");
     } finally {
       if (!ttsWaitingRef.current) setLoading(false);
     }
@@ -676,22 +677,22 @@ function VoiceAgent({ language }) {
         sessionActiveRef.current = false;
         setListening(false);
         setPermissionDenied(true);
-        setError(isTr ? 'Mikrofon erişimi reddedildi.' : 'Microphone access denied.');
-        speak(isTr ? "Mikrofon erişimi reddedildi. Tarayıcı ayarlarından izin verebilirsiniz." : "Microphone access was denied. You can allow it in your browser settings, or click Try again to grant access.");
+        setError(isAr ? 'تم رفض الوصول إلى الميكروفون.' : isTr ? 'Mikrofon erişimi reddedildi.' : 'Microphone access denied.');
+        speak(isAr ? "تم رفض الوصول للميكروفون. يمكنك السماح به من إعدادات المتصفح، أو انقر على إعادة المحاولة لمنح الوصول." : isTr ? "Mikrofon erişimi reddedildi. Tarayıcı ayarlarından izin verebilirsiniz." : "Microphone access was denied. You can allow it in your browser settings, or click Try again to grant access.");
       } else if (e.error === 'audio-capture' || e.error === 'no-speech') {
         if (e.error === 'no-speech') return;
         recognitionRef.current = null;
         setListening(false);
-        setError(e.error === 'audio-capture' ? (isTr ? 'Mikrofon bulunamadı.' : 'No microphone found.') : '');
+        setError(e.error === 'audio-capture' ? (isAr ? 'لم يتم العثور على ميكروفون.' : isTr ? 'Mikrofon bulunamadı.' : 'No microphone found.') : '');
       } else if (e.error !== 'aborted') {
         recognitionRef.current = null;
         setListening(false);
         const SR_ERRORS = {
-          network: isTr ? 'Ağ hatası — bağlantı kontrol edin.' : 'Speech network error — check internet.',
-          'service-not-allowed': isTr ? 'Konuşma servisi izin vermedi.' : 'Speech service not allowed.',
-          'bad-grammar': isTr ? 'Dil hatası.' : 'Grammar error.',
+          network: isAr ? 'خطأ في شبكة التحدث — تحقق من الإنترنت.' : isTr ? 'Ağ hatası — bağlantı kontrol edin.' : 'Speech network error — check internet.',
+          'service-not-allowed': isAr ? 'خدمة التحدث غير مسموح بها.' : isTr ? 'Konuşma servisi izin vermedi.' : 'Speech service not allowed.',
+          'bad-grammar': isAr ? 'خطأ لغوي.' : isTr ? 'Dil hatası.' : 'Grammar error.',
         };
-        const errMsg = SR_ERRORS[e.error] || e.error || (isTr ? 'Dinleme hatası' : 'Listening error');
+        const errMsg = SR_ERRORS[e.error] || e.error || (isAr ? 'خطأ في الاستماع' : isTr ? 'Dinleme hatası' : 'Listening error');
         setError(errMsg);
         // Auto-dismiss non-critical errors after 4 seconds
         setTimeout(() => setError(''), 4000);
@@ -726,7 +727,7 @@ function VoiceAgent({ language }) {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setError(isTr ? 'Bu tarayıcıda ses desteklenmiyor. Chrome deneyin.' : 'Voice not supported in this browser. Try Chrome.');
+      setError(isAr ? 'الصوت غير مدعوم في هذا المتصفح. جرب Chrome.' : isTr ? 'Bu tarayıcıda ses desteklenmiyor. Chrome deneyin.' : 'Voice not supported in this browser. Try Chrome.');
       startingRef.current = false;
       return;
     }
@@ -753,7 +754,7 @@ function VoiceAgent({ language }) {
 
         recognition = createRecognition();
         if (!recognition) {
-          setError(isTr ? 'Bu tarayıcıda ses desteklenmiyor. Chrome deneyin.' : 'Voice not supported in this browser. Try Chrome.');
+          setError(isAr ? 'الصوت غير مدعوم في هذا المتصفح. جرب Chrome.' : isTr ? 'Bu tarayıcıda ses desteklenmiyor. Chrome deneyin.' : 'Voice not supported in this browser. Try Chrome.');
           setListening(false);
           return;
         }
@@ -764,7 +765,7 @@ function VoiceAgent({ language }) {
         } catch (err) {
           recognitionRef.current = null;
           setListening(false);
-          setError(err?.message || (isTr ? 'Mikrofon başlatılamadı. Mikrofon erişimine izin verin.' : 'Could not start microphone. Allow mic access and try again.'));
+          setError(err?.message || (isAr ? 'تعذر تشغيل الميكروفون. اسمح بالوصول وحاول مجدداً.' : isTr ? 'Mikrofon başlatılamadı. Mikrofon erişimine izin verin.' : 'Could not start microphone. Allow mic access and try again.'));
           return;
         }
         justActivatedByWakeRef.current = false;
@@ -838,10 +839,10 @@ function VoiceAgent({ language }) {
         />
       )}
       {permissionDenied && (
-        <div className="fixed bottom-24 right-6 z-50 rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-red-500/50 px-4 py-3 shadow-xl max-w-xs voice-agent-card">
+        <div className={`fixed bottom-24 ${isAr ? 'left-6' : 'right-6'} z-50 rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-red-500/50 px-4 py-3 shadow-xl max-w-xs voice-agent-card`}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm text-red-600 dark:text-red-300 mb-2">{isTr ? 'Mikrofon erişimi reddedildi.' : 'Microphone access denied.'}</p>
+              <p className="text-sm text-red-600 dark:text-red-300 mb-2">{isAr ? 'تم رفض الوصول إلى الميكروفون.' : isTr ? 'Mikrofon erişimi reddedildi.' : 'Microphone access denied.'}</p>
               <button type="button" onClick={() => { setPermissionDenied(false); setError(''); startListening(); }} className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:underline">{isTr ? 'Tekrar dene' : 'Try again'}</button>
             </div>
             <button
@@ -855,7 +856,7 @@ function VoiceAgent({ language }) {
           </div>
         </div>
       )}
-      <div className="fixed bottom-6 right-6 z-[10002] flex flex-col items-end gap-2 pointer-events-none">
+      <div className={`fixed bottom-6 ${isAr ? 'left-6' : 'right-6'} z-[10002] flex flex-col ${isAr ? 'items-start' : 'items-end'} gap-2 pointer-events-none`}>
         <style>{`
           @keyframes va-bar { 0%,100%{transform:scaleY(0.35)} 50%{transform:scaleY(1)} }
           @keyframes va-dot { 0%,80%,100%{transform:translateY(0);opacity:.35} 40%{transform:translateY(-5px);opacity:1} }
@@ -965,13 +966,13 @@ function VoiceAgent({ language }) {
               <div className="flex items-center gap-4 px-5 py-3.5">
                 <div className="flex flex-col items-start min-w-0">
                   <span className="text-sm font-semibold text-white">AI Assistant</span>
-                  <span className="text-xs text-gray-400">{isTr ? 'Sizi dinliyorum…' : 'Listening…'}</span>
+                  <span className="text-xs text-gray-400">{isAr ? 'جارِ الاستماع...' : isTr ? 'Sizi dinliyorum…' : 'Listening…'}</span>
                 </div>
                 <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'radial-gradient(circle, #a78bfa, #7c3aed)' }} aria-hidden />
                 <button
                   type="button"
                   onClick={stopListening}
-                  aria-label={isTr ? 'Kapat' : 'Close'}
+                  aria-label={isAr ? 'إغلاق' : isTr ? 'Kapat' : 'Close'}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
                 >
                   <X className="w-4 h-4" />
@@ -981,7 +982,7 @@ function VoiceAgent({ language }) {
           ) : (
             <LiquidMetalButton onClick={handleToggle} width={200} className="voice-agent-trigger">
               <MessageCircle className="w-4 h-4 shrink-0" />
-              {isTr ? 'AI Asistan' : 'AI Assistant'}
+              {isAr ? 'مساعد الذكاء الاصطناعي' : isTr ? 'AI Asistan' : 'AI Assistant'}
             </LiquidMetalButton>
           )}
         </div>

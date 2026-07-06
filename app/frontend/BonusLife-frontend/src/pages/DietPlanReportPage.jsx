@@ -7,7 +7,7 @@ const DIET_GOAL_LABELS = {
   en: { diabetes_prevention: 'Diabetes Prevention', blood_sugar_control: 'Blood Sugar Control', weight_loss: 'Weight Loss', weight_gain: 'Weight Gain', maintenance: 'Maintenance', gestational_diabetes: 'Gestational Diabetes' },
   tr: { diabetes_prevention: 'Diyabet Önleme', blood_sugar_control: 'Kan Şekeri Kontrolü', weight_loss: 'Kilo Verme', weight_gain: 'Kilo Alma', maintenance: 'Koruma', gestational_diabetes: 'Gestasyonel Diyabet' },
 };
-const dietGoalDisplay = (goal, isTr) => (DIET_GOAL_LABELS[isTr ? 'tr' : 'en'][goal] || (goal || '').replace(/_/g, ' ')) || (isTr ? 'Diyet planı' : 'Diet plan');
+const dietGoalDisplay = (goal, isTr) => (DIET_GOAL_LABELS[isAr ? 'en' : isTr ? 'tr' : 'en'][goal] || (goal || '').replace(/_/g, ' ')) || (isAr ? 'خطة النظام الغذائي' : isTr ? 'Diyet planı' : 'Diet plan');
 
 const formatTime = (dateStr) => {
   if (!dateStr) return '';
@@ -16,6 +16,7 @@ const formatTime = (dateStr) => {
 
 export default function DietPlanReportPage({ language }) {
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const navigate = useNavigate();
   const location = useLocation();
   const dietPlan = location.state?.dietPlan;
@@ -28,13 +29,13 @@ export default function DietPlanReportPage({ language }) {
     return (
       <div className="max-w-2xl mx-auto px-6 pt-32 pb-24">
         <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-center">
-          <p className="text-gray-400 mb-4">{isTr ? 'Diyet planı bulunamadı.' : 'Diet plan not found.'}</p>
+          <p className="text-gray-400 mb-4">{isAr ? 'خطة النظام الغذائي غير موجودة.' : isTr ? 'Diyet planı bulunamadı.' : 'Diet plan not found.'}</p>
           <Link
             to={`${ROUTES.DASHBOARD}?tab=diet-plans`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30 transition"
           >
             <ArrowLeft className="w-4 h-4" />
-            {isTr ? 'Diyet planlarıma dön' : 'Back to My Diet Plans'}
+            {isAr ? 'العودة إلى خطط النظام الغذائي الخاصة بي' : isTr ? 'Diyet planlarıma dön' : 'Back to My Diet Plans'}
           </Link>
         </div>
       </div>
@@ -52,7 +53,7 @@ export default function DietPlanReportPage({ language }) {
           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.08] transition focus:outline-none focus:ring-2 focus:ring-violet-500/50"
         >
           <ArrowLeft className="w-4 h-4" />
-          {isTr ? 'Diyet planlarıma dön' : 'Back to My Diet Plans'}
+          {isAr ? 'العودة إلى خطط النظام الغذائي الخاصة بي' : isTr ? 'Diyet planlarıma dön' : 'Back to My Diet Plans'}
         </button>
       </div>
 
@@ -74,28 +75,28 @@ export default function DietPlanReportPage({ language }) {
 
           {p.overview && (
             <div>
-              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isTr ? 'Genel Bakış' : 'Overview'}</h4>
+              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isAr ? 'نظرة عامة' : isTr ? 'Genel Bakış' : 'Overview'}</h4>
               <p className="text-sm text-gray-300 whitespace-pre-line">{p.overview}</p>
             </div>
           )}
 
           {p.daily_plan && (
             <div>
-              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isTr ? 'Günlük Öğünler' : 'Daily Meals'}</h4>
+              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isAr ? 'الوجبات اليومية' : isTr ? 'Günlük Öğünler' : 'Daily Meals'}</h4>
               <p className="text-sm text-gray-300 whitespace-pre-line">{p.daily_plan}</p>
             </div>
           )}
 
           {p.grocery_list && (
             <div>
-              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isTr ? 'Alışveriş Listesi' : 'Grocery List'}</h4>
+              <h4 className="text-sm font-semibold text-violet-400 mb-1">{isAr ? 'قائمة البقالة' : isTr ? 'Alışveriş Listesi' : 'Grocery List'}</h4>
               <p className="text-sm text-gray-300 whitespace-pre-line">{typeof p.grocery_list === 'string' ? p.grocery_list : JSON.stringify(p.grocery_list, null, 2)}</p>
             </div>
           )}
 
           {p.important_notes && (
             <div>
-              <h4 className="text-sm font-semibold text-blue-400 mb-1">{isTr ? 'Önemli Notlar' : 'Important Notes'}</h4>
+              <h4 className="text-sm font-semibold text-blue-400 mb-1">{isAr ? 'ملاحظات هامة' : isTr ? 'Önemli Notlar' : 'Important Notes'}</h4>
               <p className="text-sm text-gray-300 whitespace-pre-line">{p.important_notes}</p>
             </div>
           )}

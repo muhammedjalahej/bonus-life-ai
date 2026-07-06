@@ -133,30 +133,31 @@ const ChatBot = ({ language = 'english' }) => {
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 56, maxHeight: 180 });
 
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const t = {
-    heading: isTr ? 'Size nasıl yardımcı olabilirim?' : 'How can I help today?',
-    subheading: isTr ? 'Diyabet veya sağlık hakkında bir soru sorun' : 'Ask a question about diabetes or your health',
-    placeholder: isTr ? 'Bir soru sorun...' : 'Ask a question...',
-    placeholderOff: isTr ? 'Bağlantı bekleniyor...' : 'Waiting for connection...',
-    thinking: isTr ? 'Düşünüyor' : 'Thinking',
-    you: isTr ? 'Siz' : 'You',
-    ai: 'AI', error: isTr ? 'Hata' : 'Error', live: 'Live',
-    close: isTr ? 'Kapat' : 'Close',
+    heading: isAr ? 'كيف يمكنني مساعدتك اليوم؟' : isTr ? 'Size nasıl yardımcı olabilirim?' : 'How can I help today?',
+    subheading: isAr ? 'اسأل سؤالاً حول السكري أو صحتك' : isTr ? 'Diyabet veya sağlık hakkında bir soru sorun' : 'Ask a question about diabetes or your health',
+    placeholder: isAr ? 'اسأل سؤالاً...' : isTr ? 'Bir soru sorun...' : 'Ask a question...',
+    placeholderOff: isAr ? 'في انتظار الاتصال...' : isTr ? 'Bağlantı bekleniyor...' : 'Waiting for connection...',
+    thinking: isAr ? 'يفكر' : isTr ? 'Düşünüyor' : 'Thinking',
+    you: isAr ? 'أنت' : isTr ? 'Siz' : 'You',
+    ai: 'AI', error: isAr ? 'خطأ' : isTr ? 'Hata' : 'Error', live: 'Live',
+    close: isAr ? 'إغلاق' : isTr ? 'Kapat' : 'Close',
     online: `Online — ${llmProvider}`,
-    offline: isTr ? 'Çevrimdışı' : 'Offline',
-    connecting: isTr ? 'Bağlanıyor...' : 'Connecting...',
-    unavailable: isTr ? 'Yapay zeka şu an kullanılamıyor.' : 'AI unavailable. Please try again later.',
-    requestTimeout: isTr ? 'Zaman aşımı' : 'Request timeout',
-    connectionError: isTr ? 'Bağlantı hatası.' : 'Connection error.',
+    offline: isAr ? 'غير متصل' : isTr ? 'Çevrimdışı' : 'Offline',
+    connecting: isAr ? 'جارِ الاتصال...' : isTr ? 'Bağlanıyor...' : 'Connecting...',
+    unavailable: isAr ? 'الذكاء الاصطناعي غير متاح. يرجى المحاولة مرة أخرى لاحقاً.' : isTr ? 'Yapay zeka şu an kullanılamıyor.' : 'AI unavailable. Please try again later.',
+    requestTimeout: isAr ? 'انتهت مهلة الطلب' : isTr ? 'Zaman aşımı' : 'Request timeout',
+    connectionError: isAr ? 'خطأ في الاتصال.' : isTr ? 'Bağlantı hatası.' : 'Connection error.',
   };
 
   const commands = [
-    { icon: <Stethoscope className="w-4 h-4" />, label: isTr ? 'Semptomlar' : 'Symptoms', desc: isTr ? 'Diyabet belirtileri' : 'Diabetes symptoms', prefix: '/symptoms' },
-    { icon: <Apple className="w-4 h-4" />, label: isTr ? 'Diyet' : 'Diet', desc: isTr ? 'Beslenme önerileri' : 'Nutrition tips', prefix: '/diet' },
-    { icon: <Dumbbell className="w-4 h-4" />, label: isTr ? 'Egzersiz' : 'Exercise', desc: isTr ? 'Fiziksel aktivite' : 'Physical activity', prefix: '/exercise' },
-    { icon: <Brain className="w-4 h-4" />, label: isTr ? 'Önleme' : 'Prevention', desc: isTr ? 'Risk azaltma' : 'Risk reduction', prefix: '/prevention' },
-    { icon: <Activity className="w-4 h-4" />, label: isTr ? 'Tedavi' : 'Treatment', desc: isTr ? 'Tedavi seçenekleri' : 'Treatment options', prefix: '/treatment' },
-    { icon: <HeartPulse className="w-4 h-4" />, label: isTr ? 'Komplikasyonlar' : 'Complications', desc: isTr ? 'Uzun vadeli etkiler' : 'Long-term effects', prefix: '/complications' },
+    { icon: <Stethoscope className="w-4 h-4" />, label: isAr ? 'الأعراض' : isTr ? 'Semptomlar' : 'Symptoms', desc: isAr ? 'أعراض السكري' : isTr ? 'Diyabet belirtileri' : 'Diabetes symptoms', prefix: '/symptoms' },
+    { icon: <Apple className="w-4 h-4" />, label: isAr ? 'النظام الغذائي' : isTr ? 'Diyet' : 'Diet', desc: isAr ? 'نصائح التغذية' : isTr ? 'Beslenme önerileri' : 'Nutrition tips', prefix: '/diet' },
+    { icon: <Dumbbell className="w-4 h-4" />, label: isAr ? 'التمرين' : isTr ? 'Egzersiz' : 'Exercise', desc: isAr ? 'النشاط البدني' : isTr ? 'Fiziksel aktivite' : 'Physical activity', prefix: '/exercise' },
+    { icon: <Brain className="w-4 h-4" />, label: isAr ? 'الوقاية' : isTr ? 'Önleme' : 'Prevention', desc: isAr ? 'تقليل المخاطر' : isTr ? 'Risk azaltma' : 'Risk reduction', prefix: '/prevention' },
+    { icon: <Activity className="w-4 h-4" />, label: isAr ? 'العلاج' : isTr ? 'Tedavi' : 'Treatment', desc: isAr ? 'خيارات العلاج' : isTr ? 'Tedavi seçenekleri' : 'Treatment options', prefix: '/treatment' },
+    { icon: <HeartPulse className="w-4 h-4" />, label: isAr ? 'المضاعفات' : isTr ? 'Komplikasyonlar' : 'Complications', desc: isAr ? 'الآثار طويلة المدى' : isTr ? 'Uzun vadeli etkiler' : 'Long-term effects', prefix: '/complications' },
   ];
 
   const connected = backendStatus === 'connected';

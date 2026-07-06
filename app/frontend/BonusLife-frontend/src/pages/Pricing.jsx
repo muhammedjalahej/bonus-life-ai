@@ -8,6 +8,7 @@ import { PricingSection } from '../components/ui/PricingSection';
 
 export default function Pricing({ language }) {
   const isTr     = language === 'turkish';
+  const isAr     = language === 'arabic';
   const navigate  = useNavigate();
   const { user }  = useAuth();
 
@@ -27,17 +28,17 @@ export default function Pricing({ language }) {
     try {
       const { url } = await apiService.createCheckout(plan);
       if (url) window.location.href = url;
-      else setError(isTr ? 'Ödeme sayfası alınamadı.' : 'Could not get checkout URL.');
+      else setError(isAr ? 'تعذر الحصول على رابط الدفع.' : isTr ? 'Ödeme sayfası alınamadı.' : 'Could not get checkout URL.');
     } catch (err) {
       const msg = err.message || '';
       if (msg.includes('404') || msg.includes('Not Found'))
-        setError(isTr ? 'Sunucuya ulaşılamadı.' : 'Cannot reach server. Is the backend running?');
+        setError(isAr ? 'لا يمكن الوصول إلى الخادم. هل الخادم الخلفي يعمل؟' : isTr ? 'Sunucuya ulaşılamadı.' : 'Cannot reach server. Is the backend running?');
       else if (msg.includes('503'))
-        setError(isTr ? 'Abonelik yapılandırılmamış.' : 'Subscription not configured. Add STRIPE_SECRET_KEY to backend .env.');
+        setError(isAr ? 'الاشتراك غير مكوّن. أضف مفتاح STRIPE إلى الخادم الخلفي.' : isTr ? 'Abonelik yapılandırılmamış.' : 'Subscription not configured. Add STRIPE_SECRET_KEY to backend .env.');
       else if (msg.includes('400') || msg.includes('Invalid plan'))
-        setError(isTr ? 'Geçersiz plan.' : 'Invalid plan. Set STRIPE_PRICE_IDs in backend .env.');
+        setError(isAr ? 'خطة غير صالحة. يرجى ضبط الإعدادات في الخادم.' : isTr ? 'Geçersiz plan.' : 'Invalid plan. Set STRIPE_PRICE_IDs in backend .env.');
       else
-        setError(err.message || (isTr ? 'Bir hata oluştu.' : 'Something went wrong.'));
+        setError(err.message || (isAr ? 'حدث خطأ ما.' : isTr ? 'Bir hata oluştu.' : 'Something went wrong.'));
     } finally {
       setLoadingPlan(null);
     }
@@ -46,7 +47,7 @@ export default function Pricing({ language }) {
   const plans = [
     {
       id: 'free',
-      name: isTr ? 'Ücretsiz' : 'Free',
+      name: isAr ? 'مجاني' : isTr ? 'Ücretsiz' : 'Free',
       description: isTr
         ? 'Tüm yapay zeka sağlık araçlarına tam erişim — kredi kartı yok, sınır yok.'
         : 'Full access to every AI health tool — no credit card, no limits.',
@@ -61,7 +62,7 @@ export default function Pricing({ language }) {
       features: isTr
         ? ['Risk değerlendirmesi (diyabet, kalp, böbrek)', 'Yapay zeka sohbet', 'Yapay zeka diyet planları', 'Sesli sağlık asistanı', 'Öğün fotoğrafı analizi', 'Antrenman videoları', 'Beyin MR analizi', 'Tüm mevcut araçlar']
         : ['Risk assessment (diabetes, heart, kidney)', 'AI Health Chat', 'AI Diet plans', 'Voice health assistant', 'Meal photo analyzer', 'Workout videos', 'Brain MRI analysis', 'All current tools'],
-      buttonText: isTr ? 'Ücretsiz Başlayın' : 'Get Started Free',
+      buttonText: isAr ? 'ابدأ مجاناً' : isTr ? 'Ücretsiz Başlayın' : 'Get Started Free',
       isPopular: false,
       onClick: () => handleCheckout('free'),
       loading: false,
@@ -83,7 +84,7 @@ export default function Pricing({ language }) {
       features: isTr
         ? ['Ücretsizdeki her şey', 'Yeni özelliklere erken erişim', 'Öncelikli destek', 'Geliştirmemize destek', 'İstediğiniz zaman iptal']
         : ['Everything in Free', 'Early access to new features', 'Priority support', 'Support our development', 'Cancel anytime'],
-      buttonText: isTr ? "Pro'ya Geç" : 'Upgrade to Pro',
+      buttonText: isAr ? "الترقية إلى برو" : isTr ? "Pro'ya Geç" : 'Upgrade to Pro',
       isPopular: true,
       onClick: () => handleCheckout('pro'),
       loading: !!loadingPlan,
@@ -106,7 +107,7 @@ export default function Pricing({ language }) {
       <PricingSection
         plans={plans}
         isTr={isTr}
-        title={isTr ? 'Şeffaf Fiyatlandırma' : 'Simple, Transparent Pricing'}
+        title={isAr ? 'أسعار بسيطة وشفافة' : isTr ? 'Şeffaf Fiyatlandırma' : 'Simple, Transparent Pricing'}
         description={isTr
           ? 'Tüm araçlar herkese açıktır. Pro üyeler yeni özelliklere erken erişir.'
           : 'Every tool is free for everyone. Pro members get early access to new features.'}

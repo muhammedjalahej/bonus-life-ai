@@ -46,20 +46,19 @@ function MaintenancePage() {
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
           <Wrench className="w-10 h-10 text-amber-400" />
         </div>
-        <h1 className="text-3xl font-bold text-white mb-3">Under Maintenance</h1>
+        <h1 className="text-3xl font-bold text-white mb-3">{language === 'arabic' ? 'تحت الصيانة' : language === 'turkish' ? 'Bakımda' : 'Under Maintenance'}</h1>
         <p className="text-gray-400 text-lg mb-6">
-          We're currently performing scheduled maintenance to improve your experience.
-          Please check back shortly.
+          {language === 'arabic' ? 'نقوم حالياً بصيانة مجدولة لتحسين تجربتك. يرجى المحاولة مرة أخرى قريباً.' : language === 'turkish' ? 'Deneyiminizi iyileştirmek için planlı bakım yapıyoruz. Lütfen kısa süre sonra tekrar kontrol edin.' : "We're currently performing scheduled maintenance to improve your experience. Please check back shortly."}
         </p>
         <div className="flex items-center justify-center gap-2 text-amber-400/80 text-sm">
           <AlertTriangle className="w-4 h-4" />
-          <span>All services will be restored soon</span>
+          <span>{language === 'arabic' ? 'سيتم استعادة جميع الخدمات قريباً' : language === 'turkish' ? 'Tüm hizmetler yakında geri yüklenecek' : 'All services will be restored soon'}</span>
         </div>
         <button
           onClick={() => window.location.reload()}
           className="mt-8 px-6 py-3 rounded-xl bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30 font-medium transition"
         >
-          Refresh Page
+          {language === 'arabic' ? 'تحديث الصفحة' : language === 'turkish' ? 'Sayfayı Yenile' : 'Refresh Page'}
         </button>
       </div>
     </div>
@@ -114,7 +113,7 @@ function AppContent({ language, setLanguage }) {
   }
 
   return (
-    <div className="min-h-screen noise" style={{ background: '#050508', color: 'white' }}>
+    <div className="min-h-screen noise" dir={language === 'arabic' ? 'rtl' : 'ltr'} style={{ background: '#050508', color: 'white', fontFamily: language === 'arabic' ? "'Tajawal','Figtree','Inter',sans-serif" : "'Figtree','Inter',sans-serif" }}>
       {showPreloader && <Preloader onComplete={handlePreloaderComplete} />}
       {!location.pathname.startsWith('/admin') && (
         <Suspense fallback={null}>
@@ -211,10 +210,16 @@ const BrainMRI = lazy(() => import('./pages/BrainMRI'));
 const CKDTest = lazy(() => import('./pages/CKDTest'));
 
 function App() {
-  const [language, setLanguage] = useState('english');
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('appLanguage') || 'english';
+  });
 
   useEffect(() => {
-    document.title = language === 'turkish' ? 'Bonus Life AI - Diyabet Önleme' : 'Bonus Life AI - Diabetes Prevention';
+    localStorage.setItem('appLanguage', language);
+    const titles = { arabic: 'Bonus Life AI - الوقاية من السكري', turkish: 'Bonus Life AI - Diyabet Önleme', english: 'Bonus Life AI - Diabetes Prevention' };
+    document.title = titles[language] || titles.english;
+    document.documentElement.dir = language === 'arabic' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language === 'arabic' ? 'ar' : language === 'turkish' ? 'tr' : 'en';
   }, [language]);
 
   return (

@@ -76,7 +76,35 @@ const DiabetesTest = ({ language = 'english' }) => {
   }, []);
 
   const isTr = language === 'turkish';
-  const t = isTr ? {
+  const isAr = language === 'arabic';
+  const t = isAr ? {
+    title: 'تقييم خطر السكري', steps: ['معلومات شخصية', 'القياسات الصحية', 'النتائج'],
+    next: 'متابعة', back: 'رجوع', submit: 'تحليل', newTest: 'تقييم جديد', loading: 'جاري التحليل...',
+    badge: 'تحليل بالذكاء الاصطناعي',
+    subtitle: 'أدخل بياناتك الصحية لتحليل خطر السكري بالذكاء الاصطناعي.',
+    step0Title: 'معلومات شخصية', step0Sub: 'بيانات أساسية لتقييمك',
+    step1Title: 'القياسات الصحية', step1Sub: 'القياسات السريرية والعلامات الحيوية',
+    pregnancies: 'عدد مرات الحمل', pregnanciesHint: 'أدخل 0 إذا لا ينطبق', pregnanciesPlaceholder: 'أدخل العدد',
+    age: 'العمر', ageHint: 'مطلوب', agePlaceholder: 'أدخل العمر',
+    glucose: 'الجلوكوز (mg/dL)', glucoseHint: 'سكر الدم الصيامي', glucosePlaceholder: 'أدخل القيمة',
+    bloodPressure: 'ضغط الدم (mmHg)', bloodPressureHint: 'الانقباضي', bloodPressurePlaceholder: 'أدخل القيمة',
+    skinThickness: 'سمك الجلد (mm)', skinThicknessHint: 'طية العضلة ثلاثية الرؤوس', skinThicknessPlaceholder: 'أدخل القيمة',
+    insulin: 'الإنسولين (mu U/ml)', insulinHint: 'مصل ساعتين', insulinPlaceholder: 'أدخل القيمة',
+    weight: 'الوزن (كغ)', weightPlaceholder: 'أدخل الوزن',
+    height: 'الطول (سم)', heightPlaceholder: 'أدخل الطول',
+    pedigree: 'دالة نسب السكري', pedigreeHint: 'درجة التاريخ العائلي (0.0 - 2.5)', pedigreePlaceholder: 'أدخل القيمة',
+    requiredError: 'يرجى ملء جميع الحقول المطلوبة.',
+    negativeError: 'يرجى إدخال رقم موجب.',
+    execSummary: 'الملخص التنفيذي', probLabel: 'احتمالية الإصابة بالسكري من النوع الثاني',
+    keyRiskFactors: 'عوامل الخطر الرئيسية', noRiskFactors: 'لا توجد عوامل خطر مهمة.',
+    bmi: 'مؤشر كتلة الجسم', metabolicAge: 'العمر الأيضي', years: 'سنة', healthScore: 'درجة الصحة',
+    nutrition: 'التغذية', nutritionDesc: 'أطعمة منخفضة السكر، التحكم بالحصص، الحبوب الكاملة. قلل السكريات المضافة والأطعمة المصنعة.',
+    fitness: 'اللياقة', fitnessDesc: '150 دقيقة/أسبوع نشاط هوائي معتدل. تمارين القوة 2-3 مرات/أسبوع.',
+    lifestyleChanges: 'تغييرات نمط الحياة',
+    immediate: 'فوري', immediateItems: ['استشر طبيبك', 'راقب الجلوكوز', 'ابدأ بالمشي'],
+    days30: '30 يوم', days30Items: ['تغييرات غذائية', 'روتين رياضي', 'تتبع أسبوعي'],
+    days90: '90 يوم', days90Items: ['إعادة تقييم القياسات', 'تعديل الخطة', 'زيارة متابعة'],
+  } : isTr ? {
     title: 'Diyabet Risk Değerlendirmesi', steps: ['Kişisel Bilgiler', 'Sağlık Ölçümleri', 'Sonuçlar'],
     next: 'Devam', back: 'Geri', submit: 'Analiz Yap', newTest: 'Yeni Değerlendirme', loading: 'Analiz ediliyor...',
     badge: 'Yapay Zeka Destekli Analiz',

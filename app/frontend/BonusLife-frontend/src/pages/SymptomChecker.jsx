@@ -18,7 +18,18 @@ export default function SymptomChecker({ language = 'english' }) {
   const [error, setError] = useState(null);
 
   const isTr = language === 'turkish';
-  const t = isTr ? {
+  const isAr = language === 'arabic';
+  const t = isAr ? {
+    badge: 'أداة', title: 'فحص الأعراض', subtitle: 'تعرّف على الحالات الصحية المحتملة بناءً على أعراضك ومعلوماتك الشخصية.',
+    warning: 'هذه المعلومات للإرشاد فقط. راجع دائماً الطبيب المختص للتشخيص. في حالات الطوارئ اتصل بـ 911/112.',
+    fever: 'الحمى', cough: 'السعال', fatigue: 'الإعياء', difficultyBreathing: 'صعوبة التنفس',
+    age: 'العمر', gender: 'الجنس', bloodPressure: 'ضغط الدم', cholesterol: 'الكوليسترول',
+    yes: 'نعم', no: 'لا', male: 'ذكر', female: 'أنثى', high: 'مرتفع', normal: 'طبيعي',
+    getPrediction: 'احصل على التوقع', predicting: 'جاري التوقع...', results: 'المجموعات المرضية المحتملة', probability: 'الاحتمالية',
+    possibleConditions: 'الحالات المحتملة', findHospitals: 'ابحث عن مستشفيات قريبة',
+    errorGeneric: 'تعذر الحصول على التوقع. يرجى المحاولة لاحقاً.', fillAll: 'يرجى ملء جميع الحقول المطلوبة.',
+    symptoms: 'الأعراض', profile: 'الملف الشخصي',
+  } : isTr ? {
     badge: 'Araç', title: 'Belirti Kontrolü', subtitle: 'Belirti ve profil bilgilerinize göre olası durum gruplarını görün.',
     warning: 'Bu yalnızca bilgilendirme amaçlıdır. Teşhis için mutlaka bir sağlık uzmanına başvurun. Acil durumlarda 911/112 arayın.',
     fever: 'Ateş', cough: 'Öksürük', fatigue: 'Yorgunluk', difficultyBreathing: 'Nefes almada zorluk',
@@ -67,17 +78,11 @@ export default function SymptomChecker({ language = 'english' }) {
     backdropFilter: 'blur(20px)',
   };
 
-  const selectStyle = {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    color: 'white',
-  };
-
   const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2";
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-16"
-      style={{ fontFamily: "'Figtree','Inter',sans-serif" }}>
+      style={{ fontFamily: language === 'arabic' ? "'Tajawal','Figtree','Inter',sans-serif" : "'Figtree','Inter',sans-serif" }} dir={language === 'arabic' ? 'rtl' : 'ltr'}>
 
       <div className="fixed top-1/4 left-1/4 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08), transparent 70%)', filter: 'blur(80px)' }} />
@@ -85,8 +90,8 @@ export default function SymptomChecker({ language = 'english' }) {
       {/* Back to Dashboard */}
       <button onClick={() => navigate(ROUTES.DASHBOARD)}
         className="flex items-center gap-2 mb-8 text-sm text-white/70 hover:text-white transition-colors group relative z-10">
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-        Back to Dashboard
+        <ArrowLeft className={`w-4 h-4 transition-transform ${language === 'arabic' ? 'rotate-180 group-hover:translate-x-0.5' : 'group-hover:-translate-x-0.5'}`} />
+        {language === 'arabic' ? 'العودة إلى لوحة التحكم' : isTr ? 'Dashboard\'a Geri Dön' : 'Back to Dashboard'}
       </button>
 
       {/* Header */}
@@ -122,7 +127,7 @@ export default function SymptomChecker({ language = 'english' }) {
                       <AnimatedSelect
                         value={form[f]}
                         onChange={update(f)}
-                        placeholder={isTr ? 'Seçiniz' : 'Select'}
+                        placeholder={language === 'arabic' ? 'اختر' : isTr ? 'Seçiniz' : 'Select'}
                         options={[{ value: '1', label: t.yes }, { value: '0', label: t.no }]}
                       />
                     </div>
@@ -142,16 +147,16 @@ export default function SymptomChecker({ language = 'english' }) {
                     <NumberField value={form.age} onChange={update('age')} min={0} max={120} step={1} placeholder="e.g. 35" accentColor="violet" />
                   </div>
                   {[
-                    { field: 'gender', opts: [['1', t.male], ['0', t.female]] },
-                    { field: 'bloodPressure', opts: [['1', t.high], ['0', t.normal]] },
-                    { field: 'cholesterol', opts: [['1', t.high], ['0', t.normal]] },
-                  ].map(({ field, opts }) => (
+                    ['gender', [['1', t.male], ['0', t.female]]],
+                    ['bloodPressure', [['1', t.high], ['0', t.normal]]],
+                    ['cholesterol', [['1', t.high], ['0', t.normal]]],
+                  ].map(([field, opts]) => (
                     <div key={field}>
                       <label className={labelCls}>{t[field]}</label>
                       <AnimatedSelect
                         value={form[field]}
                         onChange={update(field)}
-                        placeholder={isTr ? 'Seçiniz' : 'Select'}
+                        placeholder={language === 'arabic' ? 'اختر' : isTr ? 'Seçiniz' : 'Select'}
                         options={opts.map(([val, label]) => ({ value: val, label }))}
                       />
                     </div>

@@ -8,6 +8,7 @@ import { verifyReportSignature } from '../services/api';
 export default function VerifyReport({ language, embedded = false }) {
   const navigate = useNavigate();
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const [status, setStatus] = useState(null); // { valid, report_id, issued_at, alg, assessment_db_id, error }
   const [scanning, setScanning] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -34,12 +35,12 @@ export default function VerifyReport({ language, embedded = false }) {
     try {
       payload = JSON.parse(data);
     } catch {
-      setStatus({ valid: false, error: isTr ? 'Geçersiz QR verisi.' : 'Invalid QR data.' });
+      setStatus({ valid: false, error: isAr ? 'بيانات QR غير صالحة.' : isTr ? 'Geçersiz QR verisi.' : 'Invalid QR data.' });
       return;
     }
     const { payload_hash, signature_b64, report_id, issued_at, alg, assessment_db_id } = payload;
     if (!payload_hash || !signature_b64) {
-      setStatus({ valid: false, error: isTr ? 'QR imza bilgisi eksik.' : 'Missing signature data in QR.' });
+      setStatus({ valid: false, error: isAr ? 'بيانات التوقيع مفقودة في رمز الاستجابة السريعة.' : isTr ? 'QR imza bilgisi eksik.' : 'Missing signature data in QR.' });
       return;
     }
     setVerifying(true);
@@ -54,7 +55,7 @@ export default function VerifyReport({ language, embedded = false }) {
         assessment_db_id: assessment_db_id != null ? assessment_db_id : '',
       });
     } catch (err) {
-      setStatus({ valid: false, error: err.message || (isTr ? 'Doğrulama başarısız.' : 'Verification failed.') });
+      setStatus({ valid: false, error: err.message || (isAr ? 'فشل التحقق.' : isTr ? 'Doğrulama başarısız.' : 'Verification failed.') });
     } finally {
       setVerifying(false);
       stopScanner();
@@ -71,7 +72,7 @@ export default function VerifyReport({ language, embedded = false }) {
       scannerRef.current = scanner;
       setScanning(true);
     } catch (err) {
-      setStatus({ valid: false, error: err.message || (isTr ? 'Kamera açılamadı.' : 'Could not access camera.') });
+      setStatus({ valid: false, error: err.message || (isAr ? 'تعذر الوصول إلى الكاميرا.' : isTr ? 'Kamera açılamadı.' : 'Could not access camera.') });
     }
   };
 
@@ -159,18 +160,18 @@ export default function VerifyReport({ language, embedded = false }) {
               <QrCode className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">{isTr ? 'Rapor Doğrula' : 'Verify Report'}</h1>
-              <p className="text-sm text-gray-500">{isTr ? 'İmzalı PDF üzerindeki QR kodu tarayın veya QR ekran görüntüsü yükleyin' : 'Scan the QR on your signed PDF, or upload a screenshot of the QR code'}</p>
+              <h1 className="text-xl font-bold text-white">{isAr ? 'التحقق من التقرير' : isTr ? 'Rapor Doğrula' : 'Verify Report'}</h1>
+              <p className="text-sm text-gray-500">{isAr ? 'امسح رمز الاستجابة السريعة (QR) الموجود على ملف PDF الموقّع، أو قم بتحميل لقطة شاشة للرمز' : isTr ? 'İmzalı PDF üzerindeki QR kodu tarayın veya QR ekran görüntüsü yükleyin' : 'Scan the QR on your signed PDF, or upload a screenshot of the QR code'}</p>
             </div>
           </div>
 
           {!scanning && !status && (
             <div className="flex flex-col items-center gap-3">
               <LiquidMetalButton onClick={startCamera} width={200}>
-                <QrCode className="w-4 h-4" style={{ color: '#fff' }} /> {isTr ? 'Kamerayı Aç' : 'Scan with camera'}
+                <QrCode className="w-4 h-4" style={{ color: '#fff' }} /> {isAr ? 'المسح باستخدام الكاميرا' : isTr ? 'Kamerayı Aç' : 'Scan with camera'}
               </LiquidMetalButton>
               <LiquidMetalButton onClick={() => fileInputRef.current?.click()} width={200}>
-                <Upload className="w-4 h-4" /> {isTr ? 'QR Görseli Yükle' : 'Upload QR image'}
+                <Upload className="w-4 h-4" /> {isAr ? 'تحميل صورة QR' : isTr ? 'QR Görseli Yükle' : 'Upload QR image'}
               </LiquidMetalButton>
               <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFile} />
             </div>
@@ -182,14 +183,14 @@ export default function VerifyReport({ language, embedded = false }) {
                 <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
               </div>
               <button type="button" onClick={stopScanner} className="w-full py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/[0.05]">
-                {isTr ? 'İptal' : 'Cancel'}
+                {isAr ? 'إلغاء' : isTr ? 'İptal' : 'Cancel'}
               </button>
             </div>
           )}
 
           {verifying && (
             <div className="flex items-center justify-center gap-2 py-8 text-gray-400">
-              <Loader2 className="w-5 h-5 animate-spin" /> {isTr ? 'Doğrulanıyor...' : 'Verifying...'}
+              <Loader2 className="w-5 h-5 animate-spin" /> {isAr ? 'جارِ التحقق...' : isTr ? 'Doğrulanıyor...' : 'Verifying...'}
             </div>
           )}
 
@@ -198,7 +199,7 @@ export default function VerifyReport({ language, embedded = false }) {
               <div className="flex items-center gap-3 mb-3">
                 {status.valid ? <CheckCircle className="w-8 h-8 text-violet-400" /> : <XCircle className="w-8 h-8 text-red-400" />}
                 <span className={`text-lg font-bold ${status.valid ? 'text-violet-400' : 'text-red-400'}`}>
-                  {status.valid ? (isTr ? 'GEÇERLİ' : 'VALID') : (status.error || (isTr ? 'GEÇERSİZ' : 'INVALID'))}
+                  {status.valid ? (isAr ? 'صالح' : isTr ? 'GEÇERLİ' : 'VALID') : (status.error || (isAr ? 'غير صالح' : isTr ? 'GEÇERSİZ' : 'INVALID'))}
                 </span>
               </div>
               {status.valid && (
@@ -210,7 +211,7 @@ export default function VerifyReport({ language, embedded = false }) {
                 </dl>
               )}
               <button type="button" onClick={() => { setStatus(null); }} className="mt-4 text-sm text-gray-400 hover:text-white">
-                {isTr ? 'Yeni tarama' : 'Scan again'}
+                {isAr ? 'امسح مرة أخرى' : isTr ? 'Yeni tarama' : 'Scan again'}
               </button>
             </div>
           )}
@@ -224,7 +225,7 @@ export default function VerifyReport({ language, embedded = false }) {
           {content}
         </div>
         <p className="text-xs text-gray-600 mt-2 text-center">
-          {isTr ? 'Bu, Adobe PDF imzası değildir; rapor içeriğinin kriptografik kanıtı QR ile doğrulanır.' : 'This is not an Adobe PDF signature; it verifies the report via cryptographic proof in the QR.'}
+          {isAr ? 'هذا ليس توقيع Adobe PDF؛ إنه يتحقق من التقرير عبر إثبات التشفير في رمز الاستجابة السريعة.' : isTr ? 'Bu, Adobe PDF imzası değildir; rapor içeriğinin kriptografik kanıtı QR ile doğrulanır.' : 'This is not an Adobe PDF signature; it verifies the report via cryptographic proof in the QR.'}
         </p>
       </div>
     );
@@ -245,7 +246,7 @@ export default function VerifyReport({ language, embedded = false }) {
             {content}
           </div>
           <p className="text-xs text-gray-600 mt-4 text-center">
-            {isTr ? 'Bu, Adobe PDF imzası değildir; rapor içeriğinin kriptografik kanıtı QR ile doğrulanır.' : 'This is not an Adobe PDF signature; it verifies the report via cryptographic proof in the QR.'}
+            {isAr ? 'هذا ليس توقيع Adobe PDF؛ إنه يتحقق من التقرير عبر إثبات التشفير في رمز الاستجابة السريعة.' : isTr ? 'Bu, Adobe PDF imzası değildir; rapor içeriğinin kriptografik kanıtı QR ile doğrulanır.' : 'This is not an Adobe PDF signature; it verifies the report via cryptographic proof in the QR.'}
           </p>
         </div>
       </div>

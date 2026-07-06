@@ -38,6 +38,7 @@ export default function Login({ language }) {
 
   const from = location.state?.from?.pathname || ROUTES.DASHBOARD;
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
 
   useEffect(() => {
     return () => {
@@ -69,7 +70,7 @@ export default function Login({ language }) {
         videoRef.current.srcObject = stream;
         setFaceCameraActive(true);
       })
-      .catch((e) => setFaceError(e.message || (isTr ? 'Kamera erişilemedi.' : 'Camera access denied.')));
+      .catch((e) => setFaceError(e.message || (isAr ? 'تعذّر الوصول للكاميرا.' : isTr ? 'Kamera erişilemedi.' : 'Camera access denied.')));
     return () => { cancelled = true; };
   }, [faceLoginOpen, faceModelsReady, language]);
 
@@ -83,7 +84,7 @@ export default function Login({ language }) {
       haptic('success');
       if (loginAs === LOGIN_AS_ADMIN) {
         if (user?.role !== 'admin') {
-          setError(isTr ? 'Bu hesap yönetici değil. Yukarıdan "Kullanıcı" seçip tekrar giriş yapın.' : 'This account is not an admin. Switch to "User" above and sign in again.');
+          setError(isAr ? 'هذا الحساب ليس مشرفاً. اختر "مستخدم" أعلاه وسجّل الدخول مجدداً.' : isTr ? 'Bu hesap yönetici değil. Yukarıdan "Kullanıcı" seçip tekrar giriş yapın.' : 'This account is not an admin. Switch to "User" above and sign in again.');
           setLoading(false);
           return;
         }
@@ -92,7 +93,7 @@ export default function Login({ language }) {
         navigate(from, { replace: true });
       }
     } catch (err) {
-      const msg = err.message || (isTr ? 'Giriş başarısız.' : 'Login failed.');
+      const msg = err.message || (isAr ? 'فشل تسجيل الدخول.' : isTr ? 'Giriş başarısız.' : 'Login failed.');
       setError(msg);
       requestAnimationFrame(() => { emailRef.current?.focus(); });
     } finally {
@@ -118,11 +119,13 @@ export default function Login({ language }) {
       const isNoMatch = msg.includes('401') || msg.toLowerCase().includes('no matching face') || msg.toLowerCase().includes('confidence too low');
       setFaceStage('failed');
       if (isNoMatch) {
-        setFaceError(isTr
-          ? 'Yüz tanınmadı. Dashboard\'da "Yüzle giriş" kurun veya iyi ışıkta tekrar deneyin.'
+        setFaceError(isAr
+          ? 'لم يتم التعرف على الوجه. قم بإعداد تسجيل الدخول بالوجه من لوحة التحكم أولاً.'
+          : isTr
+          ? "Dashboard'da \"Y\u00fczle giri\u015f\" kurun veya iyi \u0131\u015f\u0131kta tekrar deneyin."
           : 'Face not recognized. Set up face login in Dashboard first, or try again in good lighting.');
       } else {
-        setFaceError(msg || (isTr ? 'Yüz doğrulama başarısız.' : 'Face verification failed.'));
+        setFaceError(msg || (isAr ? 'فشل التحقق من الوجه.' : isTr ? 'Yüz doğrulama başarısız.' : 'Face verification failed.'));
       }
       setFaceLoading(false);
     } finally {
@@ -192,7 +195,7 @@ export default function Login({ language }) {
     faceCheckTimeoutRef.current = setTimeout(() => {
       if (!running || faceVerifyingRef.current) return;
       running = false;
-      setFaceError(isTr ? 'Yüz algılanamadı. İptal edip tekrar deneyin.' : 'No face detected. Cancel and try again.');
+      setFaceError(isAr ? 'لم يتم الكشف عن وجه. ألغِ وحاول مرة أخرى.' : isTr ? 'Yüz algılanamadı. İptal edip tekrar deneyin.' : 'No face detected. Cancel and try again.');
       setFaceStage('failed');
     }, 30000);
 
@@ -243,10 +246,10 @@ export default function Login({ language }) {
 
           <div>
             <h1 className="text-2xl font-bold tracking-wide text-white">
-              {isTr ? 'Hoş Geldiniz' : 'Welcome back'}
+              {isAr ? 'مرحباً بعودتك' : isTr ? 'Hoş Geldiniz' : 'Welcome back'}
             </h1>
             <p className="text-gray-500 text-base mt-1">
-              {isTr ? 'Hesabınıza giriş yapın' : 'Sign in to your account to continue'}
+              {isAr ? 'سجّل الدخول إلى حسابك للمتابعة' : isTr ? 'Hesabınıza giriş yapın' : 'Sign in to your account to continue'}
             </p>
           </div>
 
@@ -256,13 +259,13 @@ export default function Login({ language }) {
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${loginAs === LOGIN_AS_USER ? 'text-white' : 'text-gray-500 hover:text-white'}`}
               style={loginAs === LOGIN_AS_USER ? { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)' } : {}}>
               <User style={{ width: '15px', height: '15px' }} />
-              {isTr ? 'Kullanıcı' : 'User'}
+              {isAr ? 'مستخدم' : isTr ? 'Kullanıcı' : 'User'}
             </button>
             <button type="button" onClick={() => setLoginAs(LOGIN_AS_ADMIN)}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${loginAs === LOGIN_AS_ADMIN ? 'text-white' : 'text-gray-500 hover:text-white'}`}
               style={loginAs === LOGIN_AS_ADMIN ? { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)' } : {}}>
               <Shield style={{ width: '15px', height: '15px' }} />
-              Admin
+              {isAr ? 'مسؤول' : 'Admin'}
             </button>
           </div>
 
@@ -278,7 +281,7 @@ export default function Login({ language }) {
             {/* Email */}
             <div>
               <label htmlFor="login-email" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                {isTr ? 'E-posta' : 'Email'}
+                {isAr ? 'البريد الإلكتروني' : isTr ? 'E-posta' : 'Email'}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" style={{ width: '15px', height: '15px' }} />
@@ -291,7 +294,7 @@ export default function Login({ language }) {
             {/* Password */}
             <div>
               <label htmlFor="login-password" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                {isTr ? 'Şifre' : 'Password'}
+                {isAr ? 'كلمة المرور' : isTr ? 'Şifre' : 'Password'}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" style={{ width: '15px', height: '15px' }} />
@@ -304,14 +307,14 @@ export default function Login({ language }) {
             {/* Forgot password */}
             <div className="flex justify-end">
               <Link to={ROUTES.FORGOT_PASSWORD} className="text-xs font-semibold text-gray-400 hover:text-white transition-colors">
-                {isTr ? 'Şifremi unuttum' : 'Forgot password?'}
+                {isAr ? 'نسيت كلمة المرور؟' : isTr ? 'Şifremi unuttum' : 'Forgot password?'}
               </Link>
             </div>
 
             {/* Submit */}
             <div className="flex justify-center">
               <LiquidMetalButton type="submit" disabled={loading} width={180}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Giriş yapılıyor...' : 'Signing in...'}</> : <><Sparkles className="w-4 h-4" /> {isTr ? 'Giriş Yap' : 'Sign in'}</>}
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isAr ? 'جاري تسجيل الدخول...' : isTr ? 'Giriş yapılıyor...' : 'Signing in...'}</> : <><Sparkles className="w-4 h-4" /> {isAr ? 'تسجيل الدخول' : isTr ? 'Giriş Yap' : 'Sign in'}</>}
               </LiquidMetalButton>
             </div>
 
@@ -320,15 +323,15 @@ export default function Login({ language }) {
               className="w-full py-3.5 rounded-xl font-bold text-gray-300 text-sm flex items-center justify-center gap-2 transition-all duration-200 hover:text-white hover:bg-white/[0.07] disabled:opacity-50"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
               <ScanFace style={{ width: '16px', height: '16px' }} />
-              {isTr ? 'Yüzümle giriş yap' : 'Sign in with face'}
+              {isAr ? 'تسجيل الدخول بالوجه' : isTr ? 'Yüzümle giriş yap' : 'Sign in with face'}
             </button>
           </form>
 
           {/* Register link */}
           <p className="mt-8 text-center text-sm text-gray-600">
-            {isTr ? 'Hesabınız yok mu?' : "Don't have an account?"}{' '}
+            {isAr ? 'ليس لديك حساب؟' : isTr ? 'Hesabınız yok mu?' : "Don't have an account?"}{' '}
             <Link to={ROUTES.REGISTER} className="text-gray-300 hover:text-white font-semibold transition-colors">
-              {isTr ? 'Kayıt ol' : 'Get started free'}
+              {isAr ? 'ابدأ مجاناً' : isTr ? 'Kayıt ol' : 'Get started free'}
             </Link>
           </p>
         </div>
@@ -337,7 +340,7 @@ export default function Login({ language }) {
       {/* ── Face Login Modal ── */}
       {faceLoginOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          role="dialog" aria-modal="true" aria-label={isTr ? 'Yüz girişi' : 'Face sign-in'}>
+          role="dialog" aria-modal="true" aria-label={isAr ? 'تسجيل الدخول بالوجه' : isTr ? 'Yüz girişi' : 'Face sign-in'}>
           <div className="rounded-2xl w-full max-w-md overflow-hidden"
             style={{ background: '#0d0d18', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 30px 60px rgba(0,0,0,0.6)' }}>
             <div className="p-6 pb-5">
@@ -347,12 +350,12 @@ export default function Login({ language }) {
                   <ScanFace className="h-5 w-5 text-gray-300" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{isTr ? 'Yüzünüzü tanıyın' : 'Sign in with your face'}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{isTr ? 'Otomatik giriş' : 'Automatic sign-in'}</p>
+                  <h3 className="text-lg font-bold text-white">{isAr ? 'تسجيل الدخول بالوجه' : isTr ? 'Yüzünüzü tanıyın' : 'Sign in with your face'}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{isAr ? 'تسجيل دخول تلقائي' : isTr ? 'Otomatik giriş' : 'Automatic sign-in'}</p>
                 </div>
               </div>
               <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-                {isTr ? 'Kameraya bakın — yüzünüz tanındığında otomatik giriş yapılacak.' : "Look at the camera — you'll be signed in automatically when recognized."}
+                {isAr ? 'انظر إلى الكاميرا — سيتم تسجيل دخولك تلقائياً عند التعرف عليك.' : isTr ? 'Kameraya bakın — yüzünüz tanındığında otomatik giriş yapılacak.' : "Look at the camera — you'll be signed in automatically when recognized."}
               </p>
 
               {/* Video + canvas overlay */}
@@ -377,31 +380,31 @@ export default function Login({ language }) {
                 {!faceModelsReady && (
                   <p className="text-sm text-gray-400 flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
-                    {isTr ? 'Yüz tanıma hazırlanıyor…' : 'Preparing face recognition…'}
+                    {isAr ? 'جاري تحضير التعرف على الوجه…' : isTr ? 'Yüz tanıma hazırlanıyor…' : 'Preparing face recognition…'}
                   </p>
                 )}
                 {faceModelsReady && !faceCameraActive && !faceError && (
                   <p className="text-sm text-gray-500 flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
-                    {isTr ? 'Kamera açılıyor…' : 'Starting camera…'}
+                    {isAr ? 'جاري تشغيل الكاميرا…' : isTr ? 'Kamera açılıyor…' : 'Starting camera…'}
                   </p>
                 )}
                 {faceModelsReady && faceCameraActive && faceStage === 'scanning' && !faceError && (
                   <p className="text-sm text-gray-300 flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse flex-shrink-0" />
-                    {isTr ? 'Yüzünüz aranıyor…' : 'Scanning for your face…'}
+                    {isAr ? 'جاري البحث عن وجهك…' : isTr ? 'Yüzünüz aranıyor…' : 'Scanning for your face…'}
                   </p>
                 )}
                 {faceStage === 'detected' && !faceLoading && !faceError && (
                   <p className="text-sm text-purple-300 flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-purple-400 flex-shrink-0" />
-                    {isTr ? 'Yüz tespit edildi, analiz ediliyor…' : 'Face detected, analyzing…'}
+                    {isAr ? 'تم الكشف عن الوجه، جاري التحليل…' : isTr ? 'Yüz tespit edildi, analiz ediliyor…' : 'Face detected, analyzing…'}
                   </p>
                 )}
                 {faceStage === 'verifying' && (
                   <p className="text-sm text-gray-300 flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
-                    {isTr ? 'Giriş yapılıyor…' : 'Signing you in…'}
+                    {isAr ? 'جاري تسجيل دخولك…' : isTr ? 'Giriş yapılıyor…' : 'Signing you in…'}
                   </p>
                 )}
                 {faceError && <p className="text-sm text-red-400 flex-1">{faceError}</p>}
@@ -414,13 +417,13 @@ export default function Login({ language }) {
                     className="py-2.5 px-4 rounded-xl text-sm font-semibold text-purple-300 hover:text-white hover:bg-purple-500/10 transition-all duration-200 flex items-center gap-2"
                     style={{ border: '1px solid rgba(124,58,237,0.25)' }}>
                     <RefreshCw className="h-3.5 w-3.5" />
-                    {isTr ? 'Tekrar dene' : 'Try again'}
+                    {isAr ? 'حاول مرة أخرى' : isTr ? 'Tekrar dene' : 'Try again'}
                   </button>
                 ) : <div />}
                 <button type="button" onClick={closeFaceLogin}
                   className="py-2.5 px-5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
                   style={{ border: '1px solid rgba(255,255,255,0.09)' }}>
-                  {isTr ? 'İptal' : 'Cancel'}
+                  {isAr ? 'إلغاء' : isTr ? 'İptal' : 'Cancel'}
                 </button>
               </div>
             </div>

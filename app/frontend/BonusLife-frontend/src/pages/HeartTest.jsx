@@ -27,7 +27,19 @@ const HeartTest = ({ language = 'english' }) => {
   const [submitted, setSubmitted] = useState(false);
 
   const isTr = language === 'turkish';
-  const t = isTr ? {
+  const isAr = language === 'arabic';
+  const t = isAr ? {
+    title: 'تقييم خطر أمراض القلب', subtitle: 'أدخل قيمك السريرية لتحليل خطر القلب بالذكاء الاصطناعي.',
+    badge: 'بالذكاء الاصطناعي', submit: 'تحليل', newTest: 'تقييم جديد', loading: 'جاري التحليل...',
+    age: 'العمر', sex: 'الجنس', cp: 'نوع ألم الصدر', trestbps: 'ضغط الراحة (mmHg)', chol: 'الكوليسترول (mg/dL)',
+    fbs: 'سكر الصيام >120', restecg: 'تخطيط القلب', thalach: 'أقصى معدل قلب', exang: 'ذبحة التمرين',
+    oldpeak: 'انخفاض ST', slope: 'ميل ST', ca: 'الأوعية الرئيسية (0-4)', thal: 'الثلاسيميا',
+    execSummary: 'الملخص', probLabel: 'احتمالية أمراض القلب', keyRiskFactors: 'عوامل الخطر',
+    lifestyleChanges: 'التوصيات', requiredError: 'يرجى ملء الحقول المطلوبة.', negativeError: 'أدخل أرقاماً غير سالبة.',
+    savedToAccount: 'تم الحفظ في حسابك.', viewInDashboard: 'عرض في لوحة التحكم',
+    sex0: 'أنثى', sex1: 'ذكر', cp0: 'لا يوجد', cp1: 'ذبحة نموذجية', cp2: 'ذبحة غير نموذجية', cp3: 'غير ذبحية', cp4: 'بدون أعراض',
+    slope1: 'صاعد', slope2: 'مسطح', slope3: 'نازل', thal3: 'طبيعي', thal6: 'ثابت', thal7: 'عكسي',
+  } : isTr ? {
     title: 'Kalp Hastalığı Risk Değerlendirmesi', subtitle: 'Klinik değerlerinizi girin; yapay zeka destekli kalp riski analizi.',
     badge: 'Yapay Zeka Destekli', submit: 'Analiz Yap', newTest: 'Yeni Değerlendirme', loading: 'Analiz ediliyor...',
     age: 'Yaş', sex: 'Cinsiyet', cp: 'Göğüs Ağrısı Tipi', trestbps: 'İstirahat Tansiyonu (mmHg)', chol: 'Kolesterol (mg/dL)',

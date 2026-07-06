@@ -11,6 +11,7 @@ export default function ForgotPassword({ language }) {
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +21,7 @@ export default function ForgotPassword({ language }) {
       await apiService.forgotPassword(email.trim());
       setSent(true);
     } catch (err) {
-      setError(err.message || (isTr ? 'Bir hata oluştu.' : 'Something went wrong.'));
+      setError(err.message || (isAr ? 'حدث خطأ ما.' : isTr ? 'Bir hata oluştu.' : 'Something went wrong.'));
     } finally {
       setLoading(false);
     }
@@ -43,7 +44,7 @@ export default function ForgotPassword({ language }) {
             <CheckCircle2 className="w-8 h-8 text-violet-400" />
           </div>
           <h1 className="text-2xl font-black text-white mb-3">
-            {isTr ? 'E-posta Gönderildi' : 'Check Your Email'}
+            {isAr ? 'تحقق من بريدك الإلكتروني' : isTr ? 'E-posta Gönderildi' : 'Check Your Email'}
           </h1>
           <p className="text-gray-500 text-sm leading-relaxed mb-8">
             {isTr
@@ -51,7 +52,7 @@ export default function ForgotPassword({ language }) {
               : 'If an account exists with this email, we sent you a new temporary password.'}
           </p>
           <LiquidMetalButton onClick={() => window.location.href = ROUTES.LOGIN} width={160}>
-            {isTr ? 'Girişe dön' : 'Back to sign in'}
+            {isAr ? 'العودة لتسجيل الدخول' : isTr ? 'Girişe dön' : 'Back to sign in'}
           </LiquidMetalButton>
         </div>
       </div>
@@ -77,7 +78,7 @@ export default function ForgotPassword({ language }) {
 
         <div className="rounded-2xl p-8" style={cardStyle}>
           <h1 className="text-2xl font-black text-white mb-2 text-center">
-            {isTr ? 'Şifremi Unuttum' : 'Forgot Password?'}
+            {isAr ? 'نسيت كلمة المرور؟' : isTr ? 'Şifremi Unuttum' : 'Forgot Password?'}
           </h1>
           <p className="text-gray-500 text-sm text-center mb-8 leading-relaxed">
             {isTr
@@ -95,7 +96,7 @@ export default function ForgotPassword({ language }) {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                {isTr ? 'E-posta' : 'Email Address'}
+                {isAr ? 'عنوان البريد الإلكتروني' : isTr ? 'E-posta' : 'Email Address'}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" style={{ width: '15px', height: '15px' }} />
@@ -106,7 +107,7 @@ export default function ForgotPassword({ language }) {
 
             <div className="flex justify-center">
               <LiquidMetalButton type="submit" disabled={loading} width={200}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Gönderiliyor...' : 'Sending...'}</> : (isTr ? 'Bağlantı Gönder' : 'Send Reset Link')}
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isAr ? 'جارِ الإرسال...' : isTr ? 'Gönderiliyor...' : 'Sending...'}</> : (isAr ? 'إرسال رابط إعادة التعيين' : isTr ? 'Bağlantı Gönder' : 'Send Reset Link')}
               </LiquidMetalButton>
             </div>
           </form>

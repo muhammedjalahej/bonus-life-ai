@@ -6,16 +6,17 @@ import { getNotifications, markNotificationRead, markAllNotificationsRead, delet
 import {
   HeartPulse, Menu, X, ChevronDown, Bell, Check,
   Home, Activity, MessageSquare, Mic, AlertTriangle, MapPin, Globe, LayoutDashboard, Shield, LogIn, UserPlus, LogOut,
-  Users, BarChart3, Settings, Compass, Trash2, ExternalLink, Sparkles,
+  Users, BarChart3, Settings, Compass, Trash2, ExternalLink, Sparkles, Sun, Moon
 } from 'lucide-react';
 import { useUXSettings } from '../context/UXSettingsContext';
 import { useTour } from '../tour/TourContext';
 
 const Header = ({ language, setLanguage }) => {
   const navigate  = useNavigate();
+  const isAr = language === 'arabic';
   const location  = useLocation();
   const { user, loading: authLoading, isAdmin, logout, allowSignups } = useAuth();
-  const { setUxModalOpen } = useUXSettings();
+  const { settings, setTheme, setUxModalOpen } = useUXSettings();
 
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [langOpen,     setLangOpen]     = useState(false);
@@ -70,7 +71,7 @@ const Header = ({ language, setLanguage }) => {
     links = [];
   } else {
     links = [...userLinks];
-    if (user) links.push({ path: ROUTES.DASHBOARD, label: language === 'turkish' ? 'Panel' : 'Dashboard', icon: LayoutDashboard, dataTour: 'nav-dashboard' });
+    if (user) links.push({ path: ROUTES.DASHBOARD, label: language === 'turkish' ? 'Panel' : isAr ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard, dataTour: 'nav-dashboard' });
   }
 
   const { start: startTour, restart: restartTour, completed: tourCompleted } = useTour();
@@ -133,6 +134,13 @@ const Header = ({ language, setLanguage }) => {
           {/* Right side: actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
 
+            {/* Dark Mode Toggle */}
+            <button onClick={() => setTheme(theme === 'light' ? 'default' : 'light')}
+              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+              title={isAr ? "تبديل المظهر" : "Toggle Theme"}>
+              {theme === 'light' ? <Moon style={{ width: '16px', height: '16px' }} /> : <Sun style={{ width: '16px', height: '16px' }} />}
+            </button>
+
             {/* Auth actions */}
             {!authLoading && !isAuthPage && (
               <>
@@ -141,7 +149,7 @@ const Header = ({ language, setLanguage }) => {
                     <button onClick={() => handleNav(ROUTES.LOGIN)}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200">
                       <LogIn style={{ width: '14px', height: '14px' }} />
-                      {language === 'turkish' ? 'Giriş' : 'Login'}
+                      {language === 'turkish' ? 'Giriş' : isAr ? 'تسجيل الدخول' : 'Login'}
                     </button>
                     {allowSignups && (
                       <button onClick={() => handleNav(ROUTES.REGISTER)}
@@ -254,7 +262,7 @@ const Header = ({ language, setLanguage }) => {
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-bold text-white truncate">{user.full_name || user.email}</p>
                                 <p className="text-xs text-gray-600 truncate">{user.email}</p>
-                                {isAdmin && <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>Admin</span>}
+                                {isAdmin && <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{isAr ? 'مسؤول' : 'Admin'}</span>}
                               </div>
                             </div>
 
@@ -262,27 +270,27 @@ const Header = ({ language, setLanguage }) => {
                             <div className="py-1">
                               {isAdmin ? (
                                 <MenuBtn onClick={() => { handleNav(ROUTES.ADMIN); setUserMenuOpen(false); }} icon={Shield}>
-                                  {language === 'turkish' ? 'Yönetim Paneli' : 'Admin Panel'}
+                                  {language === 'turkish' ? 'Yönetim Paneli' : isAr ? 'لوحة المسؤول' : 'Admin Panel'}
                                 </MenuBtn>
                               ) : (
                                 <MenuBtn onClick={() => { handleNav(ROUTES.DASHBOARD); setUserMenuOpen(false); }} icon={LayoutDashboard}>
-                                  {language === 'turkish' ? 'Panel' : 'Dashboard'}
+                                  {language === 'turkish' ? 'Panel' : isAr ? 'لوحة التحكم' : 'Dashboard'}
                                 </MenuBtn>
                               )}
                               <div className="my-1 mx-3" style={{ height: '1px', background: 'rgba(255,255,255,0.05)' }} />
                               {!isAdmin && (
                                 <MenuBtn onClick={() => { (tourCompleted ? restartTour : startTour)(); setUserMenuOpen(false); }} icon={Compass}>
-                                  {tourCompleted ? (language === 'turkish' ? 'Turu Tekrarla' : 'Restart Tour') : (language === 'turkish' ? 'Turu Başlat' : 'Start Tour')}
+                                  {tourCompleted ? (language === 'turkish' ? 'Turu Tekrarla' : isAr ? 'إعادة الجولة' : 'Restart Tour') : (language === 'turkish' ? 'Turu Başlat' : isAr ? 'بدء الجولة' : 'Start Tour')}
                                 </MenuBtn>
                               )}
                               {isAdmin && (
                                 <MenuBtn onClick={() => { setUxModalOpen(true); setUserMenuOpen(false); }} icon={Settings}>
-                                  {language === 'turkish' ? 'UX Ayarları' : 'UX Settings'}
+                                  {language === 'turkish' ? 'UX Ayarları' : isAr ? 'إعدادات واجهة المستخدم' : 'UX Settings'}
                                 </MenuBtn>
                               )}
                               {!isAdmin && (
                                 <MenuBtn onClick={() => { handleNav(ROUTES.PRICING); setUserMenuOpen(false); }} icon={ExternalLink}>
-                                  {language === 'turkish' ? 'Fiyatlandırma' : 'Pricing'}
+                                  {language === 'turkish' ? 'Fiyatlandırma' : isAr ? 'الأسعار' : 'Pricing'}
                                 </MenuBtn>
                               )}
                               <div className="my-1 mx-3" style={{ height: '1px', background: 'rgba(255,255,255,0.05)' }} />
@@ -367,14 +375,14 @@ const Header = ({ language, setLanguage }) => {
                 <button onClick={() => handleNav(ROUTES.LOGIN)}
                   className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all">
                   <LogIn style={{ width: '16px', height: '16px' }} />
-                  {language === 'turkish' ? 'Giriş' : 'Login'}
+                  {language === 'turkish' ? 'Giriş' : isAr ? 'تسجيل الدخول' : 'Login'}
                 </button>
                 {allowSignups && (
                   <button onClick={() => handleNav(ROUTES.REGISTER)}
                     className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all"
                     style={{ background: 'rgba(124,58,237,0.15)', color: '#A78BFA' }}>
                     <Sparkles style={{ width: '16px', height: '16px' }} />
-                    {language === 'turkish' ? 'Kayıt Ol' : 'Get Started Free'}
+                    {language === 'turkish' ? 'Kayıt Ol' : isAr ? 'ابدأ مجاناً' : 'Get Started Free'}
                   </button>
                 )}
               </>

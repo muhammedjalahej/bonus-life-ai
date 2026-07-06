@@ -6,11 +6,11 @@ import { ROUTES } from '../config/constants';
 import { getWorkoutVideos } from '../services/api';
 
 const GOALS = [
-  { key: 'beginner', labelEn: 'Beginner', labelTr: 'Başlangıç' },
-  { key: 'weight_loss', labelEn: 'Weight Loss', labelTr: 'Kilo Verme' },
-  { key: '10_min', labelEn: '10 Min', labelTr: '10 Dakika' },
-  { key: 'low_impact', labelEn: 'Low Impact', labelTr: 'Düşük Etki' },
-  { key: 'strength', labelEn: 'Strength', labelTr: 'Güç' },
+  { key: 'beginner', labelEn: 'Beginner', labelTr: 'Başlangıç', labelAr: 'مبتدئ' },
+  { key: 'weight_loss', labelEn: 'Weight Loss', labelTr: 'Kilo Verme', labelAr: 'خسارة الوزن' },
+  { key: '10_min', labelEn: '10 Min', labelTr: '10 Dakika', labelAr: '10 دقائق' },
+  { key: 'low_impact', labelEn: 'Low Impact', labelTr: 'Düşük Etki', labelAr: 'تأثير منخفض' },
+  { key: 'strength', labelEn: 'Strength', labelTr: 'Güç', labelAr: 'قوة' },
 ];
 
 const WorkoutVideos = ({ language = 'english' }) => {
@@ -21,21 +21,31 @@ const WorkoutVideos = ({ language = 'english' }) => {
   const [error, setError] = useState('');
 
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
 
   const fetchVideos = useCallback((refresh = null) => {
     setLoading(true);
     setError('');
     getWorkoutVideos(goal, refresh)
       .then((res) => setVideos(Array.isArray(res?.videos) ? res.videos : []))
-      .catch((err) => setError(err.message || (isTr ? 'Videolar yüklenemedi.' : 'Failed to load videos.')))
+      .catch((err) => setError(err.message || (isAr ? 'تعذر تحميل الفيديوهات.' : isTr ? 'Videolar yüklenemedi.' : 'Failed to load videos.')))
       .finally(() => setLoading(false));
-  }, [goal, isTr]);
+  }, [goal, isTr, isAr]);
 
   useEffect(() => { fetchVideos(); }, [goal]);
 
   const handleRefresh = () => fetchVideos(Date.now());
 
-  const t = isTr ? {
+  const t = isAr ? {
+    badge: 'رياضة',
+    title: 'فيديوهات التمارين الرياضية',
+    subtitle: 'فيديوهات تمارين رياضية من YouTube تناسب هدفك. مبتدئ، خسارة الوزن، 10 دقائق، أو تمارين خفيفة.',
+    chooseGoal: 'اختر هدفاً',
+    refresh: 'فيديوهات جديدة',
+    noVideos: 'لم يتم العثور على فيديوهات لهذا الهدف.',
+    by: 'القناة',
+    backToDashboard: 'العودة إلى لوحة التحكم',
+  } : isTr ? {
     badge: 'Spor',
     title: 'Antrenman Videoları',
     subtitle: 'Hedefinize uygun YouTube antrenman videoları. Başlangıç, kilo verme, 10 dakika veya düşük etkili seçenekler.',
@@ -43,6 +53,7 @@ const WorkoutVideos = ({ language = 'english' }) => {
     refresh: 'Yeni videolar',
     noVideos: 'Bu hedef için video bulunamadı.',
     by: 'Kanal',
+    backToDashboard: 'Dashboard\'a Geri Dön',
   } : {
     badge: 'Sport',
     title: 'Workout Videos',
@@ -51,11 +62,12 @@ const WorkoutVideos = ({ language = 'english' }) => {
     refresh: 'New videos',
     noVideos: 'No videos found for this goal.',
     by: 'Channel',
+    backToDashboard: 'Back to Dashboard',
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-32 pb-16"
-      style={{ fontFamily: "'Figtree','Inter',sans-serif" }}>
+      style={{ fontFamily: language === 'arabic' ? "'Tajawal','Figtree','Inter',sans-serif" : "'Figtree','Inter',sans-serif" }} dir={language === 'arabic' ? 'rtl' : 'ltr'}>
 
       {/* Background blob */}
       <div className="fixed top-1/4 right-1/4 w-96 h-96 rounded-full pointer-events-none"
@@ -64,8 +76,8 @@ const WorkoutVideos = ({ language = 'english' }) => {
       {/* Back to Dashboard */}
       <button onClick={() => navigate(ROUTES.DASHBOARD)}
         className="flex items-center gap-2 mb-8 text-sm text-white/70 hover:text-white transition-colors group relative z-10">
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-        Back to Dashboard
+        <ArrowLeft className={`w-4 h-4 transition-transform ${language === 'arabic' ? 'rotate-180 group-hover:translate-x-0.5' : 'group-hover:-translate-x-0.5'}`} />
+        {t.backToDashboard}
       </button>
 
       {/* Header */}
@@ -90,7 +102,7 @@ const WorkoutVideos = ({ language = 'english' }) => {
                 border: '1px solid rgba(255,255,255,0.08)',
                 color: '#6B7280',
               }}>
-              {isTr ? g.labelTr : g.labelEn}
+              {language === 'arabic' ? g.labelAr : isTr ? g.labelTr : g.labelEn}
             </button>
           ))}
           <LiquidMetalButton onClick={handleRefresh} disabled={loading} width={130}>

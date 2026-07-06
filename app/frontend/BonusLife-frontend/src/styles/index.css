@@ -687,6 +687,19 @@ html[data-motion="reduced"] .voice-listening-glow { animation: none; }
 /* ───────────────── Theming scaffolding (default = current look; no visual change) ───────────────── */
 html[data-theme="default"],
 html:not([data-theme]) { /* current look */ }
+
+/* ───────────────── Native Light Mode (Filter Based) ───────────────── */
+html[data-theme="light"] {
+  filter: invert(0.93) hue-rotate(180deg);
+  background: #f8fafc;
+}
+/* Revert images and media to original colors so they don't look like ghosts */
+html[data-theme="light"] img,
+html[data-theme="light"] video,
+html[data-theme="light"] iframe {
+  filter: invert(1.07) hue-rotate(180deg);
+}
+
 :root { --text-scale: 1; }
 html[data-text="lg"] { --text-scale: 1.1; }
 

@@ -33,38 +33,35 @@ import { DateRangePicker } from '../components/ui/DateRangePicker';
 const toolGroups = [
   {
     id: 'assessments',
-    titleEn: 'Health Assessments',
-    titleTr: 'Sağlık Değerlendirmeleri',
+    titleEn: 'Health Assessments', titleTr: 'Sağlık Değerlendirmeleri', titleAr: 'التقييمات الصحية',
     accent: 'violet',
     items: [
-      { path: ROUTES.TEST,            labelEn: 'Diabetes Assessment',                labelTr: 'Diyabet Değerlendirmesi',            icon: Activity },
-      { path: ROUTES.HEART_TEST,      labelEn: 'Heart Risk Assessment',              labelTr: 'Kalp Risk Değerlendirmesi',           icon: Heart },
-      { path: ROUTES.BRAIN_MRI,       labelEn: 'Brain MRI Risk Assessment',          labelTr: 'Beyin MRI Risk Değerlendirmesi',      icon: Brain },
-      { path: ROUTES.CKD_TEST,        labelEn: 'Kidney Disease (CKD) Risk Assessment', labelTr: 'Böbrek Hastalığı (CKD) Risk Değerlendirmesi', icon: Droplets },
-      { path: ROUTES.SYMPTOM_CHECKER, labelEn: 'Symptom Checker',                   labelTr: 'Belirti Kontrolü',                   icon: AlertTriangle },
+      { path: ROUTES.TEST,            labelEn: 'Diabetes Assessment', labelTr: 'Diyabet Değerlendirmesi', labelAr: 'تقييم السكري',            icon: Activity },
+      { path: ROUTES.HEART_TEST,      labelEn: 'Heart Risk Assessment', labelTr: 'Kalp Risk Değerlendirmesi', labelAr: 'تقييم خطر أمراض القلب',           icon: Heart },
+      { path: ROUTES.BRAIN_MRI,       labelEn: 'Brain MRI Risk Assessment', labelTr: 'Beyin MRI Risk Değerlendirmesi', labelAr: 'تقييم خطر الرنين المغناطيسي للدماغ',      icon: Brain },
+      { path: ROUTES.CKD_TEST,        labelEn: 'Kidney Disease (CKD) Risk Assessment', labelTr: 'Böbrek Hastalığı (CKD) Risk Değerlendirmesi', labelAr: 'تقييم خطر أمراض الكلى (CKD)', icon: Droplets },
+      { path: ROUTES.SYMPTOM_CHECKER, labelEn: 'Symptom Checker', labelTr: 'Belirti Kontrolü', labelAr: 'فاحص الأعراض',                   icon: AlertTriangle },
     ],
   },
   {
     id: 'ai',
-    titleEn: 'Diabetes Specialist AI',
-    titleTr: 'Diyabet Uzmanı Yapay Zeka',
+    titleEn: 'Diabetes Specialist AI', titleTr: 'Diyabet Uzmanı Yapay Zeka', titleAr: 'طبيب السكري بالذكاء الاصطناعي',
     accent: 'blue',
     items: [
-      { path: ROUTES.CHAT,               labelEn: 'AI Chat',    labelTr: 'Yapay Zeka Sohbet', icon: MessageSquare },
-      { path: ROUTES.VOICE_CHAT,         labelEn: 'Voice Chat', labelTr: 'Sesli Sohbet',       icon: Mic },
-      { path: ROUTES.LOCAL_AI_SCENARIO,  labelEn: 'What if…?', labelTr: 'Ya… olursa?',        icon: HelpCircle },
+      { path: ROUTES.CHAT,               labelEn: 'AI Chat', labelTr: 'Yapay Zeka Sohbet', labelAr: 'محادثة الذكاء الاصطناعي', icon: MessageSquare },
+      { path: ROUTES.VOICE_CHAT,         labelEn: 'Voice Chat', labelTr: 'Sesli Sohbet', labelAr: 'محادثة صوتية',       icon: Mic },
+      { path: ROUTES.LOCAL_AI_SCENARIO,  labelEn: 'What if…?', labelTr: 'Ya… olursa?', labelAr: 'ماذا لو...؟',        icon: HelpCircle },
     ],
   },
   {
     id: 'nutrition',
-    titleEn: 'Nutrition & Fitness',
-    titleTr: 'Beslenme & Fitness',
+    titleEn: 'Nutrition & Fitness', titleTr: 'Beslenme & Fitness', titleAr: 'التغذية واللياقة',
     accent: 'emerald',
     items: [
-      { path: ROUTES.DIET_PLAN,  labelEn: 'Diet Plan',       labelTr: 'Diyet Planı',         icon: Salad },
-      { path: ROUTES.MEAL_PHOTO, labelEn: 'Meal Analyzer',   labelTr: 'Öğün Analizi',        icon: Apple },
-      { path: ROUTES.SPORT,      labelEn: 'Workout Videos',  labelTr: 'Antrenman Videoları', icon: Dumbbell },
-      { path: ROUTES.LOCAL_AI_TIP, labelEn: 'Tip of the Day', labelTr: 'Günün İpucu',       icon: Sun },
+      { path: ROUTES.DIET_PLAN,  labelEn: 'Diet Plan', labelTr: 'Diyet Planı', labelAr: 'خطة النظام الغذائي',         icon: Salad },
+      { path: ROUTES.MEAL_PHOTO, labelEn: 'Meal Analyzer', labelTr: 'Öğün Analizi', labelAr: 'محلل الوجبات',        icon: Apple },
+      { path: ROUTES.SPORT,      labelEn: 'Workout Videos', labelTr: 'Antrenman Videoları', labelAr: 'فيديوهات التمارين', icon: Dumbbell },
+      { path: ROUTES.LOCAL_AI_TIP, labelEn: 'Tip of the Day', labelTr: 'Günün İpucu', labelAr: 'نصيحة اليوم',       icon: Sun },
     ],
   },
 ];
@@ -74,7 +71,7 @@ const DIET_GOAL_LABELS = {
   en: { diabetes_prevention: 'Diabetes Prevention', blood_sugar_control: 'Blood Sugar Control', weight_loss: 'Weight Loss', weight_gain: 'Weight Gain', maintenance: 'Maintenance', gestational_diabetes: 'Gestational Diabetes' },
   tr: { diabetes_prevention: 'Diyabet Önleme', blood_sugar_control: 'Kan Şekeri Kontrolü', weight_loss: 'Kilo Verme', weight_gain: 'Kilo Alma', maintenance: 'Koruma', gestational_diabetes: 'Gestasyonel Diyabet' },
 };
-const dietGoalDisplay = (goal, isTr) => (DIET_GOAL_LABELS[isTr ? 'tr' : 'en'][goal] || (goal || '').replace(/_/g, ' ')) || (isTr ? 'Diyet planı' : 'Diet plan');
+const dietGoalDisplay = (goal, isTr) => (DIET_GOAL_LABELS[isAr ? 'en' : isTr ? 'tr' : 'en'][goal] || (goal || '').replace(/_/g, ' ')) || (isAr ? 'خطة النظام الغذائي' : isTr ? 'Diyet planı' : 'Diet plan');
 
 // Consistent time format: "8:51 PM" (no leading zero, uppercase AM/PM)
 const formatTime = (dateStr) => {
@@ -107,19 +104,20 @@ const getRiskHoverClass = (riskLevel) => {
 };
 
 // Greeting by time of day (for hero)
-const getGreeting = (isTr, name) => {
-  const firstName = (name || '').split(/\s+/)[0] || (isTr ? 'Kullanıcı' : 'there');
+const getGreeting = (isAr, isTr, name) => {
+  const firstName = (name || '').split(/\s+/)[0] || (isAr ? 'هناك' : isTr ? 'Kullanıcı' : 'there');
   const hour = new Date().getHours();
-  let timeLabel = isTr ? 'Merhaba' : 'Hi';
-  if (hour >= 5 && hour < 12) timeLabel = isTr ? 'Günaydın' : 'Good morning';
-  else if (hour >= 12 && hour < 17) timeLabel = isTr ? 'İyi günler' : 'Good afternoon';
-  else if (hour >= 17 && hour < 21) timeLabel = isTr ? 'İyi akşamlar' : 'Good evening';
-  else timeLabel = isTr ? 'İyi geceler' : 'Good evening';
+  let timeLabel = isAr ? 'مرحباً' : isTr ? 'Merhaba' : 'Hi';
+  if (hour >= 5 && hour < 12) timeLabel = isAr ? 'صباح الخير' : isTr ? 'Günaydın' : 'Good morning';
+  else if (hour >= 12 && hour < 17) timeLabel = isAr ? 'طاب مساؤك' : isTr ? 'İyi günler' : 'Good afternoon';
+  else if (hour >= 17 && hour < 21) timeLabel = isAr ? 'مساء الخير' : isTr ? 'İyi akşamlar' : 'Good evening';
+  else timeLabel = isAr ? 'مساء الخير' : isTr ? 'İyi geceler' : 'Good evening';
   return `${timeLabel}, ${firstName}`;
 };
 
 export default function Dashboard({ language }) {
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, refreshUser, setUserAvatar } = useAuth();
@@ -238,7 +236,7 @@ export default function Dashboard({ language }) {
       setBrainMriAnalyses(Array.isArray(bmr) ? bmr : []);
       setCKDAssessments(Array.isArray(ckd) ? ckd : []);
     } catch (err) {
-      setError(err.message || (isTr ? 'Veriler yüklenemedi.' : 'Failed to load data.'));
+      setError(err.message || (isAr ? 'فشل في تحميل البيانات.' : isTr ? 'Veriler yüklenemedi.' : 'Failed to load data.'));
       setAssessments([]);
       setHeartAssessments([]);
       setDietPlans([]);
@@ -285,7 +283,7 @@ export default function Dashboard({ language }) {
         await confirmSubscription(sessionId);
         if (!cancelled) await refreshUser();
       } catch (err) {
-        if (!cancelled) setSubscriptionConfirmError(err?.message || (isTr ? 'Abonelik doğrulanamadı.' : 'Could not confirm subscription.'));
+        if (!cancelled) setSubscriptionConfirmError(err?.message || (isAr ? 'تعذر تأكيد الاشتراك.' : isTr ? 'Abonelik doğrulanamadı.' : 'Could not confirm subscription.'));
       } finally {
         if (!cancelled) setSearchParams({}, { replace: true });
       }
@@ -313,8 +311,8 @@ export default function Dashboard({ language }) {
       const msg = err.message || '';
       const is404 = msg.includes('404');
       const friendly = is404
-        ? (isTr ? 'PDF imzalama servisi bulunamadı (404). Backend çalışıyor mu?' : 'PDF signing service not found (404). Is the backend running?')
-        : (msg || (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
+        ? (isAr ? 'لم يتم العثور على خدمة توقيع PDF (404). هل الخادم الخلفي يعمل؟' : isTr ? 'PDF imzalama servisi bulunamadı (404). Backend çalışıyor mu?' : 'PDF signing service not found (404). Is the backend running?')
+        : (msg || (isAr ? 'تعذر إنشاء ملف PDF.' : isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
       alert(friendly);
     } finally {
       setPdfLoading(null);
@@ -329,8 +327,8 @@ export default function Dashboard({ language }) {
     } catch (err) {
       const msg = err.message || '';
       const friendly = msg.includes('404')
-        ? (isTr ? 'PDF imzalama servisi bulunamadı.' : 'PDF signing service not found.')
-        : (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.');
+        ? (isAr ? 'لم يتم العثور على خدمة توقيع PDF.' : isTr ? 'PDF imzalama servisi bulunamadı.' : 'PDF signing service not found.')
+        : (isAr ? 'تعذر إنشاء ملف PDF.' : isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.');
       alert(friendly + ' ' + msg);
     } finally {
       setPdfLoading(null);
@@ -363,8 +361,8 @@ export default function Dashboard({ language }) {
       const msg = err.message || '';
       const is404 = msg.includes('404');
       const friendly = is404
-        ? (isTr ? 'PDF imzalama servisi bulunamadı (404).' : 'PDF signing service not found (404).')
-        : (msg || (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
+        ? (isAr ? 'لم يتم العثور على خدمة توقيع PDF (404).' : isTr ? 'PDF imzalama servisi bulunamadı (404).' : 'PDF signing service not found (404).')
+        : (msg || (isAr ? 'تعذر إنشاء ملف PDF.' : isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
       alert(friendly);
     } finally {
       setPdfLoading(null);
@@ -389,7 +387,7 @@ export default function Dashboard({ language }) {
       await apiService.deleteHeartAssessment(a.id);
       setHeartAssessments(prev => prev.filter(x => x.id !== a.id));
     } catch (err) {
-      alert(err.message || (isTr ? 'Silinemedi.' : 'Could not delete.'));
+      alert(err.message || (isAr ? 'تعذر الحذف.' : isTr ? 'Silinemedi.' : 'Could not delete.'));
     } finally {
       setDeletingId(null);
     }
@@ -401,8 +399,8 @@ export default function Dashboard({ language }) {
     } catch (err) {
       const msg = err.message || '';
       const friendly = msg.includes('404')
-        ? (isTr ? 'PDF imzalama servisi bulunamadı (404).' : 'PDF signing service not found (404).')
-        : (msg || (isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
+        ? (isAr ? 'لم يتم العثور على خدمة توقيع PDF (404).' : isTr ? 'PDF imzalama servisi bulunamadı (404).' : 'PDF signing service not found (404).')
+        : (msg || (isAr ? 'تعذر إنشاء ملف PDF.' : isTr ? 'PDF oluşturulamadı.' : 'Could not create PDF.'));
       alert(friendly);
     } finally {
       setPdfLoading(null);
@@ -427,7 +425,7 @@ export default function Dashboard({ language }) {
       await apiService.deleteCKDAssessment(a.id);
       setCKDAssessments(prev => prev.filter(x => x.id !== a.id));
     } catch (err) {
-      alert(err.message || (isTr ? 'Silinemedi.' : 'Could not delete.'));
+      alert(err.message || (isAr ? 'تعذر الحذف.' : isTr ? 'Silinemedi.' : 'Could not delete.'));
     } finally {
       setDeletingId(null);
     }
@@ -438,7 +436,7 @@ export default function Dashboard({ language }) {
       await apiService.deleteAssessment(a.id);
       setAssessments(prev => prev.filter(x => x.id !== a.id));
     } catch (err) {
-      alert(err.message || (isTr ? 'Silinemedi.' : 'Could not delete.'));
+      alert(err.message || (isAr ? 'تعذر الحذف.' : isTr ? 'Silinemedi.' : 'Could not delete.'));
     } finally {
       setDeletingId(null);
     }
@@ -449,7 +447,7 @@ export default function Dashboard({ language }) {
       await apiService.deleteDietPlan(d.id);
       setDietPlans(prev => prev.filter(x => x.id !== d.id));
     } catch (err) {
-      alert(err.message || (isTr ? 'Silinemedi.' : 'Could not delete.'));
+      alert(err.message || (isAr ? 'تعذر الحذف.' : isTr ? 'Silinemedi.' : 'Could not delete.'));
     } finally {
       setDeletingId(null);
     }
@@ -625,9 +623,9 @@ export default function Dashboard({ language }) {
         {/* Top row: greeting + date */}
         <div className="relative flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-white/40 mb-1">{getGreeting(isTr, user?.full_name)}</p>
+            <p className="text-sm font-medium text-white/40 mb-1">{getGreeting(isAr, isTr, user?.full_name)}</p>
             <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              {isTr ? 'Kontrol Paneli' : 'Dashboard'}
+              {isAr ? 'لوحة التحكم' : isTr ? 'Kontrol Paneli' : 'Dashboard'}
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
@@ -656,10 +654,10 @@ export default function Dashboard({ language }) {
                   <div style={{ borderRadius: 16, overflow: 'hidden', background: 'linear-gradient(160deg, rgba(28,28,28,0.97) 0%, rgba(8,8,10,0.99) 100%)', backdropFilter: 'blur(48px) saturate(200%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 16px 56px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.07)' }}>
                     {/* Header */}
                     <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>{isTr ? 'Bildirimler' : 'Notifications'}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>{isAr ? 'الإشعارات' : isTr ? 'Bildirimler' : 'Notifications'}</span>
                       {unreadCount > 0 && (
                         <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontWeight: 600, padding: 0 }}>
-                          {isTr ? 'Tümünü oku' : 'Mark all read'}
+                          {isAr ? 'تحديد الكل كمقروء' : isTr ? 'Tümünü oku' : 'Mark all read'}
                         </button>
                       )}
                     </div>
@@ -668,7 +666,7 @@ export default function Dashboard({ language }) {
                       {notifications.length === 0 ? (
                         <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem' }}>
                           <Bell style={{ width: 24, height: 24, margin: '0 auto 0.5rem', opacity: 0.15 }} />
-                          {isTr ? 'Bildirim yok' : 'No notifications'}
+                          {isAr ? 'لا توجد إشعارات' : isTr ? 'Bildirim yok' : 'No notifications'}
                         </div>
                       ) : notifications.slice(0, 15).map(n => (
                         <div key={n.id} onClick={() => handleMarkRead(n.id)}
@@ -685,7 +683,7 @@ export default function Dashboard({ language }) {
                               <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', flexShrink: 0, marginLeft: 6 }}>{n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span>
                             </div>
                             {n.message && <p style={{ margin: '0 0 3px', fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</p>}
-                            <span style={{ fontSize: '0.6rem', color: n.is_read ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.35)' }}>{n.is_read ? (isTr ? '✓ Okundu' : '✓ Read') : (isTr ? '● Okunmadı' : '● Unread')}</span>
+                            <span style={{ fontSize: '0.6rem', color: n.is_read ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.35)' }}>{n.is_read ? (isAr ? '✓ مقروء' : isTr ? '✓ Okundu' : '✓ Read') : (isAr ? '● غير مقروء' : isTr ? '● Okunmadı' : '● Unread')}</span>
                           </div>
                           <button onClick={(e) => handleDeleteNotif(e, n.id)}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.15)', padding: '2px', borderRadius: 6, flexShrink: 0, display: 'flex' }}
@@ -710,7 +708,7 @@ export default function Dashboard({ language }) {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] text-xs text-white/40 hover:text-white/70 hover:border-white/[0.14] hover:bg-white/[0.07] transition-all"
             >
               <Calendar className="w-3 h-3" />
-              {new Date().toLocaleDateString(isTr ? 'tr-TR' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              {new Date().toLocaleDateString(isAr ? 'ar-SA' : isTr ? 'tr-TR' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </button>
             <MiniCalendar
               open={calendarOpen}
@@ -744,7 +742,7 @@ export default function Dashboard({ language }) {
             {/* Right: Verify Report */}
             <Link to={ROUTES.VERIFY} className="shrink-0 flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors">
               <QrCode className="w-3.5 h-3.5" />
-              {isTr ? 'Rapor Doğrula' : 'Verify Report'}
+              {isAr ? 'التحقق من التقرير' : isTr ? 'Rapor Doğrula' : 'Verify Report'}
             </Link>
           </div>
         )}
@@ -765,8 +763,8 @@ export default function Dashboard({ language }) {
                   type="button"
                   onClick={() => dismissAnnouncement(ann.id)}
                   className="p-1.5 rounded-lg text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/20 transition shrink-0 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                  title={isTr ? 'Kapat (bir daha gösterme)' : 'Dismiss (don\'t show again)'}
-                  aria-label={isTr ? 'Duyuruyu kapat' : 'Dismiss announcement'}
+                  title={isAr ? 'إخفاء (عدم الإظهار مجدداً)' : isTr ? 'Kapat (bir daha gösterme)' : 'Dismiss (don\'t show again)'}
+                  aria-label={isAr ? 'إخفاء الإعلان' : isTr ? 'Duyuruyu kapat' : 'Dismiss announcement'}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -784,7 +782,7 @@ export default function Dashboard({ language }) {
             <div className="flex items-start gap-3">
               <div>
                 <h3 className="text-white font-semibold">
-                  {isTr ? 'Hoş geldiniz! Sağlık yolculuğunuza başlayın' : 'Welcome! Start your health journey'}
+                  {isAr ? 'مرحباً بك! ابدأ رحلتك الصحية' : isTr ? 'Hoş geldiniz! Sağlık yolculuğunuza başlayın' : 'Welcome! Start your health journey'}
                 </h3>
                 <p className="text-sm text-gray-400 mt-1">
                   {isTr
@@ -796,7 +794,7 @@ export default function Dashboard({ language }) {
                   className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium transition"
                 >
                   <Activity className="w-4 h-4" />
-                  {isTr ? 'Değerlendirme Yap' : 'Take Assessment'}
+                  {isAr ? 'قم بالتقييم' : isTr ? 'Değerlendirme Yap' : 'Take Assessment'}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -812,12 +810,12 @@ export default function Dashboard({ language }) {
       <div className="relative mb-8">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent" style={{ scrollbarWidth: 'thin' }}>
           {[
-            { id: 'overview', labelEn: 'Overview', labelTr: 'Genel Bakış', dataTour: 'dashboard-tab-overview' },
-            { id: 'assessments', labelEn: 'My Assessments', labelTr: 'Değerlendirmelerim', dataTour: 'dashboard-tab-assessments' },
-            { id: 'imaging', labelEn: 'Imaging History', labelTr: 'Görüntüleme Geçmişi', dataTour: 'dashboard-tab-imaging' },
-            { id: 'diet-plans', labelEn: 'My Diet Plans', labelTr: 'Diyet Planlarım', dataTour: 'dashboard-tab-diet-plans' },
-            { id: 'subscription', labelEn: 'My Subscription', labelTr: 'Aboneliğim', dataTour: 'dashboard-tab-subscription' },
-            { id: 'profile', labelEn: 'Profile', labelTr: 'Profil', dataTour: 'dashboard-tab-profile' },
+            { id: 'overview', labelEn: 'Overview', labelTr: 'Genel Bakış', labelAr: 'نظرة عامة', dataTour: 'dashboard-tab-overview' },
+            { id: 'assessments', labelEn: 'My Assessments', labelTr: 'Değerlendirmelerim', labelAr: 'تقييماتي', dataTour: 'dashboard-tab-assessments' },
+            { id: 'imaging', labelEn: 'Imaging History', labelTr: 'Görüntüleme Geçmişi', labelAr: 'تاريخ التصوير', dataTour: 'dashboard-tab-imaging' },
+            { id: 'diet-plans', labelEn: 'My Diet Plans', labelTr: 'Diyet Planlarım', labelAr: 'خطط النظام الغذائي', dataTour: 'dashboard-tab-diet-plans' },
+            { id: 'subscription', labelEn: 'My Subscription', labelTr: 'Aboneliğim', labelAr: 'اشتراكي', dataTour: 'dashboard-tab-subscription' },
+            { id: 'profile', labelEn: 'Profile', labelTr: 'Profil', labelAr: 'الملف الشخصي', dataTour: 'dashboard-tab-profile' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -825,7 +823,7 @@ export default function Dashboard({ language }) {
               onClick={() => { setActiveTab(tab.id); setSearchParams({ tab: tab.id }, { replace: true }); }}
               className={`px-4 py-2.5 text-sm font-medium rounded-full transition whitespace-nowrap shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
             >
-              {isTr ? tab.labelTr : tab.labelEn}
+              {isAr ? tab.labelAr : isTr ? tab.labelTr : tab.labelEn}
             </button>
           ))}
         </div>
@@ -841,7 +839,7 @@ export default function Dashboard({ language }) {
           </div>
           <button onClick={fetchData} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-sm transition">
             <RefreshCw className="w-3.5 h-3.5" />
-            {isTr ? 'Tekrar Dene' : 'Retry'}
+            {isAr ? 'إعادة المحاولة' : isTr ? 'Tekrar Dene' : 'Retry'}
           </button>
         </div>
       )}
@@ -849,10 +847,10 @@ export default function Dashboard({ language }) {
       {activeTab === 'overview' && (
         <>
           <section className="mb-10" data-tour="dashboard-tools">
-            <h2 className="text-lg font-semibold text-white mb-4 tracking-tight">{isTr ? 'Araçlar' : 'TOOLS'}</h2>
+            <h2 className="text-lg font-semibold text-white mb-4 tracking-tight">{isAr ? 'الأدوات' : isTr ? 'Araçlar' : 'TOOLS'}</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               {toolGroups.map(group => (
-                <StackedToolCards key={group.id} {...group} isTr={isTr} />
+                <StackedToolCards key={group.id} {...group} isTr={isTr} isAr={isAr} />
               ))}
             </div>
           </section>
@@ -868,7 +866,7 @@ export default function Dashboard({ language }) {
             const borderCls = 'border-l-white/[0.15]';
             return (
               <section className="mt-8">
-                <h2 className="text-lg font-semibold text-white mb-4">{isTr ? 'Son Değerlendirme' : 'Latest Assessment'}</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">{isAr ? 'أحدث تقييم' : isTr ? 'Son Değerlendirme' : 'Latest Assessment'}</h2>
                 <div className={`p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 ${borderCls}`}>
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="min-w-0 flex-1">
@@ -894,18 +892,18 @@ export default function Dashboard({ language }) {
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <LiquidMetalButton onClick={() => navigate(isCKD ? ROUTES.CKD_TEST : isHeart ? ROUTES.HEART_TEST : ROUTES.TEST)} width={170} height={38}>
-                        {isTr ? 'Yeni değerlendirme' : 'New assessment'}
+                        {isAr ? 'تقييم جديد' : isTr ? 'Yeni değerlendirme' : 'New assessment'}
                         <ArrowRight className="w-4 h-4" />
                       </LiquidMetalButton>
                       <LiquidMetalButton data-tour="dashboard-view-report" onClick={() => navigate(viewRoute, { state: { assessment: latest } })} width={90} height={38}>
-                        {isTr ? 'Görüntüle' : 'View'} <Eye className="w-4 h-4" />
+                        {isAr ? 'عرض' : isTr ? 'Görüntüle' : 'View'} <Eye className="w-4 h-4" />
                       </LiquidMetalButton>
                       {isCKD ? (
                         <>
-                          <button onClick={() => exportSignedCKDPDF(latest)} disabled={pdfLoading === `ckd-${latest.id}`} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-cyan-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-500/50" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
+                          <button onClick={() => exportSignedCKDPDF(latest)} disabled={pdfLoading === `ckd-${latest.id}`} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-cyan-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-500/50" title={isAr ? 'تنزيل PDF موقّع' : isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isAr ? 'تنزيل PDF موقّع' : isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
                             {pdfLoading === `ckd-${latest.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                           </button>
-                          <button onClick={() => handleShareCKD(latest.id)} disabled={shareLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-cyan-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-500/50" title={isTr ? 'Paylaş' : 'Share'} aria-label={isTr ? 'Paylaş' : 'Share'} data-tour="dashboard-share">
+                          <button onClick={() => handleShareCKD(latest.id)} disabled={shareLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-cyan-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-500/50" title={isAr ? 'مشاركة' : isTr ? 'Paylaş' : 'Share'} aria-label={isAr ? 'مشاركة' : isTr ? 'Paylaş' : 'Share'} data-tour="dashboard-share">
                             {shareLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                           </button>
                         </>
@@ -914,10 +912,10 @@ export default function Dashboard({ language }) {
                           const heartHover = getRiskHoverClass(latest.risk_level);
                           return (
                             <>
-                              <button onClick={() => exportSignedHeartPDF(latest)} disabled={pdfLoading === latest.id} className={`p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 ${heartHover} transition focus:outline-none focus:ring-2`} title={isTr ? 'PDF İndir' : 'Download PDF'} aria-label={isTr ? 'PDF İndir' : 'Download PDF'} data-tour="dashboard-download-signed">
+                              <button onClick={() => exportSignedHeartPDF(latest)} disabled={pdfLoading === latest.id} className={`p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 ${heartHover} transition focus:outline-none focus:ring-2`} title={isAr ? 'تنزيل PDF' : isTr ? 'PDF İndir' : 'Download PDF'} aria-label={isAr ? 'تنزيل PDF' : isTr ? 'PDF İndir' : 'Download PDF'} data-tour="dashboard-download-signed">
                                 {pdfLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                               </button>
-                              <button onClick={() => handleShareHeart(latest.id)} disabled={shareLoading === latest.id} className={`p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 ${heartHover} transition focus:outline-none focus:ring-2`} title={isTr ? 'Paylaş' : 'Share'} aria-label={isTr ? 'Paylaş' : 'Share'} data-tour="dashboard-share">
+                              <button onClick={() => handleShareHeart(latest.id)} disabled={shareLoading === latest.id} className={`p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 ${heartHover} transition focus:outline-none focus:ring-2`} title={isAr ? 'مشاركة' : isTr ? 'Paylaş' : 'Share'} aria-label={isAr ? 'مشاركة' : isTr ? 'Paylaş' : 'Share'} data-tour="dashboard-share">
                                 {shareLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                               </button>
                             </>
@@ -925,10 +923,10 @@ export default function Dashboard({ language }) {
                         })()
                       ) : (
                         <>
-                          <button onClick={() => exportSignedAssessmentPDF(latest)} disabled={pdfLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
+                          <button onClick={() => exportSignedAssessmentPDF(latest)} disabled={pdfLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50" title={isAr ? 'تنزيل PDF موقّع' : isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} aria-label={isAr ? 'تنزيل PDF موقّع' : isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'} data-tour="dashboard-download-signed">
                             {pdfLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                           </button>
-                          <button onClick={() => handleShare(latest.id)} disabled={shareLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50" title={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} aria-label={isTr ? 'Doktora Paylaş' : 'Share with Doctor'} data-tour="dashboard-share">
+                          <button onClick={() => handleShare(latest.id)} disabled={shareLoading === latest.id} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50" title={isAr ? 'شارك مع الطبيب' : isTr ? 'Doktora Paylaş' : 'Share with Doctor'} aria-label={isAr ? 'شارك مع الطبيب' : isTr ? 'Doktora Paylaş' : 'Share with Doctor'} data-tour="dashboard-share">
                             {shareLoading === latest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                           </button>
                         </>
@@ -937,7 +935,7 @@ export default function Dashboard({ language }) {
                   </div>
                   {shareMatch && (
                     <div className="mt-3 p-2 rounded-lg border bg-white/[0.03] border-white/[0.08]">
-                      <p className="text-xs text-white/40">{isTr ? 'Link panoya kopyalandı:' : 'Link copied to clipboard:'}</p>
+                      <p className="text-xs text-white/40">{isAr ? 'تم نسخ الرابط إلى الحافظة:' : isTr ? 'Link panoya kopyalandı:' : 'Link copied to clipboard:'}</p>
                       <p className="text-xs break-all mt-1 text-white/30">{shareLink.link}</p>
                     </div>
                   )}
@@ -952,14 +950,14 @@ export default function Dashboard({ language }) {
             const badgeCls = 'bg-white/[0.05] text-white/45 border-white/[0.08]';
             return (
               <section className="mt-8">
-                <h2 className="text-lg font-semibold text-white mb-4">{isTr ? 'Son Görüntüleme' : 'Latest Imaging'}</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">{isAr ? 'أحدث تصوير' : isTr ? 'Son Görüntüleme' : 'Latest Imaging'}</h2>
                 <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-4 border-l-white/[0.15]">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border bg-white/[0.05] text-white/40 border-white/[0.08]">
                           <Brain className="w-3 h-3" />
-                          {isTr ? 'MRI' : 'Brain MRI'}
+                          {isAr ? 'تصوير الدماغ بالرنين المغناطيسي' : isTr ? 'MRI' : 'Brain MRI'}
                         </span>
                         <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${badgeCls}`}>
                           {`${latest.tumor_class || 'N/A'} ${latest.confidence != null ? `· ${(latest.confidence * 100).toFixed(0)}%` : ''}`}
@@ -972,13 +970,13 @@ export default function Dashboard({ language }) {
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <LiquidMetalButton onClick={() => navigate(ROUTES.BRAIN_MRI)} width={155} height={38}>
-                        {isTr ? 'Yeni analiz' : 'New analysis'}
+                        {isAr ? 'تحليل جديد' : isTr ? 'Yeni analiz' : 'New analysis'}
                         <ArrowRight className="w-4 h-4" />
                       </LiquidMetalButton>
                       <LiquidMetalButton onClick={() => navigate(ROUTES.BRAIN_MRI, { state: { assessment: latest } })} width={90} height={38}>
-                        {isTr ? 'Görüntüle' : 'View'} <Eye className="w-4 h-4" />
+                        {isAr ? 'عرض' : isTr ? 'Görüntüle' : 'View'} <Eye className="w-4 h-4" />
                       </LiquidMetalButton>
-                      <button onClick={() => exportSignedMriPDF(latest)} disabled={pdfLoading === `bm-${latest.id}`} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 focus:ring-violet-500/50 transition focus:outline-none focus:ring-2" title={isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'}>
+                      <button onClick={() => exportSignedMriPDF(latest)} disabled={pdfLoading === `bm-${latest.id}`} className="p-2 rounded-lg hover:bg-white/[0.05] text-gray-400 hover:text-violet-400 focus:ring-violet-500/50 transition focus:outline-none focus:ring-2" title={isAr ? 'تنزيل PDF موقّع' : isTr ? 'İmzalı PDF İndir' : 'Download Signed PDF'}>
                         {pdfLoading === `bm-${latest.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                       </button>
                     </div>
@@ -993,12 +991,12 @@ export default function Dashboard({ language }) {
       {activeTab === 'assessments' && (
         <section>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-white">{isTr ? 'Değerlendirmelerim' : 'My Assessments'}</h2>
+            <h2 className="text-lg font-semibold text-white">{isAr ? 'تقييماتي' : isTr ? 'Değerlendirmelerim' : 'My Assessments'}</h2>
             <div className="flex flex-wrap gap-2 items-center">
               {(assessments.length > 0 || heartAssessments.length > 0) && (
                 <LiquidMetalButton onClick={() => { setCompareMode(!compareMode); setCompareIds([]); }} width={120} height={36}>
                   <GitCompare className="w-3.5 h-3.5" />
-                  {isTr ? 'Karşılaştır' : 'Compare'}
+                  {isAr ? 'مقارنة' : isTr ? 'Karşılaştır' : 'Compare'}
                 </LiquidMetalButton>
               )}
             </div>
@@ -1008,10 +1006,10 @@ export default function Dashboard({ language }) {
           {!loading && totalAssessmentsCount > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {[
-                { value: 'all', labelEn: 'All', labelTr: 'Tümü', w: 72 },
-                { value: 'diabetes', labelEn: 'Diabetes', labelTr: 'Diyabet', w: 110 },
-                { value: 'heart', labelEn: 'Heart', labelTr: 'Kalp', w: 88 },
-                { value: 'ckd', labelEn: 'Kidney (CKD)', labelTr: 'Böbrek (CKD)', w: 148 },
+                { value: 'all', labelEn: 'All', labelTr: 'Tümü', labelAr: 'All', w: 72 },
+                { value: 'diabetes', labelEn: 'Diabetes', labelTr: 'Diyabet', labelAr: 'Diabetes', w: 110 },
+                { value: 'heart', labelEn: 'Heart', labelTr: 'Kalp', labelAr: 'Heart', w: 88 },
+                { value: 'ckd', labelEn: 'Kidney (CKD)', labelTr: 'Böbrek (CKD)', labelAr: 'Kidney (CKD)', w: 148 },
               ].map(({ value, labelEn, labelTr, w }) => {
                 const active = assessmentTypeFilter === value;
                 return (
@@ -1051,9 +1049,9 @@ export default function Dashboard({ language }) {
                     type="text"
                     value={assessmentSearch}
                     onChange={(e) => setAssessmentSearch(e.target.value)}
-                    placeholder={isTr ? 'Ara (risk, özet…)' : 'Search (risk, summary…)'}
+                    placeholder={isAr ? 'بحث (خطر، ملخص...)' : isTr ? 'Ara (risk, özet…)' : 'Search (risk, summary…)'}
                     className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
-                    aria-label={isTr ? 'Değerlendirme ara' : 'Search assessments'}
+                    aria-label={isAr ? 'البحث في التقييمات' : isTr ? 'Değerlendirme ara' : 'Search assessments'}
                   />
                 </div>
                 <DateRangePicker
@@ -1068,30 +1066,30 @@ export default function Dashboard({ language }) {
                 <div className="flex flex-wrap gap-2 mb-4 items-center">
                   {assessmentSearch && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/15 text-violet-300 text-xs border border-violet-500/25">
-                      {isTr ? 'Ara' : 'Search'}: {assessmentSearch}
-                      <button type="button" onClick={() => setAssessmentSearch('')} className="hover:bg-violet-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      {isAr ? 'بحث' : isTr ? 'Ara' : 'Search'}: {assessmentSearch}
+                      <button type="button" onClick={() => setAssessmentSearch('')} className="hover:bg-violet-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isAr ? 'إزالة' : isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   {assessmentDateFrom && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
-                      {isTr ? 'Başlangıç' : 'From'}: {assessmentDateFrom}
-                      <button type="button" onClick={() => setAssessmentDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      {isAr ? 'من' : isTr ? 'Başlangıç' : 'From'}: {assessmentDateFrom}
+                      <button type="button" onClick={() => setAssessmentDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isAr ? 'إزالة' : isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   {assessmentDateTo && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
-                      {isTr ? 'Bitiş' : 'To'}: {assessmentDateTo}
-                      <button type="button" onClick={() => setAssessmentDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      {isAr ? 'إلى' : isTr ? 'Bitiş' : 'To'}: {assessmentDateTo}
+                      <button type="button" onClick={() => setAssessmentDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isAr ? 'إزالة' : isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-xs text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded px-2 py-1">
-                    {isTr ? 'Filtreleri temizle' : 'Clear all'}
+                    {isAr ? 'مسح الكل' : isTr ? 'Filtreleri temizle' : 'Clear all'}
                   </button>
                 </div>
               )}
@@ -1121,15 +1119,15 @@ export default function Dashboard({ language }) {
             </div>
           ) : totalAssessmentsCount === 0 ? (
             <div className="text-center py-14 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
-              <h3 className="text-white font-semibold mb-1">{isTr ? 'Henüz değerlendirme yok' : 'No assessments yet'}</h3>
-              <p className="text-gray-400 text-sm max-w-sm mx-auto">{isTr ? 'Diyabet, kalp, böbrek veya beyin MRI testi yapın — sonuçlarınız burada görünecek.' : 'Run a diabetes, heart, kidney, or brain MRI test — your results will appear here.'}</p>
+              <h3 className="text-white font-semibold mb-1">{isAr ? 'لا توجد تقييمات بعد' : isTr ? 'Henüz değerlendirme yok' : 'No assessments yet'}</h3>
+              <p className="text-gray-400 text-sm max-w-sm mx-auto">{isAr ? 'قم بإجراء فحص السكري، القلب، الكلى، أو الرنين المغناطيسي للدماغ — ستظهر نتائجك هنا.' : isTr ? 'Diyabet, kalp, böbrek veya beyin MRI testi yapın — sonuçlarınız burada görünecek.' : 'Run a diabetes, heart, kidney, or brain MRI test — your results will appear here.'}</p>
             </div>
           ) : filteredAssessments.length === 0 ? (
             <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
               <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan değerlendirme yok.' : 'No assessments match the filters.'}</p>
+              <p className="text-gray-400 mb-3">{isAr ? 'لا توجد تقييمات تطابق عوامل التصفية.' : isTr ? 'Filtreye uyan değerlendirme yok.' : 'No assessments match the filters.'}</p>
               <button type="button" onClick={() => { setAssessmentSearch(''); setAssessmentDateFrom(''); setAssessmentDateTo(''); }} className="text-sm text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-lg px-3 py-1.5">
-                {isTr ? 'Filtreleri temizle' : 'Clear filters'}
+                {isAr ? 'مسح عوامل التصفية' : isTr ? 'Filtreleri temizle' : 'Clear filters'}
               </button>
             </div>
           ) : (
@@ -1137,7 +1135,7 @@ export default function Dashboard({ language }) {
               {/* Feature f6: Compare mode */}
               {compareMode && compareIds.length === 2 && comparedAssessments.length === 2 && (
                 <div className="mb-6 p-4 rounded-xl bg-white/[0.03] border border-violet-500/20">
-                  <h3 className="text-sm font-semibold text-violet-400 mb-3">{isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
+                  <h3 className="text-sm font-semibold text-violet-400 mb-3">{isAr ? 'مقارنة' : isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {comparedAssessments.map((a) => {
                       const isCKD = a._type === 'ckd';
@@ -1176,10 +1174,10 @@ export default function Dashboard({ language }) {
                           </span>
                         )}
                         {improved
-                          ? (isTr ? `Risk ${pct}% azaldı — İyi ilerleme!` : `Risk decreased by ${pct}% — Good progress!`)
+                          ? (isAr ? `انخفض الخطر بنسبة ${pct}% — تقدم جيد!` : isTr ? `Risk ${pct}% azaldı — İyi ilerleme!` : `Risk decreased by ${pct}% — Good progress!`)
                           : diff > 0
-                            ? (isTr ? `Risk ${pct}% arttı` : `Risk increased by ${pct}%`)
-                            : (isTr ? 'Değişiklik yok' : 'No change')}
+                            ? (isAr ? `ازداد الخطر بنسبة ${pct}%` : isTr ? `Risk ${pct}% arttı` : `Risk increased by ${pct}%`)
+                            : (isAr ? 'لا يوجد تغيير' : isTr ? 'Değişiklik yok' : 'No change')}
                       </div>
                     );
                   })()}
@@ -1189,7 +1187,7 @@ export default function Dashboard({ language }) {
                 <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
                   <GitCompare className="w-5 h-5 text-amber-400 shrink-0" />
                   <p className="text-sm text-amber-200/90">
-                    {isTr ? 'Karşılaştırmak için 2 değerlendirme seçin' : 'Select 2 assessments to compare'}
+                    {isAr ? 'حدد تقييمين للمقارنة' : isTr ? 'Karşılaştırmak için 2 değerlendirme seçin' : 'Select 2 assessments to compare'}
                   </p>
                 </div>
               )}
@@ -1221,7 +1219,7 @@ export default function Dashboard({ language }) {
                             <button
                               onClick={(e) => { e.stopPropagation(); toggleCompare(a.id, a._type); }}
                               className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition focus:outline-none focus:ring-2 ${isCKD ? 'focus:ring-cyan-500/50' : isHeart ? 'focus:ring-pink-500/50' : 'focus:ring-violet-500/50'} ${compareIds.includes(a.id) ? (isCKD ? 'bg-cyan-500 border-cyan-500' : isHeart ? 'bg-pink-500 border-pink-500' : 'bg-violet-500 border-violet-500') : `border-white/20 ${isCKD ? 'hover:border-cyan-500/50' : isHeart ? 'hover:border-pink-500/50' : 'hover:border-violet-500/50'}`}`}
-                              aria-label={compareIds.includes(a.id) ? (isTr ? 'Karşılaştırmadan çıkar' : 'Deselect from compare') : (isTr ? 'Karşılaştırmaya ekle' : 'Select to compare')}
+                              aria-label={compareIds.includes(a.id) ? (isAr ? 'إلغاء التحديد من المقارنة' : isTr ? 'Karşılaştırmadan çıkar' : 'Deselect from compare') : (isAr ? 'اختر للمقارنة' : isTr ? 'Karşılaştırmaya ekle' : 'Select to compare')}
                             >
                               {compareIds.includes(a.id) && <Check className="w-3 h-3 text-white" />}
                             </button>
@@ -1258,10 +1256,10 @@ export default function Dashboard({ language }) {
                             <AnimatedActionMenu
                               loading={pdfLoading === a.id || pdfLoading === `ckd-${a.id}` || shareLoading === a.id || deletingId === `ckd-${a.id}` || deletingId === `h-${a.id}` || deletingId === `a-${a.id}`}
                               items={[
-                                { label: isTr ? 'PDF İndir' : 'Download PDF', icon: <Download className="w-4 h-4" />, onClick: () => isCKD ? exportSignedCKDPDF(a) : isHeart ? exportSignedHeartPDF(a) : exportSignedAssessmentPDF(a) },
-                                { label: isTr ? 'Paylaş' : 'Share', icon: <Share2 className="w-4 h-4" />, onClick: () => isCKD ? handleShareCKD(a.id) : isHeart ? handleShareHeart(a.id) : handleShare(a.id) },
+                                { label: isAr ? 'تنزيل PDF' : isTr ? 'PDF İndir' : 'Download PDF', icon: <Download className="w-4 h-4" />, onClick: () => isCKD ? exportSignedCKDPDF(a) : isHeart ? exportSignedHeartPDF(a) : exportSignedAssessmentPDF(a) },
+                                { label: isAr ? 'مشاركة' : isTr ? 'Paylaş' : 'Share', icon: <Share2 className="w-4 h-4" />, onClick: () => isCKD ? handleShareCKD(a.id) : isHeart ? handleShareHeart(a.id) : handleShare(a.id) },
                                 { separator: true },
-                                { label: isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, onClick: () => isCKD ? handleDeleteCKDAssessment(a) : isHeart ? handleDeleteHeartAssessment(a) : handleDeleteAssessment(a), destructive: true },
+                                { label: isAr ? 'حذف' : isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, onClick: () => isCKD ? handleDeleteCKDAssessment(a) : isHeart ? handleDeleteHeartAssessment(a) : handleDeleteAssessment(a), destructive: true },
                               ]}
                             />
                           </div>
@@ -1269,7 +1267,7 @@ export default function Dashboard({ language }) {
                       </div>
                       {shareLinkMatch && (
                         <div className={`mt-2 p-2 rounded-lg border ${isCKD ? 'bg-cyan-500/10 border-cyan-500/20' : isHeart ? getRiskBadgeClasses(a.risk_level) : 'bg-violet-500/10 border-violet-500/20'}`}>
-                          <p className={`text-xs ${isCKD ? 'text-cyan-400' : isHeart ? '' : 'text-violet-400'}`}>{isTr ? 'Link kopyalandı:' : 'Link copied:'}</p>
+                          <p className={`text-xs ${isCKD ? 'text-cyan-400' : isHeart ? '' : 'text-violet-400'}`}>{isAr ? 'تم نسخ الرابط:' : isTr ? 'Link kopyalandı:' : 'Link copied:'}</p>
                           <p className={`text-xs break-all opacity-90 ${isCKD ? 'text-cyan-300' : isHeart ? '' : 'text-violet-300'}`}>{shareLink.link}</p>
                         </div>
                       )}
@@ -1285,12 +1283,12 @@ export default function Dashboard({ language }) {
       {activeTab === 'imaging' && (
         <section>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-white">{isTr ? 'G�r�nt�leme Ge�misi' : 'Imaging History'}</h2>
+            <h2 className="text-lg font-semibold text-white">{isAr ? 'تاريخ التصوير' : isTr ? 'G�r�nt�leme Ge�misi' : 'Imaging History'}</h2>
             <div className="flex flex-wrap gap-2 items-center">
               {brainMriAnalyses.length > 0 && (
                 <LiquidMetalButton onClick={() => { setImagingCompareMode(!imagingCompareMode); setImagingCompareIds([]); }} width={120} height={36}>
                   <GitCompare className="w-3.5 h-3.5" />
-                  {isTr ? 'Karşılaştır' : 'Compare'}
+                  {isAr ? 'مقارنة' : isTr ? 'Karşılaştır' : 'Compare'}
                 </LiquidMetalButton>
               )}
             </div>
@@ -1300,8 +1298,8 @@ export default function Dashboard({ language }) {
           {!loading && brainMriAnalyses.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {[
-                { id: 'all', labelEn: 'All', labelTr: 'Tümü', w: 72 },
-                { id: 'mri', labelEn: 'Brain MRI', labelTr: 'Beyin MRI', icon: <Brain className="w-3.5 h-3.5" />, w: 120 },
+                { id: 'all', labelEn: 'All', labelTr: 'Tümü', labelAr: 'All', w: 72 },
+                { id: 'mri', labelEn: 'Brain MRI', labelTr: 'Beyin MRI', labelAr: 'Brain MRI', icon: <Brain className="w-3.5 h-3.5" />, w: 120 },
               ].map(f => {
                 const active = imagingTypeFilter === f.id;
                 return (
@@ -1328,7 +1326,7 @@ export default function Dashboard({ language }) {
                     type="text"
                     value={imagingSearch}
                     onChange={(e) => setImagingSearch(e.target.value)}
-                    placeholder={isTr ? 'Ara (bulgular, ozet...)' : 'Search (findings, summary...)'}
+                    placeholder={isAr ? 'بحث (نتائج، ملخص...)' : isTr ? 'Ara (bulgular, ozet...)' : 'Search (findings, summary...)'}
                     className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
                   />
                 </div>
@@ -1344,13 +1342,13 @@ export default function Dashboard({ language }) {
                 <div className="flex flex-wrap gap-2 mb-4 items-center">
                   {imagingSearch && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/15 text-violet-300 text-xs border border-violet-500/25">
-                      {isTr ? 'Ara' : 'Search'}: {imagingSearch}
+                      {isAr ? 'بحث' : isTr ? 'Ara' : 'Search'}: {imagingSearch}
                       <button type="button" onClick={() => setImagingSearch('')} className="hover:bg-violet-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50"><X className="w-3 h-3" /></button>
                     </span>
                   )}
                   {(imagingDateFrom || imagingDateTo) && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-300 text-xs border border-blue-500/25">
-                      {isTr ? 'Tarih' : 'Date'}: {imagingDateFrom || '...'} � {imagingDateTo || '...'}
+                      {isAr ? 'التاريخ' : isTr ? 'Tarih' : 'Date'}: {imagingDateFrom || '...'} � {imagingDateTo || '...'}
                       <button type="button" onClick={() => { setImagingDateFrom(''); setImagingDateTo(''); }} className="hover:bg-blue-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"><X className="w-3 h-3" /></button>
                     </span>
                   )}
@@ -1366,14 +1364,14 @@ export default function Dashboard({ language }) {
           ) : combinedImagingAnalyses.length === 0 ? (
             <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
               <Brain className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-400">{isTr ? 'Henüz görüntüleme analizi yok.' : 'No imaging analyses recorded yet.'}</p>
+              <p className="text-gray-400">{isAr ? 'لم يتم تسجيل أي تحليلات تصوير بعد.' : isTr ? 'Henüz görüntüleme analizi yok.' : 'No imaging analyses recorded yet.'}</p>
             </div>
           ) : filteredImagingAnalyses.length === 0 ? (
             <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
               <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan analiz yok.' : 'No analyses match the filters.'}</p>
+              <p className="text-gray-400 mb-3">{isAr ? 'لا توجد تحليلات تطابق عوامل التصفية.' : isTr ? 'Filtreye uyan analiz yok.' : 'No analyses match the filters.'}</p>
               <button type="button" onClick={() => { setImagingSearch(''); setImagingDateFrom(''); setImagingDateTo(''); }} className="text-sm text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-lg px-3 py-1.5">
-                {isTr ? 'Filtreleri temizle' : 'Clear filters'}
+                {isAr ? 'مسح عوامل التصفية' : isTr ? 'Filtreleri temizle' : 'Clear filters'}
               </button>
             </div>
           ) : (
@@ -1381,7 +1379,7 @@ export default function Dashboard({ language }) {
               {/* Feature f6: Compare mode */}
               {imagingCompareMode && imagingCompareIds.length === 2 && comparedImagingAnalyses.length === 2 && (
                 <div className="mb-6 p-4 rounded-xl bg-white/[0.03] border border-violet-500/20">
-                  <h3 className="text-sm font-semibold mb-3 text-violet-400">{isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
+                  <h3 className="text-sm font-semibold mb-3 text-violet-400">{isAr ? 'مقارنة' : isTr ? 'Karşılaştırma' : 'Comparison'}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {comparedImagingAnalyses.map((a) => (
                       <div key={a.id} className="space-y-2">
@@ -1401,7 +1399,7 @@ export default function Dashboard({ language }) {
                 <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
                   <GitCompare className="w-5 h-5 text-amber-400 shrink-0" />
                   <p className="text-sm text-amber-200/90">
-                    {isTr ? 'Karşılaştırmak için 2 analiz seçin' : 'Select 2 analyses to compare'}
+                    {isAr ? 'حدد تحليلين للمقارنة' : isTr ? 'Karşılaştırmak için 2 analiz seçin' : 'Select 2 analyses to compare'}
                   </p>
                 </div>
               )}
@@ -1418,7 +1416,7 @@ export default function Dashboard({ language }) {
                       onKeyDown={!imagingCompareMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(ROUTES.BRAIN_MRI, { state: { assessment: a } }); } } : undefined}
                       role={!imagingCompareMode ? 'button' : undefined}
                       tabIndex={!imagingCompareMode ? 0 : undefined}
-                      aria-label={!imagingCompareMode ? (isTr ? 'MRI görüntüle' : 'View MRI') : undefined}
+                      aria-label={!imagingCompareMode ? (isAr ? 'عرض التصوير' : isTr ? 'MRI görüntüle' : 'View MRI') : undefined}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -1426,7 +1424,7 @@ export default function Dashboard({ language }) {
                             <button
                               onClick={(e) => { e.stopPropagation(); toggleImagingCompare(a.id); }}
                               className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition focus:outline-none focus:ring-2 focus:ring-violet-500/50 ${imagingCompareIds.includes(a.id) ? 'bg-violet-500 border-violet-500' : 'border-white/20 hover:border-violet-500/50'}`}
-                              aria-label={imagingCompareIds.includes(a.id) ? (isTr ? 'Çıkar' : 'Deselect') : (isTr ? 'Seç' : 'Select')}
+                              aria-label={imagingCompareIds.includes(a.id) ? (isAr ? 'إلغاء التحديد' : isTr ? 'Çıkar' : 'Deselect') : (isAr ? 'تحديد' : isTr ? 'Seç' : 'Select')}
                             >
                               {imagingCompareIds.includes(a.id) && <Check className="w-3 h-3 text-white" />}
                             </button>
@@ -1452,10 +1450,10 @@ export default function Dashboard({ language }) {
                             <AnimatedActionMenu
                               loading={pdfLoading === `bm-${a.id}` || deletingId === `bmr-${a.id}`}
                               items={[
-                                { label: isTr ? 'PDF İndir' : 'Download PDF', icon: <Download className="w-4 h-4" />, onClick: () => exportSignedMriPDF(a) },
+                                { label: isAr ? 'تنزيل PDF' : isTr ? 'PDF İndir' : 'Download PDF', icon: <Download className="w-4 h-4" />, onClick: () => exportSignedMriPDF(a) },
                                 { separator: true },
-                                { label: isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, destructive: true, onClick: async () => {
-                                  if (!window.confirm(isTr ? 'Bu kayıt silinsin mi?' : 'Delete this record?')) return;
+                                { label: isAr ? 'حذف' : isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, destructive: true, onClick: async () => {
+                                  if (!window.confirm(isAr ? 'هل تريد حذف هذا السجل؟' : isTr ? 'Bu kayıt silinsin mi?' : 'Delete this record?')) return;
                                   setDeletingId(`bmr-${a.id}`);
                                   try {
                                     await apiService.deleteBrainMriAnalysis(a.id);
@@ -1479,9 +1477,9 @@ export default function Dashboard({ language }) {
       {activeTab === 'diet-plans' && (
         <section>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-white">{isTr ? 'Diyet Planlarım' : 'My Diet Plans'}</h2>
+            <h2 className="text-lg font-semibold text-white">{isAr ? 'خطط النظام الغذائي الخاصة بي' : isTr ? 'Diyet Planlarım' : 'My Diet Plans'}</h2>
             <LiquidMetalButton onClick={() => navigate(ROUTES.DIET_PLAN)} width={130} height={36}>
-              {isTr ? 'Yeni plan' : 'New plan'} <ArrowRight className="w-3.5 h-3.5" />
+              {isAr ? 'خطة جديدة' : isTr ? 'Yeni plan' : 'New plan'} <ArrowRight className="w-3.5 h-3.5" />
             </LiquidMetalButton>
           </div>
 
@@ -1495,9 +1493,9 @@ export default function Dashboard({ language }) {
                     type="text"
                     value={dietPlanSearch}
                     onChange={(e) => setDietPlanSearch(e.target.value)}
-                    placeholder={isTr ? 'Ara (hedef, özet…)' : 'Search (goal, overview…)'}
+                    placeholder={isAr ? 'بحث (هدف، نظرة عامة...)' : isTr ? 'Ara (hedef, özet…)' : 'Search (goal, overview…)'}
                     className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
-                    aria-label={isTr ? 'Diyet planı ara' : 'Search diet plans'}
+                    aria-label={isAr ? 'البحث في خطط النظام الغذائي' : isTr ? 'Diyet planı ara' : 'Search diet plans'}
                   />
                 </div>
                 <DateRangePicker
@@ -1512,30 +1510,30 @@ export default function Dashboard({ language }) {
                 <div className="flex flex-wrap gap-2 mb-4 items-center">
                   {dietPlanSearch && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 text-xs border border-cyan-500/25">
-                      {isTr ? 'Ara' : 'Search'}: {dietPlanSearch}
-                      <button type="button" onClick={() => setDietPlanSearch('')} className="hover:bg-cyan-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      {isAr ? 'بحث' : isTr ? 'Ara' : 'Search'}: {dietPlanSearch}
+                      <button type="button" onClick={() => setDietPlanSearch('')} className="hover:bg-cyan-500/20 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isAr ? 'إزالة' : isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   {dietPlanDateFrom && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
-                      {isTr ? 'Başlangıç' : 'From'}: {dietPlanDateFrom}
-                      <button type="button" onClick={() => setDietPlanDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      {isAr ? 'من' : isTr ? 'Başlangıç' : 'From'}: {dietPlanDateFrom}
+                      <button type="button" onClick={() => setDietPlanDateFrom('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isAr ? 'إزالة' : isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   {dietPlanDateTo && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.08] text-gray-300 text-xs border border-white/[0.12]">
-                      {isTr ? 'Bitiş' : 'To'}: {dietPlanDateTo}
-                      <button type="button" onClick={() => setDietPlanDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isTr ? 'Kaldır' : 'Remove'}>
+                      {isAr ? 'إلى' : isTr ? 'Bitiş' : 'To'}: {dietPlanDateTo}
+                      <button type="button" onClick={() => setDietPlanDateTo('')} className="hover:bg-white/10 rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50" aria-label={isAr ? 'إزالة' : isTr ? 'Kaldır' : 'Remove'}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-xs text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded px-2 py-1">
-                    {isTr ? 'Filtreleri temizle' : 'Clear all'}
+                    {isAr ? 'مسح الكل' : isTr ? 'Filtreleri temizle' : 'Clear all'}
                   </button>
                 </div>
               )}
@@ -1563,15 +1561,15 @@ export default function Dashboard({ language }) {
             </div>
           ) : dietPlans.length === 0 ? (
             <div className="text-center py-14 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
-              <h3 className="text-white font-semibold mb-1">{isTr ? 'Henüz diyet planı yok' : 'No diet plans yet'}</h3>
-              <p className="text-gray-400 text-sm max-w-sm mx-auto">{isTr ? 'Yapay zeka destekli kişiselleştirilmiş diyet planlarınız burada görünecek.' : 'Your AI-generated personalized diet plans will appear here.'}</p>
+              <h3 className="text-white font-semibold mb-1">{isAr ? 'لا توجد خطط للنظام الغذائي بعد' : isTr ? 'Henüz diyet planı yok' : 'No diet plans yet'}</h3>
+              <p className="text-gray-400 text-sm max-w-sm mx-auto">{isAr ? 'ستظهر خطط النظام الغذائي المخصصة التي يتم إنشاؤها بواسطة الذكاء الاصطناعي هنا.' : isTr ? 'Yapay zeka destekli kişiselleştirilmiş diyet planlarınız burada görünecek.' : 'Your AI-generated personalized diet plans will appear here.'}</p>
             </div>
           ) : filteredDietPlans.length === 0 ? (
             <div className="text-center py-10 px-6 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02]">
               <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-400 mb-3">{isTr ? 'Filtreye uyan diyet planı yok.' : 'No diet plans match the filters.'}</p>
+              <p className="text-gray-400 mb-3">{isAr ? 'لا توجد خطط تطابق عوامل التصفية.' : isTr ? 'Filtreye uyan diyet planı yok.' : 'No diet plans match the filters.'}</p>
               <button type="button" onClick={() => { setDietPlanSearch(''); setDietPlanDateFrom(''); setDietPlanDateTo(''); }} className="text-sm text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-lg px-3 py-1.5">
-                {isTr ? 'Filtreleri temizle' : 'Clear filters'}
+                {isAr ? 'مسح عوامل التصفية' : isTr ? 'Filtreleri temizle' : 'Clear filters'}
               </button>
             </div>
           ) : (
@@ -1595,9 +1593,9 @@ export default function Dashboard({ language }) {
                         <AnimatedActionMenu
                           loading={deletingId === `d-${d.id}`}
                           items={[
-                            { label: isTr ? 'Planı görüntüle' : 'View plan', icon: <Eye className="w-4 h-4" />, onClick: () => navigate(`${ROUTES.DASHBOARD_DIET_PLAN}/${d.id}`, { state: { dietPlan: d } }) },
+                            { label: isAr ? 'عرض الخطة' : isTr ? 'Planı görüntüle' : 'View plan', icon: <Eye className="w-4 h-4" />, onClick: () => navigate(`${ROUTES.DASHBOARD_DIET_PLAN}/${d.id}`, { state: { dietPlan: d } }) },
                             ...(payload.grocery_list ? [{
-                              label: isTr ? 'Alışveriş Listesi' : 'Grocery List',
+                              label: isAr ? 'قائمة البقالة' : isTr ? 'Alışveriş Listesi' : 'Grocery List',
                               icon: <Download className="w-4 h-4" />,
                               onClick: () => {
                                 const text = typeof payload.grocery_list === 'string' ? payload.grocery_list : JSON.stringify(payload.grocery_list, null, 2);
@@ -1609,7 +1607,7 @@ export default function Dashboard({ language }) {
                               },
                             }] : []),
                             { separator: true },
-                            { label: isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, destructive: true, onClick: () => handleDeleteDietPlan(d) },
+                            { label: isAr ? 'حذف' : isTr ? 'Sil' : 'Delete', icon: <Trash2 className="w-4 h-4" />, destructive: true, onClick: () => handleDeleteDietPlan(d) },
                           ]}
                         />
                       </div>
@@ -1625,8 +1623,8 @@ export default function Dashboard({ language }) {
       {activeTab === 'subscription' && (
         <section className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">{isTr ? 'Aboneliğim' : 'My Plan'}</h2>
-            <p className="text-gray-400 text-sm mt-1">{isTr ? 'Mevcut planınızı görüntüleyin ve yönetin.' : 'Manage your current plan and access.'}</p>
+            <h2 className="text-xl font-semibold text-white tracking-tight">{isAr ? 'خطتي' : isTr ? 'Aboneliğim' : 'My Plan'}</h2>
+            <p className="text-gray-400 text-sm mt-1">{isAr ? 'إدارة خطتك الحالية وصلاحيات الوصول.' : isTr ? 'Mevcut planınızı görüntüleyin ve yönetin.' : 'Manage your current plan and access.'}</p>
           </div>
 
           {subscriptionConfirmError && (
@@ -1665,24 +1663,24 @@ export default function Dashboard({ language }) {
                           : 'bg-white/[0.1] text-gray-200 border border-white/[0.12]'
                       }`}>
                         {(user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly')
-                          ? (user.subscription_tier === 'pro_yearly' ? (isTr ? 'Pro (Yıllık) tier' : 'Pro (Yearly) tier') : (isTr ? 'Pro (Aylık) tier' : 'Pro (Monthly) tier'))
-                          : (isTr ? 'Ücretsiz tier' : 'Free tier')}
+                          ? (user.subscription_tier === 'pro_yearly' ? (isAr ? 'باقة برو (سنوية)' : isTr ? 'Pro (Yıllık) tier' : 'Pro (Yearly) tier') : (isAr ? 'باقة برو (شهرية)' : isTr ? 'Pro (Aylık) tier' : 'Pro (Monthly) tier'))
+                          : (isAr ? 'باقة مجانية' : isTr ? 'Ücretsiz tier' : 'Free tier')}
                       </span>
                       {user?.subscription_status === 'active' && (user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly') && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-500/15 text-violet-400 border border-violet-500/25">
-                          {isTr ? 'Aktif' : 'Active'}
+                          {isAr ? 'نشط' : isTr ? 'Aktif' : 'Active'}
                         </span>
                       )}
                     </div>
                     <p className="text-gray-400 text-sm mt-2">
                       {user?.subscription_status === 'active' && user?.current_period_end
-                        ? (isTr ? `Sonraki ödeme: ${new Date(user.current_period_end).toLocaleDateString()}` : `Next billing: ${new Date(user.current_period_end).toLocaleDateString()}`)
-                        : (isTr ? 'Tüm araçlar ücretsiz. İstediğiniz zaman Pro\'ya geçebilirsiniz.' : 'All tools are free. Upgrade to Pro anytime for early access to new features.')}
+                        ? (isAr ? `الفاتورة القادمة: ${new Date(user.current_period_end).toLocaleDateString()}` : isTr ? `Sonraki ödeme: ${new Date(user.current_period_end).toLocaleDateString()}` : `Next billing: ${new Date(user.current_period_end).toLocaleDateString()}`)
+                        : (isAr ? 'جميع الأدوات مجانية. قم بالترقية إلى برو في أي وقت للوصول المبكر إلى الميزات الجديدة.' : isTr ? 'Tüm araçlar ücretsiz. İstediğiniz zaman Pro\'ya geçebilirsiniz.' : 'All tools are free. Upgrade to Pro anytime for early access to new features.')}
                     </p>
                     {(user?.subscription_tier === 'pro_monthly' || user?.subscription_tier === 'pro_yearly') ? (
-                      <p className="text-violet-400/90 text-xs mt-1.5">{isTr ? 'Yeni özelliklere erken erişim.' : 'Early access to new features.'}</p>
+                      <p className="text-violet-400/90 text-xs mt-1.5">{isAr ? 'وصول مبكر إلى ميزات جديدة.' : isTr ? 'Yeni özelliklere erken erişim.' : 'Early access to new features.'}</p>
                     ) : (
-                      <p className="text-gray-500 text-xs mt-1.5">{isTr ? 'Assessment, Chat, Diyet, Ses ve daha fazlası.' : 'Assessment, Chat, Diet, Voice & more.'}</p>
+                      <p className="text-gray-500 text-xs mt-1.5">{isAr ? 'التقييم، المحادثة، النظام الغذائي، الصوت والمزيد.' : isTr ? 'Assessment, Chat, Diyet, Ses ve daha fazlası.' : 'Assessment, Chat, Diet, Voice & more.'}</p>
                     )}
                   </div>
                 </div>
@@ -1696,7 +1694,7 @@ export default function Dashboard({ language }) {
                           const { url } = await apiService.createPortalSession();
                           if (url) window.location.href = url;
                         } catch (err) {
-                          alert(err.message || (isTr ? 'Portal açılamadı.' : 'Could not open portal.'));
+                          alert(err.message || (isAr ? 'تعذر فتح البوابة.' : isTr ? 'Portal açılamadı.' : 'Could not open portal.'));
                         } finally {
                           setPortalLoading(false);
                         }
@@ -1705,12 +1703,12 @@ export default function Dashboard({ language }) {
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.1] hover:bg-white/[0.15] text-white text-sm font-medium border border-white/[0.15] transition focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                     >
                       {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                      {isTr ? 'Aboneliği yönet' : 'Manage subscription'}
+                      {isAr ? 'إدارة الاشتراك' : isTr ? 'Aboneliği yönet' : 'Manage subscription'}
                     </button>
                   ) : (
                     <LiquidMetalButton onClick={() => navigate(ROUTES.PRICING)} width={180}>
                       <Sparkles className="w-4 h-4" />
-                      {isTr ? "Pro'ya geç" : 'Upgrade to Pro'}
+                      {isAr ? "الترقية إلى برو" : isTr ? "Pro'ya geç" : 'Upgrade to Pro'}
                     </LiquidMetalButton>
                   )}
                 </div>
@@ -1752,6 +1750,7 @@ function AvatarPreview({ url, initials }) {
 
 function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleExportData, exporting }) {
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const fileInputRef = useRef(null);
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [preferredLanguage, setPreferredLanguage] = useState(user?.preferred_language || 'english');
@@ -1834,13 +1833,13 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       const next = !faceEnabled;
       await faceToggleEnabled(next);
       setFaceEnabled(next);
-      showMessage(next ? (isTr ? 'Yüz girişi açıldı.' : 'Face login enabled.') : (isTr ? 'Yüz girişi kapatıldı.' : 'Face login disabled.'));
+      showMessage(next ? (isAr ? 'تم تفعيل تسجيل الدخول بالوجه.' : isTr ? 'Yüz girişi açıldı.' : 'Face login enabled.') : (isAr ? 'تم إيقاف تسجيل الدخول بالوجه.' : isTr ? 'Yüz girişi kapatıldı.' : 'Face login disabled.'));
       // Refetch so UI stays in sync with server
       faceStatus().then((r) => { setHasFace(!!r.enrolled); setFaceEnabled(!!r.enabled); }).catch(() => {});
     } catch (e) {
       const msg = (e && e.message) || '';
       const is404 = /404|not enrolled/i.test(msg);
-      showMessage(is404 ? (isTr ? 'Yüz kaydı bulunamadı. Lütfen önce yüz kaydı oluşturun.' : 'Face login not set up. Set it up first.') : (msg || (isTr ? 'Ayar güncellenemedi.' : 'Could not update setting.')), 'error');
+      showMessage(is404 ? (isAr ? 'تسجيل الدخول بالوجه غير معد. قم بإعداده أولاً.' : isTr ? 'Yüz kaydı bulunamadı. Lütfen önce yüz kaydı oluşturun.' : 'Face login not set up. Set it up first.') : (msg || (isAr ? 'تعذر تحديث الإعداد.' : isTr ? 'Ayar güncellenemedi.' : 'Could not update setting.')), 'error');
       faceStatus().then((r) => { setHasFace(!!r.enrolled); setFaceEnabled(!!r.enabled); }).catch(() => {});
     } finally {
       setFaceToggleLoading(false);
@@ -1855,7 +1854,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       faceVideoRef.current.srcObject = stream;
       setFaceCameraActive(true);
     } catch (e) {
-      showMessage(e.message || (isTr ? 'Kamera erişilemedi.' : 'Camera access denied.'), 'error');
+      showMessage(e.message || (isAr ? 'تم رفض الوصول إلى الكاميرا.' : isTr ? 'Kamera erişilemedi.' : 'Camera access denied.'), 'error');
     }
   };
 
@@ -1866,7 +1865,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       const { getEnrollmentEmbedding } = await import('../utils/faceEmbedding');
       const embedding = await getEnrollmentEmbedding(faceVideoRef.current);
       if (!embedding || embedding.length === 0) {
-        showMessage(isTr ? 'Yüz algılanamadı. Işığı kontrol edip tekrar deneyin.' : 'No face detected. Check lighting and try again.', 'error');
+        showMessage(isAr ? 'لم يتم اكتشاف وجه. تحقق من الإضاءة وحاول مرة أخرى.' : isTr ? 'Yüz algılanamadı. Işığı kontrol edip tekrar deneyin.' : 'No face detected. Check lighting and try again.', 'error');
         setFaceEnrollLoading(false);
         return;
       }
@@ -1875,9 +1874,9 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       setFaceCameraActive(false);
       setFaceEnrollOpen(false);
       setHasFace(true);
-      showMessage(isTr ? 'Yüz kaydı tamamlandı.' : 'Face enrollment complete.');
+      showMessage(isAr ? 'تم اكتمال تسجيل الوجه.' : isTr ? 'Yüz kaydı tamamlandı.' : 'Face enrollment complete.');
     } catch (e) {
-      showMessage(e.message || (isTr ? 'Yüz kaydı başarısız.' : 'Face enrollment failed.'), 'error');
+      showMessage(e.message || (isAr ? 'فشل تسجيل الوجه.' : isTr ? 'Yüz kaydı başarısız.' : 'Face enrollment failed.'), 'error');
     } finally {
       setFaceEnrollLoading(false);
     }
@@ -1900,7 +1899,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
     e.preventDefault();
     const calorieNegative = calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0;
     if (calorieNegative) {
-      showMessage(isTr ? 'Lütfen negatif olmayan bir sayı girin.' : 'Please enter a positive number.', 'error');
+      showMessage(isAr ? 'الرجاء إدخال رقم موجب.' : isTr ? 'Lütfen negatif olmayan bir sayı girin.' : 'Please enter a positive number.', 'error');
       return;
     }
     setMessage('');
@@ -1914,9 +1913,9 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
         calorie_goal: calorieGoal ? parseInt(calorieGoal) : null,
       });
       await refreshUser();
-      showMessage(isTr ? 'Profil güncellendi.' : 'Profile updated.', 'success');
+      showMessage(isAr ? 'تم تحديث الملف الشخصي.' : isTr ? 'Profil güncellendi.' : 'Profile updated.', 'success');
     } catch (err) {
-      showMessage(err.message || (isTr ? 'Güncelleme başarısız.' : 'Update failed.'), 'error');
+      showMessage(err.message || (isAr ? 'فشل التحديث.' : isTr ? 'Güncelleme başarısız.' : 'Update failed.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -1932,9 +1931,9 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       if (setUserAvatar) setUserAvatar(url);
       await refreshUser();
       setShowAvatarEdit(false);
-      showMessage(isTr ? 'Profil fotoğrafı güncellendi.' : 'Profile picture updated.', 'success');
+      showMessage(isAr ? 'تم تحديث صورة الملف الشخصي.' : isTr ? 'Profil fotoğrafı güncellendi.' : 'Profile picture updated.', 'success');
     } catch (err) {
-      showMessage(err.message || (isTr ? 'Güncelleme başarısız.' : 'Update failed.'), 'error');
+      showMessage(err.message || (isAr ? 'فشل التحديث.' : isTr ? 'Güncelleme başarısız.' : 'Update failed.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -1949,9 +1948,9 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       setAvatarUrl('');
       setAvatarInput('');
       setShowAvatarEdit(false);
-      showMessage(isTr ? 'Profil fotoğrafı kaldırıldı.' : 'Profile picture removed.', 'success');
+      showMessage(isAr ? 'تمت إزالة صورة الملف الشخصي.' : isTr ? 'Profil fotoğrafı kaldırıldı.' : 'Profile picture removed.', 'success');
     } catch (err) {
-      showMessage(err.message || (isTr ? 'Kaldırma başarısız.' : 'Remove failed.'), 'error');
+      showMessage(err.message || (isAr ? 'فشل الإزالة.' : isTr ? 'Kaldırma başarısız.' : 'Remove failed.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -1967,9 +1966,9 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       if (setUserAvatar) setUserAvatar(dataUrl);
       await refreshUser();
       setShowAvatarEdit(false);
-      showMessage(isTr ? 'Avatar güncellendi.' : 'Avatar updated.', 'success');
+      showMessage(isAr ? 'تم تحديث الصورة الرمزية.' : isTr ? 'Avatar güncellendi.' : 'Avatar updated.', 'success');
     } catch (err) {
-      showMessage(err.message || (isTr ? 'Güncelleme başarısız.' : 'Update failed.'), 'error');
+      showMessage(err.message || (isAr ? 'فشل التحديث.' : isTr ? 'Güncelleme başarısız.' : 'Update failed.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -1989,9 +1988,9 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       if (setUserAvatar) setUserAvatar(url);
       await refreshUser();
       setShowAvatarEdit(false);
-      showMessage(isTr ? 'Profil fotoğrafı yüklendi.' : 'Profile picture uploaded.', 'success');
+      showMessage(isAr ? 'تم تحميل صورة الملف الشخصي.' : isTr ? 'Profil fotoğrafı yüklendi.' : 'Profile picture uploaded.', 'success');
     } catch (err) {
-      showMessage(err.message || (isTr ? 'Yükleme başarısız.' : 'Upload failed.'), 'error');
+      showMessage(err.message || (isAr ? 'فشل التحميل.' : isTr ? 'Yükleme başarısız.' : 'Upload failed.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -2001,17 +2000,17 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
     e.preventDefault();
     setMessage('');
     if (!currentPassword || !newPassword) {
-      showMessage(isTr ? 'Mevcut ve yeni şifre gerekli.' : 'Current and new password required.', 'error');
+      showMessage(isAr ? 'كلمة المرور الحالية والجديدة مطلوبة.' : isTr ? 'Mevcut ve yeni şifre gerekli.' : 'Current and new password required.', 'error');
       return;
     }
     setSaving(true);
     try {
       await apiService.changePassword(currentPassword, newPassword);
-      showMessage(isTr ? 'Şifre güncellendi.' : 'Password updated.', 'success');
+      showMessage(isAr ? 'تم تحديث كلمة المرور.' : isTr ? 'Şifre güncellendi.' : 'Password updated.', 'success');
       setCurrentPassword('');
       setNewPassword('');
     } catch (err) {
-      showMessage(err.message || (isTr ? 'Şifre güncellenemedi.' : 'Password update failed.'), 'error');
+      showMessage(err.message || (isAr ? 'فشل تحديث كلمة المرور.' : isTr ? 'Şifre güncellenemedi.' : 'Password update failed.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -2025,7 +2024,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       setTwoFAData(data);
       setShow2FA(true);
     } catch (err) {
-      showMessage(err.message || (isTr ? '2FA kurulumu başarısız.' : '2FA setup failed'), 'error');
+      showMessage(err.message || (isAr ? 'فشل إعداد المصادقة الثنائية' : isTr ? '2FA kurulumu başarısız.' : '2FA setup failed'), 'error');
     } finally {
       setTwoFALoading(false);
     }
@@ -2035,13 +2034,13 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
     setTwoFALoading(true);
     try {
       await apiService.verify2FA(twoFACode);
-      showMessage(isTr ? '2FA etkinleştirildi.' : '2FA enabled successfully.', 'success');
+      showMessage(isAr ? 'تم تفعيل المصادقة الثنائية بنجاح.' : isTr ? '2FA etkinleştirildi.' : '2FA enabled successfully.', 'success');
       setShow2FA(false);
       setTwoFACode('');
       setTwoFAData(null);
       refreshUser();
     } catch (err) {
-      showMessage(err.message || (isTr ? 'Doğrulama başarısız.' : 'Verification failed'), 'error');
+      showMessage(err.message || (isAr ? 'فشل التحقق' : isTr ? 'Doğrulama başarısız.' : 'Verification failed'), 'error');
     } finally {
       setTwoFALoading(false);
     }
@@ -2051,10 +2050,10 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
     setTwoFALoading(true);
     try {
       await apiService.disable2FA();
-      showMessage(isTr ? '2FA devre dışı bırakıldı.' : '2FA disabled.', 'success');
+      showMessage(isAr ? 'تم إيقاف المصادقة الثنائية.' : isTr ? '2FA devre dışı bırakıldı.' : '2FA disabled.', 'success');
       refreshUser();
     } catch (err) {
-      showMessage(err.message || (isTr ? '2FA devre dışı bırakılamadı.' : 'Failed to disable 2FA'), 'error');
+      showMessage(err.message || (isAr ? 'فشل في إيقاف المصادقة الثنائية' : isTr ? '2FA devre dışı bırakılamadı.' : 'Failed to disable 2FA'), 'error');
     } finally {
       setTwoFALoading(false);
     }
@@ -2104,7 +2103,7 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
             <div className="bg-[#0e0e0e] border border-white/[0.08] rounded-2xl shadow-2xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">{isTr ? 'Profil Fotoğrafı' : 'Profile Picture'}</h3>
+                <h3 className="text-lg font-semibold text-white">{isAr ? 'صورة الملف الشخصي' : isTr ? 'Profil Fotoğrafı' : 'Profile Picture'}</h3>
                 <button onClick={() => setShowAvatarEdit(false)} className="p-1 hover:bg-white/[0.05] rounded-lg">
                   <X className="w-5 h-5 text-gray-400" />
                 </button>
@@ -2122,24 +2121,24 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
               <div className="space-y-4">
                 <button type="button" onClick={() => fileInputRef.current?.click()} disabled={saving} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/[0.04] text-white/50 hover:bg-white/[0.07] hover:text-white/70 border border-white/[0.08] transition disabled:opacity-50">
                   <Upload className="w-5 h-5" />
-                  {isTr ? 'Bilgisayardan yükle' : 'Upload from computer'}
+                  {isAr ? 'تحميل من جهاز الكمبيوتر' : isTr ? 'Bilgisayardan yükle' : 'Upload from computer'}
                 </button>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Veya resim URL' : 'Or image URL'}</label>
+                  <label className="block text-sm text-gray-400 mb-1">{isAr ? 'أو رابط الصورة' : isTr ? 'Veya resim URL' : 'Or image URL'}</label>
                   <input type="url" value={avatarInput} onChange={(e) => setAvatarInput(e.target.value)} placeholder="https://example.com/photo.jpg" className="w-full px-4 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/20 focus:outline-none focus:border-white/20" />
                 </div>
                 <div className="flex gap-3">
                   {avatarUrl && (
                     <button onClick={handleRemoveAvatar} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 border border-red-500/20 transition">
-                      {isTr ? 'Kaldır' : 'Remove'}
+                      {isAr ? 'إزالة' : isTr ? 'Kaldır' : 'Remove'}
                     </button>
                   )}
                   <button onClick={() => setShowAvatarEdit(false)} className="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-white/[0.05] border border-white/[0.08] transition">
-                    {isTr ? 'İptal' : 'Cancel'}
+                    {isAr ? 'إلغاء' : isTr ? 'İptal' : 'Cancel'}
                   </button>
                   <button onClick={handleSaveAvatar} disabled={saving} className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-white/[0.08] hover:bg-white/[0.12] text-white/80 border border-white/[0.1] transition flex items-center justify-center gap-2">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    {isTr ? 'Kaydet' : 'Save'}
+                    {isAr ? 'حفظ' : isTr ? 'Kaydet' : 'Save'}
                   </button>
                 </div>
 
@@ -2153,42 +2152,43 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
 
       {/* Profile Form */}
       <form onSubmit={handleSaveProfile} className="space-y-4 max-w-md pb-8">
-        <h3 className="text-white font-medium">{isTr ? 'Profil bilgileri' : 'Profile info'}</h3>
+        <h3 className="text-white font-medium">{isAr ? 'معلومات الملف الشخصي' : isTr ? 'Profil bilgileri' : 'Profile info'}</h3>
         <div>
-          <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Ad Soyad' : 'Full name'}</label>
+          <label className="block text-sm text-gray-400 mb-1">{isAr ? 'الاسم الكامل' : isTr ? 'Ad Soyad' : 'Full name'}</label>
           <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
         </div>
         <div ref={langDropdownRef} className="relative">
-          <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Dil' : 'Language'}</label>
+          <label className="block text-sm text-gray-400 mb-1">{isAr ? 'اللغة' : isTr ? 'Dil' : 'Language'}</label>
           <button
             type="button"
             onClick={() => setLangDropdownOpen((o) => !o)}
             className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50 text-left"
           >
-            <span>{preferredLanguage === 'turkish' ? 'Türkçe' : 'English'}</span>
+            <span>{preferredLanguage === 'arabic' ? 'العربية' : preferredLanguage === 'turkish' ? 'Türkçe' : 'English'}</span>
             <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
           {langDropdownOpen && (
             <div className="absolute z-20 mt-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a2e] shadow-xl py-1">
               <button type="button" onClick={() => { setPreferredLanguage('english'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'english' ? 'bg-violet-500/20 text-violet-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>English</button>
               <button type="button" onClick={() => { setPreferredLanguage('turkish'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'turkish' ? 'bg-violet-500/20 text-violet-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>Türkçe</button>
+              <button type="button" onClick={() => { setPreferredLanguage('arabic'); setLangDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition ${preferredLanguage === 'arabic' ? 'bg-violet-500/20 text-violet-400' : 'text-gray-200 hover:bg-white/[0.06] hover:text-white'}`}>العربية</button>
             </div>
           )}
         </div>
 
         {/* Feature f8: Diet preferences */}
         <div className="pt-2">
-          <h3 className="text-white font-medium mb-3">{isTr ? 'Diyet Tercihleri' : 'Diet Preferences'}</h3>
+          <h3 className="text-white font-medium mb-3">{isAr ? 'تفضيلات النظام الغذائي' : isTr ? 'Diyet Tercihleri' : 'Diet Preferences'}</h3>
           <div className="space-y-4">
             <div ref={dietDropdownRef} className="relative">
-              <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Diyet tipi' : 'Dietary preference'}</label>
+              <label className="block text-sm text-gray-400 mb-1">{isAr ? 'التفضيل الغذائي' : isTr ? 'Diyet tipi' : 'Dietary preference'}</label>
               <button
                 type="button"
                 onClick={() => setDietDropdownOpen((o) => !o)}
                 className="w-full flex items-center justify-between pl-4 pr-3 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50 text-left"
               >
                 <span className={dietPref ? 'text-white' : 'text-gray-500'}>
-                  {dietPref === 'balanced' ? (isTr ? 'Dengeli' : 'Balanced') : dietPref === 'vegetarian' ? (isTr ? 'Vejetaryen' : 'Vegetarian') : dietPref === 'vegan' ? 'Vegan' : dietPref === 'mediterranean' ? (isTr ? 'Akdeniz' : 'Mediterranean') : dietPref === 'low_carb' ? (isTr ? 'Düşük Karbonhidrat' : 'Low Carb') : dietPref === 'diabetic_friendly' ? (isTr ? 'Diyabet Dostu' : 'Diabetic Friendly') : (isTr ? 'Seçin...' : 'Select...')}
+                  {dietPref === 'balanced' ? (isAr ? 'متوازن' : isTr ? 'Dengeli' : 'Balanced') : dietPref === 'vegetarian' ? (isAr ? 'نباتي' : isTr ? 'Vejetaryen' : 'Vegetarian') : dietPref === 'vegan' ? 'Vegan' : dietPref === 'mediterranean' ? (isAr ? 'البحر الأبيض المتوسط' : isTr ? 'Akdeniz' : 'Mediterranean') : dietPref === 'low_carb' ? (isAr ? 'منخفض الكربوهيدرات' : isTr ? 'Düşük Karbonhidrat' : 'Low Carb') : dietPref === 'diabetic_friendly' ? (isAr ? 'مناسب لمرضى السكري' : isTr ? 'Diyabet Dostu' : 'Diabetic Friendly') : (isAr ? 'اختر...' : isTr ? 'Seçin...' : 'Select...')}
                 </span>
                 <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${dietDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -2216,46 +2216,46 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
               )}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Alerjiler / kısıtlamalar' : 'Allergies / restrictions'}</label>
-              <input type="text" value={allergies} onChange={(e) => setAllergies(e.target.value)} placeholder={isTr ? 'örn. glüten, laktoz' : 'e.g. gluten, lactose'} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/50" />
+              <label className="block text-sm text-gray-400 mb-1">{isAr ? 'الحساسية / القيود' : isTr ? 'Alerjiler / kısıtlamalar' : 'Allergies / restrictions'}</label>
+              <input type="text" value={allergies} onChange={(e) => setAllergies(e.target.value)} placeholder={isAr ? 'مثال: الغلوتين، اللاكتوز' : isTr ? 'örn. glüten, laktoz' : 'e.g. gluten, lactose'} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Günlük kalori hedefi' : 'Daily calorie goal'}</label>
-              <input type="number" value={calorieGoal} onChange={(e) => setCalorieGoal(e.target.value)} placeholder={isTr ? 'örn. 2000' : 'e.g. 2000'} className={`w-full px-4 py-2 rounded-lg bg-white/[0.05] border text-white placeholder-gray-500 focus:outline-none ${calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-violet-500/50'}`} />
-              {calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 && <p className="text-[11px] text-red-400 font-medium mt-1">{isTr ? 'Lütfen negatif olmayan bir sayı girin.' : 'Please enter a positive number.'}</p>}
+              <label className="block text-sm text-gray-400 mb-1">{isAr ? 'الهدف اليومي للسعرات' : isTr ? 'Günlük kalori hedefi' : 'Daily calorie goal'}</label>
+              <input type="number" value={calorieGoal} onChange={(e) => setCalorieGoal(e.target.value)} placeholder={isAr ? 'مثال: 2000' : isTr ? 'örn. 2000' : 'e.g. 2000'} className={`w-full px-4 py-2 rounded-lg bg-white/[0.05] border text-white placeholder-gray-500 focus:outline-none ${calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-violet-500/50'}`} />
+              {calorieGoal !== '' && !isNaN(parseInt(calorieGoal)) && parseInt(calorieGoal) < 0 && <p className="text-[11px] text-red-400 font-medium mt-1">{isAr ? 'الرجاء إدخال رقم موجب.' : isTr ? 'Lütfen negatif olmayan bir sayı girin.' : 'Please enter a positive number.'}</p>}
             </div>
           </div>
         </div>
 
         <div className="pt-4">
           <LiquidMetalButton type="submit" disabled={saving} width={120}>
-            {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Kaydediliyor…' : 'Saving…'}</> : (isTr ? 'Kaydet' : 'Save')}
+            {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> {isAr ? 'جارِ الحفظ...' : isTr ? 'Kaydediliyor…' : 'Saving…'}</> : (isAr ? 'حفظ' : isTr ? 'Kaydet' : 'Save')}
           </LiquidMetalButton>
         </div>
       </form>
 
       {/* Face login: full control */}
       <div className="space-y-4 max-w-md pt-8 pb-4">
-        <h3 className="text-white font-medium">{isTr ? 'Yüz ile giriş' : 'Face login'}</h3>
+        <h3 className="text-white font-medium">{isAr ? 'تسجيل الدخول بالوجه' : isTr ? 'Yüz ile giriş' : 'Face login'}</h3>
         <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-4">
           <div className="flex items-center gap-2">
             <ScanFace className="w-5 h-5 text-violet-400 shrink-0" />
-            <span className="text-gray-300">{isTr ? 'Giriş sayfasında yüzünüzle otomatik giriş yapın.' : 'Sign in on the login page with your face.'}</span>
+            <span className="text-gray-300">{isAr ? 'سجل الدخول في صفحة تسجيل الدخول باستخدام وجهك.' : isTr ? 'Giriş sayfasında yüzünüzle otomatik giriş yapın.' : 'Sign in on the login page with your face.'}</span>
           </div>
           {!hasFace ? (
             <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-4 py-2 rounded-lg bg-violet-500/20 text-violet-400 border border-violet-500/30 text-sm font-medium hover:bg-violet-500/25 transition">
-              {isTr ? 'Yüz kaydı oluştur' : 'Set up face login'}
+              {isAr ? 'إعداد تسجيل الدخول بالوجه' : isTr ? 'Yüz kaydı oluştur' : 'Set up face login'}
             </button>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
               <span className={`text-sm px-2.5 py-1 rounded-lg ${faceEnabled ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' : 'bg-white/[0.06] text-gray-400 border border-white/[0.08]'}`}>
-                {faceEnabled ? (isTr ? 'Açık' : 'On') : (isTr ? 'Kapalı' : 'Off')}
+                {faceEnabled ? (isAr ? 'تشغيل' : isTr ? 'Açık' : 'On') : (isAr ? 'إيقاف' : isTr ? 'Kapalı' : 'Off')}
               </span>
               <button type="button" onClick={handleFaceToggle} disabled={faceToggleLoading} className="px-3 py-1.5 rounded-lg bg-white/[0.06] text-gray-300 hover:text-white border border-white/[0.08] text-sm font-medium disabled:opacity-50 transition">
-                {faceToggleLoading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : (faceEnabled ? (isTr ? 'Kapat' : 'Turn off') : (isTr ? 'Aç' : 'Turn on'))}
+                {faceToggleLoading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : (faceEnabled ? (isAr ? 'إيقاف التشغيل' : isTr ? 'Kapat' : 'Turn off') : (isAr ? 'تشغيل' : isTr ? 'Aç' : 'Turn on'))}
               </button>
               <button type="button" onClick={() => setFaceEnrollOpen(true)} className="px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-400 border border-violet-500/30 text-sm font-medium hover:bg-violet-500/25 transition">
-                {isTr ? 'Yüz taramasını güncelle' : 'Update face scan'}
+                {isAr ? 'تحديث مسح الوجه' : isTr ? 'Yüz taramasını güncelle' : 'Update face scan'}
               </button>
             </div>
           )}
@@ -2263,11 +2263,11 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
       </div>
 
       {faceEnrollOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={isTr ? 'Yüz kaydı' : 'Face enrollment'}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={isAr ? 'تسجيل الوجه' : isTr ? 'Yüz kaydı' : 'Face enrollment'}>
           <div className="rounded-2xl bg-[#0c0c14] border border-white/10 p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">{isTr ? 'Yüzünüzü kaydedin' : 'Set up face login'}</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">{isAr ? 'إعداد تسجيل الدخول بالوجه' : isTr ? 'Yüzünüzü kaydedin' : 'Set up face login'}</h3>
             <p className="text-sm text-gray-500 mb-4">
-              {isTr ? 'Kamerayı açın, kameraya bakın ve Kaydet\'e tıklayın.' : 'Start camera, look at it, then click Capture. First time may take a few seconds.'}
+              {isAr ? 'قم بتشغيل الكاميرا، انظر إليها، ثم انقر فوق التقاط. قد تستغرق المرة الأولى بضع ثوانٍ.' : isTr ? 'Kamerayı açın, kameraya bakın ve Kaydet\'e tıklayın.' : 'Start camera, look at it, then click Capture. First time may take a few seconds.'}
             </p>
             <div className="relative rounded-xl overflow-hidden bg-black aspect-video mb-4">
               <video ref={faceVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
@@ -2275,15 +2275,15 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
             <div className="flex gap-2">
               {!faceCameraActive ? (
                 <button type="button" onClick={startFaceEnrollCamera} className="flex-1 py-2.5 rounded-xl bg-violet-500/20 text-violet-400 border border-violet-500/30">
-                  {isTr ? 'Kamerayı aç' : 'Start camera'}
+                  {isAr ? 'تشغيل الكاميرا' : isTr ? 'Kamerayı aç' : 'Start camera'}
                 </button>
               ) : (
                 <button type="button" onClick={captureAndEnrollFace} disabled={faceEnrollLoading} className="flex-1 py-2.5 rounded-xl bg-violet-500 text-white font-medium disabled:opacity-50">
-                  {faceEnrollLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (isTr ? 'Kaydet' : 'Capture')}
+                  {faceEnrollLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (isAr ? 'التقاط' : isTr ? 'Kaydet' : 'Capture')}
                 </button>
               )}
               <button type="button" onClick={closeFaceEnroll} className="py-2.5 px-4 rounded-xl border border-white/20 text-gray-400 hover:text-white">
-                {isTr ? 'İptal' : 'Cancel'}
+                {isAr ? 'إلغاء' : isTr ? 'İptal' : 'Cancel'}
               </button>
             </div>
           </div>
@@ -2292,50 +2292,50 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
 
       {/* Password Form */}
       <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-        <h3 className="text-white font-medium">{isTr ? 'Şifre değiştir' : 'Change password'}</h3>
+        <h3 className="text-white font-medium">{isAr ? 'تغيير كلمة المرور' : isTr ? 'Şifre değiştir' : 'Change password'}</h3>
         <div>
-          <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Mevcut şifre' : 'Current password'}</label>
+          <label className="block text-sm text-gray-400 mb-1">{isAr ? 'كلمة المرور الحالية' : isTr ? 'Mevcut şifre' : 'Current password'}</label>
           <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Yeni şifre' : 'New password'}</label>
+          <label className="block text-sm text-gray-400 mb-1">{isAr ? 'كلمة المرور الجديدة' : isTr ? 'Yeni şifre' : 'New password'}</label>
           <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
         </div>
         <LiquidMetalButton type="submit" disabled={saving} width={180}>
-          {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Güncelleniyor…' : 'Updating…'}</> : (isTr ? 'Şifreyi güncelle' : 'Update password')}
+          {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> {isAr ? 'جارِ التحديث...' : isTr ? 'Güncelleniyor…' : 'Updating…'}</> : (isAr ? 'تحديث كلمة المرور' : isTr ? 'Şifreyi güncelle' : 'Update password')}
         </LiquidMetalButton>
       </form>
 
       {/* Feature f15: 2FA Section */}
       <div className="space-y-3 max-w-md">
-        <h3 className="text-white font-medium">{isTr ? 'İki Aşamalı Doğrulama' : 'Two-Factor Authentication'}</h3>
-        <p className="text-sm text-gray-500">{isTr ? 'Hesabınıza ek güvenlik katmanı ekleyin.' : 'Add an extra layer of security to your account.'}</p>
+        <h3 className="text-white font-medium">{isAr ? 'المصادقة الثنائية (2FA)' : isTr ? 'İki Aşamalı Doğrulama' : 'Two-Factor Authentication'}</h3>
+        <p className="text-sm text-gray-500">{isAr ? 'أضف طبقة إضافية من الأمان إلى حسابك.' : isTr ? 'Hesabınıza ek güvenlik katmanı ekleyin.' : 'Add an extra layer of security to your account.'}</p>
         {user?.totp_enabled ? (
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
               <Shield className="w-4 h-4 text-violet-400" />
-              <span className="text-sm text-violet-400">{isTr ? '2FA Etkin' : '2FA Enabled'}</span>
+              <span className="text-sm text-violet-400">{isAr ? 'المصادقة الثنائية مفعلة' : isTr ? '2FA Etkin' : '2FA Enabled'}</span>
             </div>
             <button onClick={handle2FADisable} disabled={twoFALoading} className="px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 border border-red-500/20 transition">
-              {isTr ? 'Kapat' : 'Disable'}
+              {isAr ? 'تعطيل' : isTr ? 'Kapat' : 'Disable'}
             </button>
           </div>
         ) : (
           <>
             <button onClick={handle2FASetup} disabled={twoFALoading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.05] text-white hover:bg-white/[0.08] border border-white/[0.08] transition">
               {twoFALoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-              {isTr ? '2FA Etkinleştir' : 'Enable 2FA'}
+              {isAr ? 'تفعيل المصادقة الثنائية' : isTr ? '2FA Etkinleştir' : 'Enable 2FA'}
             </button>
             {show2FA && twoFAData && (
               <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-3">
-                <p className="text-sm text-gray-400">{isTr ? 'Google Authenticator, Microsoft Authenticator veya Authy gibi bir uygulamada bu gizli anahtarı ekleyin:' : 'Use any TOTP app (e.g. Google Authenticator, Microsoft Authenticator, or Authy) and add this secret key:'}</p>
+                <p className="text-sm text-gray-400">{isAr ? 'استخدم أي تطبيق TOTP (مثل Google Authenticator أو Authy) وأضف هذا المفتاح السري:' : isTr ? 'Google Authenticator, Microsoft Authenticator veya Authy gibi bir uygulamada bu gizli anahtarı ekleyin:' : 'Use any TOTP app (e.g. Google Authenticator, Microsoft Authenticator, or Authy) and add this secret key:'}</p>
                 <code className="block p-2 rounded-lg bg-white/[0.05] text-violet-400 text-xs break-all">{twoFAData.secret}</code>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">{isTr ? 'Doğrulama kodu' : 'Verification code'}</label>
+                  <label className="block text-sm text-gray-400 mb-1">{isAr ? 'رمز التحقق' : isTr ? 'Doğrulama kodu' : 'Verification code'}</label>
                   <div className="flex gap-2">
                     <input type="text" value={twoFACode} onChange={(e) => setTwoFACode(e.target.value)} placeholder="000000" maxLength={6} className="flex-1 px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white focus:outline-none focus:border-violet-500/50" />
                     <button onClick={handle2FAVerify} disabled={twoFALoading || twoFACode.length < 6} className="px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium disabled:opacity-50 transition">
-                      {isTr ? 'Doğrula' : 'Verify'}
+                      {isAr ? 'تحقق' : isTr ? 'Doğrula' : 'Verify'}
                     </button>
                   </div>
                 </div>
@@ -2347,11 +2347,11 @@ function DashboardProfile({ language, user, refreshUser, setUserAvatar, handleEx
 
       {/* Feature f11: Export my data */}
       <div className="space-y-3 max-w-md">
-        <h3 className="text-white font-medium">{isTr ? 'Verilerim' : 'My Data'}</h3>
-        <p className="text-sm text-gray-500">{isTr ? 'Profilinizi, değerlendirmelerinizi ve diyet planlarınızı indirin.' : 'Download your profile, assessments, and diet plans.'}</p>
+        <h3 className="text-white font-medium">{isAr ? 'بياناتي' : isTr ? 'Verilerim' : 'My Data'}</h3>
+        <p className="text-sm text-gray-500">{isAr ? 'قم بتنزيل ملفك الشخصي وتقييماتك وخطط النظام الغذائي الخاصة بك.' : isTr ? 'Profilinizi, değerlendirmelerinizi ve diyet planlarınızı indirin.' : 'Download your profile, assessments, and diet plans.'}</p>
         <button onClick={handleExportData} disabled={exporting} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.05] text-white hover:bg-white/[0.08] border border-white/[0.08] transition disabled:opacity-50">
           {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          {isTr ? 'Verilerimi İndir' : 'Download My Data'}
+          {isAr ? 'تنزيل بياناتي' : isTr ? 'Verilerimi İndir' : 'Download My Data'}
         </button>
       </div>
 

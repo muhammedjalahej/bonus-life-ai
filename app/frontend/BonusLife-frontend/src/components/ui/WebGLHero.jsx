@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { useUXSettings } from '../../context/UXSettingsContext';
 
 /* ── WebGL rainbow-wave background ── */
 function WebGLCanvas() {
@@ -110,8 +111,10 @@ function WebGLCanvas() {
 }
 
 /* ── Hero overlay content ── */
-export function WebGLHero({ language }) {
+export default function WebGLHero({ language }) {
+  const isAr = language === 'arabic';
   const isTr = language === 'turkish';
+  const { theme } = useUXSettings();
 
   return (
     <div
@@ -165,7 +168,7 @@ export function WebGLHero({ language }) {
             color: '#fff',
             fontFamily: "'Figtree','Inter',sans-serif",
             letterSpacing: '-0.02em',
-            textShadow: '0 0 40px rgba(255,255,255,0.6)',
+            textShadow: theme === 'light' ? 'none' : '0 0 40px rgba(255,255,255,0.6)',
           }}
         >
           Bonus Life AI
@@ -182,8 +185,10 @@ export function WebGLHero({ language }) {
             fontFamily: "'Figtree','Inter',sans-serif",
           }}
         >
-          {isTr
-            ? 'Diyabet, kalp hastalığı ve böbrek sağlığı için klinik kaliteli yapay zeka risk değerlendirmeleri. Ücretsiz, anında, gizli.'
+          {isAr
+            ? 'تقييمات مخاطر بالذكاء الاصطناعي للسكري وأمراض القلب وصحة الكلى. مجاني، فوري، وخاص.'
+            : isTr
+            ? 'Diyabet, kalp hastalığı ve böbrek sağlığı için klinik kaliteli yapay zeka risk değerlendirmeleri. Ücretsiz, anlık, gizli.'
             : 'Clinical-grade AI risk assessments for diabetes, heart disease, and kidney health. Free, instant, private.'}
         </p>
 

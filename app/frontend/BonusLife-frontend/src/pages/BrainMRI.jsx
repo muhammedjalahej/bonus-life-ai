@@ -35,6 +35,7 @@ function TumorProbBar({ label, value, active }) {
 
 export default function BrainMRI({ language }) {
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -144,7 +145,7 @@ export default function BrainMRI({ language }) {
               className="inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:text-violet-400"
               style={{ color: '#A78BFA' }}>
               <ChevronLeft className="w-5 h-5" />
-              {isTr ? 'Görüntüleme Geçmişine Dön' : 'Back to Imaging History'}
+              {isAr ? 'العودة لتاريخ التصوير' : isTr ? 'Görüntüleme Geçmişine Dön' : 'Back to Imaging History'}
             </Link>
           </div>
         )}

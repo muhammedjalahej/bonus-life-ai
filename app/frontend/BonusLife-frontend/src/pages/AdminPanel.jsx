@@ -34,6 +34,7 @@ import {
 /* ===================== REUSABLE COMPONENTS ===================== */
 
 function Toast({ message, type, onClose }) {
+  const isAr = localStorage.getItem('language') === 'arabic';
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
   useEffect(() => { haptic(type === 'error' ? 'error' : 'success'); }, [type]);
   const colors = { success: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-600', error: 'bg-red-500/20 border-red-500/30 text-red-400', info: 'bg-blue-500/20 border-blue-500/30 text-blue-400' };
@@ -48,6 +49,7 @@ function Toast({ message, type, onClose }) {
 }
 
 function Modal({ isOpen, onClose, title, children, width = 'max-w-md' }) {
+  const isAr = localStorage.getItem('language') === 'arabic';
   const titleId = useId();
   const containerRef = useFocusTrap(isOpen, onClose);
   useEffect(() => {
@@ -81,6 +83,7 @@ function Modal({ isOpen, onClose, title, children, width = 'max-w-md' }) {
 }
 
 function UserAvatar({ user, size = 'sm' }) {
+  const isAr = localStorage.getItem('language') === 'arabic';
   const s = size === 'sm' ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm';
   if (user.avatar_url) return <img src={getAvatarUrl(user.avatar_url)} alt="" className={`${s} rounded-full object-cover`} />;
   const i = (user.full_name || user.email || '?').slice(0, 2).toUpperCase();
@@ -88,6 +91,7 @@ function UserAvatar({ user, size = 'sm' }) {
 }
 
 function StatsSkeleton() {
+  const isAr = localStorage.getItem('language') === 'arabic';
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {[1, 2, 3].map(i => (
@@ -101,6 +105,7 @@ function StatsSkeleton() {
 
 /* ── Interactive Growth Chart ── */
 function GrowthChart({ userRaw, assessRaw }) {
+  const isAr = localStorage.getItem('language') === 'arabic';
   const [hovered, setHovered] = useState(null); // index
   const svgRef = useRef(null);
 
@@ -158,15 +163,15 @@ function GrowthChart({ userRaw, assessRaw }) {
     <>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-sm font-semibold text-gray-900">User Growth</p>
-          <p className="text-xs text-gray-400 mt-0.5">Registrations & assessments — last 30 days</p>
+          <p className="text-sm font-semibold text-gray-900">{isAr ? 'نمو المستخدمين' : 'User Growth'}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{isAr ? 'التسجيلات والتقييمات — آخر 30 يوماً' : 'Registrations & assessments — last 30 days'}</p>
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="w-4 h-0.5 rounded-full bg-indigo-500 inline-block" /> Users <span className="font-semibold text-indigo-600">+{totalNewUsers}</span>
+            <span className="w-4 h-0.5 rounded-full bg-indigo-500 inline-block" />{isAr ? 'المستخدمون' : 'Users'}<span className="font-semibold text-indigo-600">+{totalNewUsers}</span>
           </span>
           <span className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="w-4 h-0.5 rounded-full bg-emerald-400 inline-block" style={{ borderTop: '2px dashed #34d399', background: 'none', height: 0 }} /> Tests <span className="font-semibold text-emerald-600">+{totalNewAssess}</span>
+            <span className="w-4 h-0.5 rounded-full bg-emerald-400 inline-block" style={{ borderTop: '2px dashed #34d399', background: 'none', height: 0 }} />{isAr ? 'الاختبارات' : 'Tests'}<span className="font-semibold text-emerald-600">+{totalNewAssess}</span>
           </span>
         </div>
       </div>
@@ -242,12 +247,12 @@ function GrowthChart({ userRaw, assessRaw }) {
                 <div className="flex flex-col gap-0.5">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />
-                    <span className="text-white/60">New users</span>
+                    <span className="text-white/60">{isAr ? 'مستخدمون جدد' : 'New users'}</span>
                     <span className="font-bold ml-auto pl-4">{userPts[h].count}</span>
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                    <span className="text-white/60">Assessments</span>
+                    <span className="text-white/60">{isAr ? 'التقييمات' : 'Assessments'}</span>
                     <span className="font-bold ml-auto pl-4">{assessPts[h].count}</span>
                   </span>
                 </div>
@@ -271,6 +276,7 @@ function GrowthChart({ userRaw, assessRaw }) {
 
 /* Custom dropdown to replace native <select> */
 function Dropdown({ value, onChange, options, className = '' }) {
+  const isAr = localStorage.getItem('language') === 'arabic';
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const selected = options.find(o => o.value === value);
@@ -308,7 +314,8 @@ function Dropdown({ value, onChange, options, className = '' }) {
 
 /* Simple bar chart with optional sonification on hover */
 function MiniBarChart({ data, color = 'emerald', label }) {
-  if (!data || data.length === 0) return <p className="text-gray-500 text-sm">No data</p>;
+  const isAr = localStorage.getItem('language') === 'arabic';
+  if (!data || data.length === 0) return <p className="text-gray-500 text-sm">{isAr ? 'لا توجد بيانات' : 'No data'}</p>;
   const sliced = data.slice(-14);
   const max = Math.max(...data.map(d => d.count), 1);
   return (
@@ -338,7 +345,8 @@ function MiniBarChart({ data, color = 'emerald', label }) {
 
 /* Risk pie-like display with sonification on hover */
 function RiskDistribution({ data }) {
-  if (!data || data.length === 0) return <p className="text-gray-500 text-sm">No data</p>;
+  const isAr = localStorage.getItem('language') === 'arabic';
+  if (!data || data.length === 0) return <p className="text-gray-500 text-sm">{isAr ? 'لا توجد بيانات' : 'No data'}</p>;
   const total = data.reduce((s, d) => s + d.count, 0) || 1;
   const getColor = (level) => {
     const l = (level || '').toLowerCase();
@@ -349,7 +357,7 @@ function RiskDistribution({ data }) {
   };
   return (
     <div className="space-y-2.5">
-      <p className="text-xs text-gray-500 mb-3 font-medium uppercase tracking-wider">Risk Level Distribution</p>
+      <p className="text-xs text-gray-500 mb-3 font-medium uppercase tracking-wider">{isAr ? 'توزيع مستوى الخطر' : 'Risk Level Distribution'}</p>
       {data.map((d, idx) => {
         const { bar, text } = getColor(d.level);
         return (
@@ -375,6 +383,7 @@ function RiskDistribution({ data }) {
 
 export default function AdminPanel({ language }) {
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -761,11 +770,11 @@ export default function AdminPanel({ language }) {
   /* ===================== RENDER ===================== */
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: BarChart3 },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'assessments', label: 'Assessments', icon: FileText },
-    { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'overview', label: isAr ? 'نظرة عامة' : 'Overview', icon: BarChart3 },
+    { id: 'users', label: isAr ? 'المستخدمون' : 'Users', icon: Users },
+    { id: 'assessments', label: isAr ? 'التقييمات' : 'Assessments', icon: FileText },
+    { id: 'subscriptions', label: isAr ? 'الاشتراكات' : 'Subscriptions', icon: CreditCard },
+    { id: 'settings', label: isAr ? 'الإعدادات' : 'Settings', icon: Settings },
   ];
 
   return (
@@ -775,8 +784,8 @@ export default function AdminPanel({ language }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
-          <p className="text-gray-600 text-xs mt-0.5">Manage users, data, and platform settings</p>
+          <h1 className="text-xl font-bold text-gray-900">{isAr ? 'لوحة المسؤول' : 'Admin Panel'}</h1>
+          <p className="text-gray-600 text-xs mt-0.5">{isAr ? 'إدارة المستخدمين والبيانات وإعدادات المنصة' : 'Manage users, data, and platform settings'}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={fetchTab} disabled={loading} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 transition">
@@ -846,7 +855,7 @@ export default function AdminPanel({ language }) {
               </div>
               {/* Name + meta */}
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-semibold mb-0.5">Admin Dashboard</p>
+                <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-semibold mb-0.5">{isAr ? 'لوحة تحكم المسؤول' : 'Admin Dashboard'}</p>
                 <h2 className="text-sm font-semibold text-white/90 truncate leading-snug">{user?.full_name || user?.email || 'Admin'}</h2>
                 <p className="text-white/30 text-[11px] truncate">{user?.email}</p>
               </div>
@@ -906,10 +915,10 @@ export default function AdminPanel({ language }) {
               {/* Assessment Mix */}
               <div className="p-5 rounded-2xl bg-white border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-semibold text-gray-900">Assessment Mix</p>
-                  <button onClick={() => setActiveTab('assessments')} className="text-[11px] text-gray-400 hover:text-gray-700 transition">View all →</button>
+                  <p className="text-sm font-semibold text-gray-900">{isAr ? 'مزيج التقييمات' : 'Assessment Mix'}</p>
+                  <button onClick={() => setActiveTab('assessments')} className="text-[11px] text-gray-400 hover:text-gray-700 transition">{isAr ? 'عرض الكل ←' : 'View all →'}</button>
                 </div>
-                <p className="text-xs text-gray-400 mb-4">Breakdown of submissions by test type</p>
+                <p className="text-xs text-gray-400 mb-4">{isAr ? 'تفصيل التقييمات حسب نوع الاختبار' : 'Breakdown of submissions by test type'}</p>
                 {(() => {
                   const types = [
                     { l: 'Diabetes', v: stats?.total_assessments ?? 0, color: '#6366f1', bg: 'bg-indigo-50', text: 'text-indigo-600', filter: 'diabetes', icon: FileText },
@@ -946,7 +955,7 @@ export default function AdminPanel({ language }) {
                         </button>
                       ))}
                       <div className="pt-2 mt-1 border-t border-gray-50 flex justify-between items-center px-2">
-                        <span className="text-[11px] text-gray-400">Total submissions</span>
+                        <span className="text-[11px] text-gray-400">{isAr ? 'إجمالي التقييمات' : 'Total submissions'}</span>
                         <span className="text-sm font-bold text-gray-700">{total}</span>
                       </div>
                     </div>
@@ -957,8 +966,8 @@ export default function AdminPanel({ language }) {
               {/* Recent Activity */}
               <div className="p-4 rounded-2xl bg-white border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-gray-700">Recent Activity</p>
-                  <button onClick={() => setActiveTab('assessments')} className="text-[10px] text-gray-300 hover:text-gray-600 transition">View all →</button>
+                  <p className="text-xs font-semibold text-gray-700">{isAr ? 'النشاط الأخير' : 'Recent Activity'}</p>
+                  <button onClick={() => setActiveTab('assessments')} className="text-[10px] text-gray-300 hover:text-gray-600 transition">{isAr ? 'عرض الكل ←' : 'View all →'}</button>
                 </div>
                 {(() => {
                   const TYPE_COLORS_DOT = { diabetes: '#6366f1', heart: '#f43f5e', ckd: '#8b5cf6', brain: '#f59e0b', diet: '#10b981' };
@@ -981,7 +990,7 @@ export default function AdminPanel({ language }) {
                   };
 
                   if (merged.length === 0) return (
-                    <div className="h-20 flex items-center justify-center text-gray-200 text-xs">No activity yet</div>
+                    <div className="h-20 flex items-center justify-center text-gray-200 text-xs">{isAr ? 'لا يوجد نشاط بعد' : 'No activity yet'}</div>
                   );
                   return (
                     <div className="space-y-0.5">
@@ -1012,16 +1021,16 @@ export default function AdminPanel({ language }) {
               {/* Risk Alerts — expandable */}
               <div className="lg:col-span-2 p-4 rounded-2xl bg-white border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-semibold text-gray-900">Risk Alerts</p>
-                  <button onClick={() => { setAssessSortBy('high_risk'); setActiveTab('assessments'); }} className="text-[11px] text-gray-400 hover:text-gray-700 transition">View high risk →</button>
+                  <p className="text-sm font-semibold text-gray-900">{isAr ? 'تنبيهات المخاطر' : 'Risk Alerts'}</p>
+                  <button onClick={() => { setAssessSortBy('high_risk'); setActiveTab('assessments'); }} className="text-[11px] text-gray-400 hover:text-gray-700 transition">{isAr ? 'عرض المخاطر العالية ←' : 'View high risk →'}</button>
                 </div>
-                <p className="text-xs text-gray-400 mb-3">Click any card to see a breakdown — high-risk & positive findings</p>
+                <p className="text-xs text-gray-400 mb-3">{isAr ? 'انقر على أي بطاقة لرؤية التفاصيل — مخاطر عالية ونتائج إيجابية' : 'Click any card to see a breakdown — high-risk & positive findings'}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: 'High Risk Diabetes', value: stats.high_risk_diabetes ?? 0, total: stats.total_assessments ?? 0, color: '#6366f1', bg: 'bg-indigo-50', border: 'border-indigo-100', text: 'text-indigo-700', filter: 'diabetes', desc: 'of all diabetes tests returned high-risk results.' },
-                    { label: 'High Risk Heart',    value: stats.high_risk_heart ?? 0,    total: stats.total_heart ?? 0,        color: '#f43f5e', bg: 'bg-rose-50',   border: 'border-rose-100',   text: 'text-rose-700',   filter: 'heart',    desc: 'of heart assessments flagged as high risk.' },
-                    { label: 'CKD Positive',       value: stats.positive_ckd ?? 0,       total: stats.total_ckd ?? 0,          color: '#8b5cf6', bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-700', filter: 'ckd',      desc: 'of CKD tests came back with a positive prediction.' },
-                    { label: 'Brain Tumor Found',  value: stats.brain_tumor_detected ?? 0, total: stats.total_brain_mri ?? 0,  color: '#f59e0b', bg: 'bg-amber-50',  border: 'border-amber-100',  text: 'text-amber-700',  filter: 'brain',    desc: 'of Brain MRI scans detected a tumor.' },
+                    { label: isAr ? 'خطر سكري عالي' : 'High Risk Diabetes', value: stats.high_risk_diabetes ?? 0, total: stats.total_assessments ?? 0, color: '#6366f1', bg: 'bg-indigo-50', border: 'border-indigo-100', text: 'text-indigo-700', filter: 'diabetes', desc: 'of all diabetes tests returned high-risk results.' },
+                    { label: isAr ? 'خطر قلب عالي' : 'High Risk Heart',    value: stats.high_risk_heart ?? 0,    total: stats.total_heart ?? 0,        color: '#f43f5e', bg: 'bg-rose-50',   border: 'border-rose-100',   text: 'text-rose-700',   filter: 'heart',    desc: 'of heart assessments flagged as high risk.' },
+                    { label: isAr ? 'CKD إيجابي' : 'CKD Positive',       value: stats.positive_ckd ?? 0,       total: stats.total_ckd ?? 0,          color: '#8b5cf6', bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-700', filter: 'ckd',      desc: 'of CKD tests came back with a positive prediction.' },
+                    { label: isAr ? 'تم العثور على ورم بالدماغ' : 'Brain Tumor Found',  value: stats.brain_tumor_detected ?? 0, total: stats.total_brain_mri ?? 0,  color: '#f59e0b', bg: 'bg-amber-50',  border: 'border-amber-100',  text: 'text-amber-700',  filter: 'brain',    desc: 'of Brain MRI scans detected a tumor.' },
                   ].map((r, i) => {
                     const pct = r.total > 0 ? Math.round((r.value / r.total) * 100) : 0;
                     const safePct = r.total > 0 ? pct : 0;
@@ -1063,7 +1072,7 @@ export default function AdminPanel({ language }) {
                             </svg>
                             {/* Stats */}
                             <div className="flex-1 mt-3 space-y-1">
-                              <p className="text-xs text-gray-600"><span className="font-bold text-gray-900">{r.value}</span> of <span className="font-bold text-gray-900">{r.total}</span> {r.desc}</p>
+                              <p className="text-xs text-gray-600"><span className="font-bold text-gray-900">{r.value}</span>{isAr ? 'من' : 'of'}<span className="font-bold text-gray-900">{r.total}</span> {r.desc}</p>
                               <p className="text-[11px] text-gray-400">{r.total - r.value} are low-risk or negative</p>
                               <button
                                 onClick={() => { setTestTypeFilter(r.filter); setAssessSortBy('high_risk'); setActiveTab('assessments'); setExpandedRiskAlert(null); }}
@@ -1081,8 +1090,8 @@ export default function AdminPanel({ language }) {
 
               {/* Quick Actions */}
               <div className="p-4 rounded-2xl bg-white border border-gray-100 flex flex-col">
-                <p className="text-sm font-semibold text-gray-900 mb-1">Quick Actions</p>
-                <p className="text-xs text-gray-400 mb-3">Jump to common admin tasks</p>
+                <p className="text-sm font-semibold text-gray-900 mb-1">{isAr ? 'إجراءات سريعة' : 'Quick Actions'}</p>
+                <p className="text-xs text-gray-400 mb-3">{isAr ? 'انتقل إلى مهام المسؤول الشائعة' : 'Jump to common admin tasks'}</p>
                 <div className="flex flex-col gap-2 flex-1">
                   {[
                     { l: 'Manage Users',     sub: 'View & edit all users',  icon: Users,       tab: 'users',          color: 'bg-blue-50 text-blue-600' },
@@ -1116,28 +1125,28 @@ export default function AdminPanel({ language }) {
 
             // Per-type test breakdown for chart use
             const typeBreakdown = [
-              { label: 'Diabetes', count: stats.total_assessments ?? 0, color: '#6366f1' },
-              { label: 'Heart',    count: stats.total_heart ?? 0,        color: '#f43f5e' },
-              { label: 'CKD',      count: stats.total_ckd ?? 0,          color: '#8b5cf6' },
-              { label: 'Brain',    count: stats.total_brain_mri ?? 0,    color: '#f59e0b' },
-              { label: 'Diet',     count: stats.total_diet_plans ?? 0,   color: '#10b981' },
+              { label: isAr ? 'السكري' : 'Diabetes', count: stats.total_assessments ?? 0, color: '#6366f1' },
+              { label: isAr ? 'القلب' : 'Heart',    count: stats.total_heart ?? 0,        color: '#f43f5e' },
+              { label: isAr ? 'أمراض الكلى' : 'CKD',      count: stats.total_ckd ?? 0,          color: '#8b5cf6' },
+              { label: isAr ? 'الدماغ' : 'Brain',    count: stats.total_brain_mri ?? 0,    color: '#f59e0b' },
+              { label: isAr ? 'النظام الغذائي' : 'Diet',     count: stats.total_diet_plans ?? 0,   color: '#10b981' },
             ];
             const maxTypeCount = Math.max(...typeBreakdown.map(t => t.count), 1);
 
             const engagementItems = [
               {
-                label: 'New Users This Month', value: stats.new_users_this_month ?? 0, sub: 'signups in current month',
+                label: isAr ? 'مستخدمون جدد هذا الشهر' : 'New Users This Month', value: stats.new_users_this_month ?? 0, sub: 'signups in current month',
                 icon: UserPlus, color: 'text-indigo-600', bg: 'bg-indigo-50', barColor: '#6366f1',
                 barPct: Math.min(((stats.new_users_this_month ?? 0) / Math.max(stats.total_users, 1)) * 100, 100),
                 chartBars: [
-                  { label: 'New', count: stats.new_users_this_month ?? 0, color: '#6366f1' },
-                  { label: 'Total', count: stats.total_users ?? 0, color: '#c7d2fe' },
+                  { label: isAr ? 'جديد' : 'New', count: stats.new_users_this_month ?? 0, color: '#6366f1' },
+                  { label: isAr ? 'الإجمالي' : 'Total', count: stats.total_users ?? 0, color: '#c7d2fe' },
                 ],
                 chartMax: Math.max(stats.total_users ?? 0, 1),
                 detail: `${stats.new_users_this_month ?? 0} new vs ${stats.total_users ?? 0} total registered users`,
               },
               {
-                label: 'New Tests This Month', value: stats.new_assessments_this_month ?? 0, sub: 'submissions this month',
+                label: isAr ? 'اختبارات جديدة هذا الشهر' : 'New Tests This Month', value: stats.new_assessments_this_month ?? 0, sub: 'submissions this month',
                 icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50', barColor: '#10b981',
                 barPct: Math.min(((stats.new_assessments_this_month ?? 0) / Math.max(totalRecords2, 1)) * 100, 100),
                 chartBars: typeBreakdown,
@@ -1145,7 +1154,7 @@ export default function AdminPanel({ language }) {
                 detail: 'Breakdown of all tests by type across the platform',
               },
               {
-                label: 'Avg Tests / User', value: avgTests, sub: 'tests per registered user',
+                label: isAr ? 'متوسط الاختبارات / مستخدم' : 'Avg Tests / User', value: avgTests, sub: 'tests per registered user',
                 icon: Activity, color: 'text-amber-600', bg: 'bg-amber-50', barColor: '#f59e0b',
                 barPct: Math.min(parseFloat(avgTests) * 10, 100),
                 chartBars: typeBreakdown,
@@ -1153,35 +1162,35 @@ export default function AdminPanel({ language }) {
                 detail: `${totalRecords2} total records ÷ ${stats.total_users ?? 0} users = ${avgTests} avg`,
               },
               {
-                label: 'User Activation Rate', value: `${activeRate}%`, sub: 'of all accounts are active',
+                label: isAr ? 'معدل تنشيط المستخدمين' : 'User Activation Rate', value: `${activeRate}%`, sub: 'of all accounts are active',
                 icon: UserCheck, color: 'text-sky-600', bg: 'bg-sky-50', barColor: '#0ea5e9',
                 barPct: activeRate,
                 chartBars: [
-                  { label: 'Active', count: stats.active_users ?? 0, color: '#0ea5e9' },
-                  { label: 'Inactive', count: inactiveUsers, color: '#fca5a5' },
-                  { label: 'Admins', count: stats.admin_count ?? 0, color: '#8b5cf6' },
+                  { label: isAr ? 'نشط' : 'Active', count: stats.active_users ?? 0, color: '#0ea5e9' },
+                  { label: isAr ? 'غير نشط' : 'Inactive', count: inactiveUsers, color: '#fca5a5' },
+                  { label: isAr ? 'المسؤولون' : 'Admins', count: stats.admin_count ?? 0, color: '#8b5cf6' },
                 ],
                 chartMax: Math.max(stats.total_users ?? 0, 1),
                 detail: `${stats.active_users ?? 0} active · ${inactiveUsers} inactive · ${stats.admin_count ?? 0} admins`,
               },
               {
-                label: 'Inactive Accounts', value: inactiveUsers, sub: 'accounts currently disabled',
+                label: isAr ? 'حسابات غير نشطة' : 'Inactive Accounts', value: inactiveUsers, sub: 'accounts currently disabled',
                 icon: UserX, color: 'text-red-500', bg: 'bg-red-50', barColor: '#f43f5e',
                 barPct: Math.min((inactiveUsers / Math.max(stats.total_users + stats.admin_count, 1)) * 100, 100),
                 chartBars: [
-                  { label: 'Inactive', count: inactiveUsers, color: '#f43f5e' },
-                  { label: 'Active', count: stats.active_users ?? 0, color: '#bbf7d0' },
+                  { label: isAr ? 'غير نشط' : 'Inactive', count: inactiveUsers, color: '#f43f5e' },
+                  { label: isAr ? 'نشط' : 'Active', count: stats.active_users ?? 0, color: '#bbf7d0' },
                 ],
                 chartMax: Math.max(stats.total_users + stats.admin_count, 1),
                 detail: `${inactiveUsers} disabled of ${(stats.total_users ?? 0) + (stats.admin_count ?? 0)} total accounts`,
               },
               {
-                label: 'Total Admins', value: stats.admin_count ?? 0, sub: 'users with admin access',
+                label: isAr ? 'إجمالي المسؤولين' : 'Total Admins', value: stats.admin_count ?? 0, sub: 'users with admin access',
                 icon: Shield, color: 'text-violet-600', bg: 'bg-violet-50', barColor: '#8b5cf6',
                 barPct: Math.min(((stats.admin_count ?? 0) / Math.max(stats.total_users + stats.admin_count, 1)) * 100, 100),
                 chartBars: [
-                  { label: 'Admins', count: stats.admin_count ?? 0, color: '#8b5cf6' },
-                  { label: 'Users', count: stats.total_users ?? 0, color: '#ddd6fe' },
+                  { label: isAr ? 'المسؤولون' : 'Admins', count: stats.admin_count ?? 0, color: '#8b5cf6' },
+                  { label: isAr ? 'المستخدمون' : 'Users', count: stats.total_users ?? 0, color: '#ddd6fe' },
                 ],
                 chartMax: Math.max(stats.total_users + stats.admin_count, 1),
                 detail: `${stats.admin_count ?? 0} admins out of ${(stats.total_users ?? 0) + (stats.admin_count ?? 0)} total accounts`,
@@ -1191,10 +1200,10 @@ export default function AdminPanel({ language }) {
             return (
               <div className="p-5 rounded-2xl bg-white border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-semibold text-gray-900">User Engagement</p>
-                  <button onClick={() => setActiveTab('users')} className="text-[11px] text-gray-400 hover:text-gray-700 transition">View users →</button>
+                  <p className="text-sm font-semibold text-gray-900">{isAr ? 'تفاعل المستخدمين' : 'User Engagement'}</p>
+                  <button onClick={() => setActiveTab('users')} className="text-[11px] text-gray-400 hover:text-gray-700 transition">{isAr ? 'عرض المستخدمين ←' : 'View users →'}</button>
                 </div>
-                <p className="text-xs text-gray-400 mb-4">Click any card to expand — activity & health metrics across the platform</p>
+                <p className="text-xs text-gray-400 mb-4">{isAr ? 'انقر على أي بطاقة لتوسيعها — النشاط والمقاييس الصحية عبر المنصة' : 'Click any card to expand — activity & health metrics across the platform'}</p>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   {engagementItems.map((s, i) => {
                     const isExpanded = expandedEngagement === i;
@@ -1271,7 +1280,7 @@ export default function AdminPanel({ language }) {
                 <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-gray-100">
                   {/* Total Users */}
                   <div className="p-5">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Total Users</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'إجمالي المستخدمين' : 'Total Users'}</p>
                     <p className="text-3xl font-black text-gray-900 leading-none">{total}</p>
                     <div className="flex items-center gap-2 mt-3">
                       <div className="flex-1 h-1 rounded-full bg-gray-100 overflow-hidden">
@@ -1283,30 +1292,30 @@ export default function AdminPanel({ language }) {
 
                   {/* Active vs Inactive */}
                   <div className="p-5">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Status</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'الحالة' : 'Status'}</p>
                     <div className="flex items-end gap-3">
                       <div>
                         <p className="text-3xl font-black text-emerald-600 leading-none">{active}</p>
-                        <p className="text-[10px] text-gray-400 mt-1">Active</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{isAr ? 'نشط' : 'Active'}</p>
                       </div>
                       <div className="w-px h-8 bg-gray-100 mb-1" />
                       <div>
                         <p className="text-3xl font-black text-gray-300 leading-none">{inactive}</p>
-                        <p className="text-[10px] text-gray-400 mt-1">Inactive</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{isAr ? 'غير نشط' : 'Inactive'}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Admins */}
                   <div className="p-5">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Admins</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'المسؤولون' : 'Admins'}</p>
                     <p className="text-3xl font-black text-amber-500 leading-none">{admins}</p>
                     <p className="text-[10px] text-gray-400 mt-3">{total - admins} regular user{total - admins !== 1 ? 's' : ''}</p>
                   </div>
 
                   {/* New This Month */}
                   <div className="p-5">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">New This Month</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'جديد هذا الشهر' : 'New This Month'}</p>
                     <p className="text-3xl font-black text-gray-900 leading-none">{thisMonth}</p>
                     <div className="flex items-center gap-1.5 mt-3">
                       <span className={`w-1.5 h-1.5 rounded-full ${thisMonth > 0 ? 'bg-emerald-400' : 'bg-gray-300'}`} />
@@ -1322,21 +1331,20 @@ export default function AdminPanel({ language }) {
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+              <input type="text" placeholder={isAr ? 'بحث...' : 'Search...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400" />
             </div>
             <Dropdown value={roleFilter} onChange={setRoleFilter} options={[
-              { value: 'all', label: 'All roles' }, { value: 'user', label: 'User' }, { value: 'admin', label: 'Admin' },
+              { value: 'all', label: isAr ? 'جميع الأدوار' : 'All roles' }, { value: 'user', label: isAr ? 'مستخدم' : 'User' }, { value: 'admin', label: isAr ? 'مسؤول' : 'Admin' },
             ]} />
             <Dropdown value={statusFilter} onChange={setStatusFilter} options={[
-              { value: 'all', label: 'All status' }, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' },
+              { value: 'all', label: isAr ? 'جميع الحالات' : 'All status' }, { value: 'active', label: isAr ? 'نشط' : 'Active' }, { value: 'inactive', label: isAr ? 'غير نشط' : 'Inactive' },
             ]} />
             <button onClick={exportCSV} className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 transition">
               <Download className="w-4 h-4" /> Export CSV
             </button>
             <button onClick={() => setCreateUserOpen(true)} className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 border border-gray-900">
-              <Plus className="w-4 h-4" /> Create User
-            </button>
+              <Plus className="w-4 h-4" />{isAr ? 'إنشاء مستخدم' : 'Create User'}</button>
           </div>
 
           {/* Bulk actions bar */}
@@ -1344,9 +1352,9 @@ export default function AdminPanel({ language }) {
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm">
               <span className="font-medium">{selectedUserIds.length} selected</span>
               <div className="flex-1" />
-              <button onClick={() => handleBulkAction('activate')} disabled={actionLoading} className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">Activate</button>
-              <button onClick={() => handleBulkAction('deactivate')} disabled={actionLoading} className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition">Deactivate</button>
-              <button onClick={() => handleBulkAction('delete')} disabled={actionLoading} className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition">Delete</button>
+              <button onClick={() => handleBulkAction('activate')} disabled={actionLoading} className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">{isAr ? 'تفعيل' : 'Activate'}</button>
+              <button onClick={() => handleBulkAction('deactivate')} disabled={actionLoading} className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition">{isAr ? 'تعطيل' : 'Deactivate'}</button>
+              <button onClick={() => handleBulkAction('delete')} disabled={actionLoading} className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition">{isAr ? 'حذف' : 'Delete'}</button>
               <button onClick={() => setSelectedUserIds([])} className="p-1.5 rounded-lg hover:bg-white/10 transition"><X className="w-4 h-4" /></button>
             </div>
           )}
@@ -1368,18 +1376,18 @@ export default function AdminPanel({ language }) {
                       <input type="checkbox" checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0} onChange={toggleSelectAll} className="rounded border-gray-300 accent-gray-900" />
                     </th>
                     <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest cursor-pointer" onClick={() => toggleSort('email')}>
-                      <span className="flex items-center gap-1">User <SortIcon field="email" /></span>
+                      <span className="flex items-center gap-1">{isAr ? 'مستخدم' : 'User'}<SortIcon field="email" /></span>
                     </th>
                     <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest cursor-pointer hidden sm:table-cell" onClick={() => toggleSort('role')}>
-                      <span className="flex items-center gap-1">Role <SortIcon field="role" /></span>
+                      <span className="flex items-center gap-1">{isAr ? 'الدور' : 'Role'}<SortIcon field="role" /></span>
                     </th>
-                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest hidden md:table-cell">Plan</th>
-                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest hidden lg:table-cell">Tests</th>
+                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest hidden md:table-cell">{isAr ? 'الخطة' : 'Plan'}</th>
+                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest hidden lg:table-cell">{isAr ? 'الاختبارات' : 'Tests'}</th>
                     <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest hidden lg:table-cell cursor-pointer" onClick={() => toggleSort('created_at')}>
-                      <span className="flex items-center gap-1">Joined <SortIcon field="created_at" /></span>
+                      <span className="flex items-center gap-1">{isAr ? 'تاريخ الانضمام' : 'Joined'}<SortIcon field="created_at" /></span>
                     </th>
-                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest hidden sm:table-cell">Status</th>
-                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest hidden sm:table-cell">{isAr ? 'الحالة' : 'Status'}</th>
+                    <th className="px-4 py-3.5 text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-right">{isAr ? 'الإجراءات' : 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -1443,7 +1451,7 @@ export default function AdminPanel({ language }) {
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
-                                  {u.full_name || <span className="text-gray-400 italic">No name</span>}
+                                  {u.full_name || <span className="text-gray-400 italic">{isAr ? 'بلا اسم' : 'No name'}</span>}
                                 </p>
                                 <p className="text-xs text-gray-400 truncate mt-0.5">{u.email}</p>
                                 <p className="text-[10px] text-gray-300 font-mono mt-0.5">#{u.id}</p>
@@ -1476,7 +1484,7 @@ export default function AdminPanel({ language }) {
                               </div>
                               <span className={`text-xs font-bold tabular-nums w-5 text-right ${userTestCount > 0 ? 'text-gray-700' : 'text-gray-300'}`}>{userTestCount}</span>
                               {userHasHighRisk && (
-                                <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">HIGH RISK</span>
+                                <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">{isAr ? 'خطر عالي' : 'HIGH RISK'}</span>
                               )}
                             </div>
                           </td>
@@ -1498,11 +1506,11 @@ export default function AdminPanel({ language }) {
                           {/* Actions */}
                           <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => openUserProfile(u)} title="View profile"
+                              <button onClick={() => openUserProfile(u)} title={isAr ? 'عرض الملف الشخصي' : 'View profile'}
                                 className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
                                 <Eye className="w-4 h-4" />
                               </button>
-                              <button onClick={() => setConfirmModal({ open: true, type: 'delete', data: u })} title="Delete user"
+                              <button onClick={() => setConfirmModal({ open: true, type: 'delete', data: u })} title={isAr ? 'حذف مستخدم' : 'Delete user'}
                                 className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition">
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -1521,11 +1529,11 @@ export default function AdminPanel({ language }) {
             <div className="flex items-center justify-between">
               <p className="text-xs text-gray-500">{filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} · page {usersPage} of {Math.ceil(filteredUsers.length / PAGE_SIZE)}</p>
               <div className="flex gap-1">
-                <button disabled={usersPage === 1} onClick={() => setUsersPage(p => p - 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition">← Prev</button>
+                <button disabled={usersPage === 1} onClick={() => setUsersPage(p => p - 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition">{isAr ? '← السابق' : '← Prev'}</button>
                 {Array.from({ length: Math.ceil(filteredUsers.length / PAGE_SIZE) }, (_, i) => i + 1).map(n => (
                   <button key={n} onClick={() => setUsersPage(n)} className={`px-3 py-1.5 rounded-lg text-xs border transition ${n === usersPage ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{n}</button>
                 ))}
-                <button disabled={usersPage === Math.ceil(filteredUsers.length / PAGE_SIZE)} onClick={() => setUsersPage(p => p + 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition">Next →</button>
+                <button disabled={usersPage === Math.ceil(filteredUsers.length / PAGE_SIZE)} onClick={() => setUsersPage(p => p + 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition">{isAr ? 'التالي →' : 'Next →'}</button>
               </div>
             </div>
           )}
@@ -1607,11 +1615,11 @@ export default function AdminPanel({ language }) {
 
         // Per-type analytics for the stats strip
         const typeStats = [
-          { key: 'diabetes', label: 'Diabetes',  color: '#6366f1', bg: 'bg-indigo-50',  text: 'text-indigo-700',  total: assessments.length,      highRisk: assessments.filter(a => (a.risk_level || '').toLowerCase().includes('high')).length },
-          { key: 'heart',    label: 'Heart',      color: '#f43f5e', bg: 'bg-rose-50',    text: 'text-rose-700',    total: heartAssessments.length,  highRisk: heartAssessments.filter(a => (a.risk_level || '').toLowerCase().includes('high')).length },
-          { key: 'ckd',      label: 'CKD',        color: '#8b5cf6', bg: 'bg-purple-50',  text: 'text-purple-700',  total: ckdAssessments.length,    highRisk: ckdAssessments.filter(a => (a.prediction || '').toLowerCase() === 'ckd').length },
-          { key: 'brain',    label: 'Brain MRI',  color: '#f59e0b', bg: 'bg-amber-50',   text: 'text-amber-700',   total: brainMRIAnalyses.length,  highRisk: brainMRIAnalyses.filter(a => (a.tumor_class || '').toLowerCase() !== 'no tumor').length },
-          { key: 'diet',     label: 'Diet Plans', color: '#10b981', bg: 'bg-emerald-50', text: 'text-emerald-700', total: dietPlans.length,         highRisk: 0 },
+          { key: 'diabetes', label: isAr ? 'السكري' : 'Diabetes',  color: '#6366f1', bg: 'bg-indigo-50',  text: 'text-indigo-700',  total: assessments.length,      highRisk: assessments.filter(a => (a.risk_level || '').toLowerCase().includes('high')).length },
+          { key: 'heart',    label: isAr ? 'القلب' : 'Heart',      color: '#f43f5e', bg: 'bg-rose-50',    text: 'text-rose-700',    total: heartAssessments.length,  highRisk: heartAssessments.filter(a => (a.risk_level || '').toLowerCase().includes('high')).length },
+          { key: 'ckd',      label: isAr ? 'أمراض الكلى' : 'CKD',        color: '#8b5cf6', bg: 'bg-purple-50',  text: 'text-purple-700',  total: ckdAssessments.length,    highRisk: ckdAssessments.filter(a => (a.prediction || '').toLowerCase() === 'ckd').length },
+          { key: 'brain',    label: isAr ? 'رنين الدماغ' : 'Brain MRI',  color: '#f59e0b', bg: 'bg-amber-50',   text: 'text-amber-700',   total: brainMRIAnalyses.length,  highRisk: brainMRIAnalyses.filter(a => (a.tumor_class || '').toLowerCase() !== 'no tumor').length },
+          { key: 'diet',     label: isAr ? 'خطط النظام الغذائي' : 'Diet Plans', color: '#10b981', bg: 'bg-emerald-50', text: 'text-emerald-700', total: dietPlans.length,         highRisk: 0 },
         ];
         const grandTotal = typeStats.reduce((s, t) => s + t.total, 0);
 
@@ -1622,7 +1630,7 @@ export default function AdminPanel({ language }) {
             {grandTotal > 0 && (
               <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
-                  <p className="text-xs font-semibold text-gray-700">Assessment Breakdown</p>
+                  <p className="text-xs font-semibold text-gray-700">{isAr ? 'تفصيل التقييم' : 'Assessment Breakdown'}</p>
                   <span className="text-[11px] text-gray-400">{grandTotal} total records</span>
                 </div>
                 <div className="grid grid-cols-5 divide-x divide-gray-100">
@@ -1655,12 +1663,12 @@ export default function AdminPanel({ language }) {
             {/* Type filter pills + clear */}
             <div className="flex flex-wrap gap-2">
               {[
-                { value: 'all', label: 'All', count: allItems.length, color: 'bg-gray-900 text-white', inactive: 'bg-white text-gray-600 border border-gray-200' },
-                { value: 'diabetes', label: 'Diabetes', count: assessments.length, color: 'bg-blue-600 text-white', inactive: 'bg-white text-blue-600 border border-blue-200' },
-                { value: 'heart', label: 'Heart', count: heartAssessments.length, color: 'bg-rose-500 text-white', inactive: 'bg-white text-rose-500 border border-rose-200' },
-                { value: 'ckd', label: 'CKD', count: ckdAssessments.length, color: 'bg-purple-600 text-white', inactive: 'bg-white text-purple-600 border border-purple-200' },
-                { value: 'brain', label: 'Brain MRI', count: brainMRIAnalyses.length, color: 'bg-amber-500 text-white', inactive: 'bg-white text-amber-600 border border-amber-200' },
-                { value: 'diet', label: 'Diet Plans', count: dietPlans.length, color: 'bg-emerald-600 text-white', inactive: 'bg-white text-emerald-600 border border-emerald-200' },
+                { value: 'all', label: isAr ? 'الكل' : 'All', count: allItems.length, color: 'bg-gray-900 text-white', inactive: 'bg-white text-gray-600 border border-gray-200' },
+                { value: 'diabetes', label: isAr ? 'السكري' : 'Diabetes', count: assessments.length, color: 'bg-blue-600 text-white', inactive: 'bg-white text-blue-600 border border-blue-200' },
+                { value: 'heart', label: isAr ? 'القلب' : 'Heart', count: heartAssessments.length, color: 'bg-rose-500 text-white', inactive: 'bg-white text-rose-500 border border-rose-200' },
+                { value: 'ckd', label: isAr ? 'أمراض الكلى' : 'CKD', count: ckdAssessments.length, color: 'bg-purple-600 text-white', inactive: 'bg-white text-purple-600 border border-purple-200' },
+                { value: 'brain', label: isAr ? 'رنين الدماغ' : 'Brain MRI', count: brainMRIAnalyses.length, color: 'bg-amber-500 text-white', inactive: 'bg-white text-amber-600 border border-amber-200' },
+                { value: 'diet', label: isAr ? 'خطط النظام الغذائي' : 'Diet Plans', count: dietPlans.length, color: 'bg-emerald-600 text-white', inactive: 'bg-white text-emerald-600 border border-emerald-200' },
               ].map(f => (
                 <button key={f.value} onClick={() => { setTestTypeFilter(f.value); setAssessPage(1); }}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${testTypeFilter === f.value ? f.color : f.inactive}`}>
@@ -1670,22 +1678,21 @@ export default function AdminPanel({ language }) {
               <div className="flex-1" />
               <button onClick={() => setClearAllModal(true)} disabled={actionLoading || visibleItems.length === 0}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-red-500 hover:bg-red-50 border border-red-200 transition disabled:opacity-40">
-                <Trash2 className="w-3 h-3" /> Clear
-              </button>
+                <Trash2 className="w-3 h-3" />{isAr ? 'مسح' : 'Clear'}</button>
             </div>
 
             {/* Search + Sort row */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type="text" placeholder="Search by name or email…" value={assessSearchTerm} onChange={e => { setAssessSearchTerm(e.target.value); setAssessPage(1); }}
+                <input type="text" placeholder={isAr ? 'البحث بالاسم أو البريد الإلكتروني...' : 'Search by name or email…'} value={assessSearchTerm} onChange={e => { setAssessSearchTerm(e.target.value); setAssessPage(1); }}
                   className="w-full pl-9 pr-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400" />
               </div>
               <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-1.5">
                 {[
-                  { v: 'newest', label: 'Newest' },
-                  { v: 'oldest', label: 'Oldest' },
-                  { v: 'high_risk', label: '⚠ Risk' },
+                  { v: 'newest', label: isAr ? 'الأحدث' : 'Newest' },
+                  { v: 'oldest', label: isAr ? 'الأقدم' : 'Oldest' },
+                  { v: 'high_risk', label: isAr ? '⚠ خطر' : '⚠ Risk' },
                 ].map(s => (
                   <button key={s.v} onClick={() => { setAssessSortBy(s.v); setAssessPage(1); }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium transition ${assessSortBy === s.v ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-800'}`}>
@@ -1698,15 +1705,15 @@ export default function AdminPanel({ language }) {
             {/* Risk insights strip */}
             {filteredItems.length > 0 && testTypeFilter !== 'diet' && (
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-100">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mr-1">Risk Breakdown</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mr-1">{isAr ? 'تفصيل الخطر' : 'Risk Breakdown'}</span>
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-[11px] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> High <span className="font-bold ml-0.5">{highRisk}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />{isAr ? 'عالي' : 'High'}<span className="font-bold ml-0.5">{highRisk}</span>
                 </span>
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[11px] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Medium <span className="font-bold ml-0.5">{medRisk}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />{isAr ? 'متوسط' : 'Medium'}<span className="font-bold ml-0.5">{medRisk}</span>
                 </span>
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Low/Neg. <span className="font-bold ml-0.5">{lowRisk}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />{isAr ? 'منخفض/سلبي' : 'Low/Neg.'}<span className="font-bold ml-0.5">{lowRisk}</span>
                 </span>
                 <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden ml-2">
                   {filteredItems.length > 0 && (
@@ -1726,7 +1733,7 @@ export default function AdminPanel({ language }) {
               : visibleItems.length === 0
                 ? <div className="text-center py-16 rounded-xl border border-gray-200 bg-gray-50">
                     <FileText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500">No assessments found</p>
+                    <p className="text-gray-500">{isAr ? 'لا توجد تقييمات' : 'No assessments found'}</p>
                   </div>
                 : <ul className="space-y-1.5">
                     {visibleItems.slice((assessPage - 1) * PAGE_SIZE, assessPage * PAGE_SIZE).map(a => {
@@ -1748,7 +1755,7 @@ export default function AdminPanel({ language }) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-gray-800 text-sm font-semibold truncate">{a.user_full_name || a.user_email}</p>
-                            {isHighRisk && <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full shrink-0">HIGH RISK</span>}
+                            {isHighRisk && <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full shrink-0">{isAr ? 'خطر عالي' : 'HIGH RISK'}</span>}
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <p className="text-gray-400 text-[11px] truncate">{getMetaText(a)}</p>
@@ -1761,7 +1768,7 @@ export default function AdminPanel({ language }) {
                           <p className="text-gray-300 text-[11px] whitespace-nowrap tabular-nums hidden sm:block">
                             {a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                           </p>
-                          <button onClick={e => { e.stopPropagation(); handleDeleteAssessmentItem(a); }} title="Delete"
+                          <button onClick={e => { e.stopPropagation(); handleDeleteAssessmentItem(a); }} title={isAr ? 'حذف' : 'Delete'}
                             className="p-1.5 rounded-lg text-gray-200 hover:bg-red-50 hover:text-red-500 transition">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1775,8 +1782,8 @@ export default function AdminPanel({ language }) {
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-500">{visibleItems.length} results · page {assessPage} of {Math.ceil(visibleItems.length / PAGE_SIZE)}</p>
                 <div className="flex gap-1">
-                  <button disabled={assessPage === 1} onClick={() => setAssessPage(p => p - 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">← Prev</button>
-                  <button disabled={assessPage === Math.ceil(visibleItems.length / PAGE_SIZE)} onClick={() => setAssessPage(p => p + 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">Next →</button>
+                  <button disabled={assessPage === 1} onClick={() => setAssessPage(p => p - 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">{isAr ? '← السابق' : '← Prev'}</button>
+                  <button disabled={assessPage === Math.ceil(visibleItems.length / PAGE_SIZE)} onClick={() => setAssessPage(p => p + 1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">{isAr ? 'التالي →' : 'Next →'}</button>
                 </div>
               </div>
             )}
@@ -1786,7 +1793,7 @@ export default function AdminPanel({ language }) {
       })()}
 
       {/* Universal Assessment Detail Modal */}
-      <Modal isOpen={detailModal.open} onClose={() => setDetailModal({ open: false, item: null })} title="Assessment Details" width="max-w-lg">
+      <Modal isOpen={detailModal.open} onClose={() => setDetailModal({ open: false, item: null })} title={isAr ? 'تفاصيل التقييم' : 'Assessment Details'} width="max-w-lg">
         {detailModal.item && (() => {
           const a = detailModal.item;
           const fmt = (s) => (s || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -1873,17 +1880,17 @@ export default function AdminPanel({ language }) {
               {/* Info grid */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">Time</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{isAr ? 'الوقت' : 'Time'}</p>
                   <p className="text-gray-700 text-xs font-medium">
                     {a.created_at ? new Date(a.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—'}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">Assessment ID</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{isAr ? 'معرف التقييم' : 'Assessment ID'}</p>
                   <div className="flex items-center gap-1.5">
                     <p className="text-gray-700 text-xs font-mono truncate">{assessId || '—'}</p>
                     {assessId && (
-                      <button onClick={() => navigator.clipboard.writeText(assessId)} title="Copy ID"
+                      <button onClick={() => navigator.clipboard.writeText(assessId)} title={isAr ? 'نسخ المعرف' : 'Copy ID'}
                         className="shrink-0 p-0.5 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition">
                         <Copy className="w-3 h-3" />
                       </button>
@@ -1899,10 +1906,10 @@ export default function AdminPanel({ language }) {
       </Modal>
 
       {/* Clear All Assessments confirm */}
-      <Modal isOpen={clearAllModal} onClose={() => setClearAllModal(false)} title="Clear All Assessments">
-        <p className="text-gray-500 text-sm mb-6">This will hide all <strong className="text-gray-900">{testTypeFilter === 'all' ? '' : testTypeFilter + ' '}assessments</strong> from your admin view. Users keep their data. This cannot be undone.</p>
+      <Modal isOpen={clearAllModal} onClose={() => setClearAllModal(false)} title={isAr ? 'مسح جميع التقييمات' : 'Clear All Assessments'}>
+        <p className="text-gray-500 text-sm mb-6">{isAr ? 'سيؤدي هذا إلى إخفاء جميع' : 'This will hide all'}<strong className="text-gray-900">{testTypeFilter === 'all' ? '' : testTypeFilter + ' '}assessments</strong>{isAr ? 'من عرض المسؤول الخاص بك. يحتفظ المستخدمون ببياناتهم. لا يمكن التراجع عن هذا.' : 'from your admin view. Users keep their data. This cannot be undone.'}</p>
         <div className="flex gap-3 justify-end">
-          <button onClick={() => setClearAllModal(false)} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+          <button onClick={() => setClearAllModal(false)} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
           <button onClick={handleClearAllAssessments} disabled={actionLoading} className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white flex items-center gap-2">
             {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />} Clear All
           </button>
@@ -1910,12 +1917,12 @@ export default function AdminPanel({ language }) {
       </Modal>
 
       {/* Reset Password Modal */}
-      <Modal isOpen={resetPwModal.open} onClose={() => { setResetPwModal({ open: false, user: null }); setResetPwValue(''); }} title="Reset Password">
-        <p className="text-gray-500 text-sm mb-4">Set a new password for <strong className="text-gray-900">{resetPwModal.user?.email}</strong>.</p>
-        <input type="text" placeholder="New password (min 6 chars)" value={resetPwValue} onChange={e => setResetPwValue(e.target.value)}
+      <Modal isOpen={resetPwModal.open} onClose={() => { setResetPwModal({ open: false, user: null }); setResetPwValue(''); }} title={isAr ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}>
+        <p className="text-gray-500 text-sm mb-4">{isAr ? 'تعيين كلمة مرور جديدة لـ' : 'Set a new password for'}<strong className="text-gray-900">{resetPwModal.user?.email}</strong>.</p>
+        <input type="text" placeholder={isAr ? 'كلمة مرور جديدة (6 أحرف على الأقل)' : 'New password (min 6 chars)'} value={resetPwValue} onChange={e => setResetPwValue(e.target.value)}
           className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-400 mb-5" />
         <div className="flex gap-3 justify-end">
-          <button onClick={() => { setResetPwModal({ open: false, user: null }); setResetPwValue(''); }} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+          <button onClick={() => { setResetPwModal({ open: false, user: null }); setResetPwValue(''); }} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
           <button onClick={handleResetPassword} disabled={actionLoading || resetPwValue.length < 6} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white flex items-center gap-2 disabled:opacity-40">
             {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />} Reset Password
           </button>
@@ -1946,7 +1953,7 @@ export default function AdminPanel({ language }) {
 
                           {/* Total Users */}
                           <div className="p-5">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Total Users</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'إجمالي المستخدمين' : 'Total Users'}</p>
                             <p className="text-3xl font-black text-gray-900 leading-none">{total}</p>
                             <div className="flex items-center gap-2 mt-3">
                               <div className="flex-1 h-1 rounded-full bg-gray-100 overflow-hidden">
@@ -1958,28 +1965,28 @@ export default function AdminPanel({ language }) {
 
                           {/* Free Plan */}
                           <div className="p-5">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Free Plan</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'الخطة المجانية' : 'Free Plan'}</p>
                             <p className="text-3xl font-black text-gray-500 leading-none">{free}</p>
                             <p className="text-[10px] text-gray-400 mt-3">{total > 0 ? Math.round((free / total) * 100) : 0}% of users</p>
                           </div>
 
                           {/* Pro Monthly */}
                           <div className="p-5">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Pro Monthly</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'البرو شهري' : 'Pro Monthly'}</p>
                             <p className="text-3xl font-black text-emerald-600 leading-none">{proM}</p>
                             <p className="text-[10px] text-gray-400 mt-3">{total > 0 ? Math.round((proM / total) * 100) : 0}% of users</p>
                           </div>
 
                           {/* Pro Yearly */}
                           <div className="p-5">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Pro Yearly</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'البرو سنوي' : 'Pro Yearly'}</p>
                             <p className="text-3xl font-black text-blue-600 leading-none">{proY}</p>
                             <p className="text-[10px] text-gray-400 mt-3">{total > 0 ? Math.round((proY / total) * 100) : 0}% of users</p>
                           </div>
 
                           {/* Active Subs */}
                           <div className="p-5">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">Active Subs</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">{isAr ? 'الاشتراكات النشطة' : 'Active Subs'}</p>
                             <p className="text-3xl font-black text-amber-500 leading-none">{activeSubs}</p>
                             <div className="flex items-center gap-1.5 mt-3">
                               <span className={`w-1.5 h-1.5 rounded-full ${activeSubs > 0 ? 'bg-emerald-400' : 'bg-gray-300'}`} />
@@ -1996,15 +2003,15 @@ export default function AdminPanel({ language }) {
                     <div className="p-4 rounded-xl bg-white border border-gray-100">
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">Plan Distribution</p>
+                          <p className="text-sm font-semibold text-gray-800">{isAr ? 'توزيع الخطط' : 'Plan Distribution'}</p>
                           <p className="text-[11px] text-gray-400 mt-0.5">{subscriptionStats.total_users} total users</p>
                         </div>
                         <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                          <button onClick={() => setSubChartView('donut')} title="Donut view"
+                          <button onClick={() => setSubChartView('donut')} title={isAr ? 'عرض دائري' : 'Donut view'}
                             className={`p-1.5 rounded-md transition ${subChartView === 'donut' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}>
                             <PieChart className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => setSubChartView('bar')} title="Bar view"
+                          <button onClick={() => setSubChartView('bar')} title={isAr ? 'عرض شريطي' : 'Bar view'}
                             className={`p-1.5 rounded-md transition ${subChartView === 'bar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}>
                             <BarChart2 className="w-3.5 h-3.5" />
                           </button>
@@ -2064,7 +2071,7 @@ export default function AdminPanel({ language }) {
                                   />
                                 ))}
                                 <text x={cx} y={cy - 7} textAnchor="middle" fontSize="22" fontWeight="700" fill="#111827">{proTotal}</text>
-                                <text x={cx} y={cy + 10} textAnchor="middle" fontSize="9" fill="#9ca3af">Pro users</text>
+                                <text x={cx} y={cy + 10} textAnchor="middle" fontSize="9" fill="#9ca3af">{isAr ? 'مستخدمو برو' : 'Pro users'}</text>
                               </svg>
                             </div>
                             <div className="flex-1 space-y-3">
@@ -2095,16 +2102,16 @@ export default function AdminPanel({ language }) {
                 <table className="w-full text-left min-w-[640px]">
                   <thead className="bg-gray-50 border-b border-gray-100">
                     <tr>
-                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">User</th>
-                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Plan</th>
-                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Renewal</th>
-                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Stripe ID</th>
+                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{isAr ? 'مستخدم' : 'User'}</th>
+                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{isAr ? 'الخطة' : 'Plan'}</th>
+                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{isAr ? 'الحالة' : 'Status'}</th>
+                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">{isAr ? 'تجديد' : 'Renewal'}</th>
+                      <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">{isAr ? 'معرف سترايب' : 'Stripe ID'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {subscriptionList.length === 0 ? (
-                      <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-400 text-sm">No subscription data</td></tr>
+                      <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-400 text-sm">{isAr ? 'لا توجد بيانات اشتراك' : 'No subscription data'}</td></tr>
                     ) : (
                       subscriptionList.map(u => {
                         const isPro = u.subscription_tier === 'pro_monthly' || u.subscription_tier === 'pro_yearly';
@@ -2164,14 +2171,14 @@ export default function AdminPanel({ language }) {
                     <Settings className="w-4 h-4 text-gray-400" />
                   </div>
                   <div>
-                    <h3 className="text-gray-900 text-sm font-bold">Platform Controls</h3>
-                    <p className="text-gray-400 text-xs">Global platform feature flags</p>
+                    <h3 className="text-gray-900 text-sm font-bold">{isAr ? 'ضوابط المنصة' : 'Platform Controls'}</h3>
+                    <p className="text-gray-400 text-xs">{isAr ? 'ميزات المنصة العامة' : 'Global platform feature flags'}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   {[
-                    { key: 'maintenance_mode', label: 'Maintenance Mode', desc: 'Blocks all non-admin users and shows a maintenance page', icon: AlertTriangle, danger: true },
-                    { key: 'allow_signups', label: 'Allow New Signups', desc: 'Permit new users to register accounts', icon: UserCheck },
+                    { key: 'maintenance_mode', label: isAr ? 'وضع الصيانة' : 'Maintenance Mode', desc: 'Blocks all non-admin users and shows a maintenance page', icon: AlertTriangle, danger: true },
+                    { key: 'allow_signups', label: isAr ? 'السماح بتسجيل جديد' : 'Allow New Signups', desc: 'Permit new users to register accounts', icon: UserCheck },
                   ].map(s => {
                     const isOn = siteSettings[s.key] === 'true';
                     return (
@@ -2225,23 +2232,23 @@ export default function AdminPanel({ language }) {
                     <Megaphone className="w-4 h-4 text-amber-500" />
                   </div>
                   <div>
-                    <h3 className="text-gray-900 text-sm font-bold">Announcements</h3>
-                    <p className="text-gray-400 text-xs">Broadcast messages to all users</p>
+                    <h3 className="text-gray-900 text-sm font-bold">{isAr ? 'الإعلانات' : 'Announcements'}</h3>
+                    <p className="text-gray-400 text-xs">{isAr ? 'بث رسائل لجميع المستخدمين' : 'Broadcast messages to all users'}</p>
                   </div>
                 </div>
 
                 {/* New announcement form */}
                 <div className="p-5 rounded-2xl bg-white border border-gray-200 space-y-3 mb-4">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">New Announcement</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{isAr ? 'إعلان جديد' : 'New Announcement'}</p>
                   <input
                     type="text"
-                    placeholder="Title"
+                    placeholder={isAr ? 'العنوان' : 'Title'}
                     value={newAnnTitle}
                     onChange={e => setNewAnnTitle(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition"
                   />
                   <textarea
-                    placeholder="Write your message…"
+                    placeholder={isAr ? 'اكتب رسالتك...' : 'Write your message…'}
                     value={newAnnMsg}
                     onChange={e => setNewAnnMsg(e.target.value)}
                     rows={2}
@@ -2249,7 +2256,7 @@ export default function AdminPanel({ language }) {
                   />
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 font-medium">Expires</span>
+                      <span className="text-xs text-gray-500 font-medium">{isAr ? 'ينتهي في' : 'Expires'}</span>
                       <button
                         ref={annCalAnchorRef}
                         type="button"
@@ -2260,7 +2267,7 @@ export default function AdminPanel({ language }) {
                         {newAnnExpires ? new Date(newAnnExpires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pick a date'}
                       </button>
                       {newAnnExpires && (
-                        <button type="button" onClick={() => setNewAnnExpires('')} className="text-xs text-gray-400 hover:text-red-400 transition">Clear</button>
+                        <button type="button" onClick={() => setNewAnnExpires('')} className="text-xs text-gray-400 hover:text-red-400 transition">{isAr ? 'مسح' : 'Clear'}</button>
                       )}
                       <MiniCalendar
                         open={annCalOpen}
@@ -2306,7 +2313,7 @@ export default function AdminPanel({ language }) {
                           <button onClick={() => handleToggleAnnouncement(a)} title={a.is_active ? 'Hide' : 'Show'} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
                             {a.is_active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                           </button>
-                          <button onClick={() => handleDeleteAnnouncement(a.id)} title="Delete" className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition">
+                          <button onClick={() => handleDeleteAnnouncement(a.id)} title={isAr ? 'حذف' : 'Delete'} className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -2324,7 +2331,7 @@ export default function AdminPanel({ language }) {
                       <Clock className="w-4 h-4 text-blue-500" />
                     </div>
                     <div>
-                      <h3 className="text-gray-900 text-sm font-bold">Audit Log</h3>
+                      <h3 className="text-gray-900 text-sm font-bold">{isAr ? 'سجل المراجعة' : 'Audit Log'}</h3>
                       <p className="text-gray-400 text-xs">{auditLogs.length} entr{auditLogs.length !== 1 ? 'ies' : 'y'} recorded</p>
                     </div>
                   </div>
@@ -2340,19 +2347,19 @@ export default function AdminPanel({ language }) {
                     <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
                       <Clock className="w-6 h-6 text-gray-300" />
                     </div>
-                    <p className="text-gray-500 text-sm font-medium">No actions recorded yet</p>
-                    <p className="text-gray-400 text-xs mt-1">Admin activity will appear here</p>
+                    <p className="text-gray-500 text-sm font-medium">{isAr ? 'لا توجد إجراءات مسجلة بعد' : 'No actions recorded yet'}</p>
+                    <p className="text-gray-400 text-xs mt-1">{isAr ? 'سيظهر نشاط المسؤول هنا' : 'Admin activity will appear here'}</p>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-gray-200 overflow-hidden">
                     <table className="w-full text-left">
                       <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                         <tr>
-                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Admin</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Action</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Target</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Details</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Time</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{isAr ? 'مسؤول' : 'Admin'}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{isAr ? 'إجراء' : 'Action'}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{isAr ? 'الهدف' : 'Target'}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">{isAr ? 'التفاصيل' : 'Details'}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">{isAr ? 'الوقت' : 'Time'}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -2427,11 +2434,11 @@ export default function AdminPanel({ language }) {
         const close = () => setUserProfileModal({ open: false, userId: null, data: null, loading: false });
         const isAdmin = p?.role === 'admin';
         const activityItems = (!p || isAdmin) ? [] : [
-          { label: 'Diabetes', key: 'diabetes', color: '#60a5fa' },
-          { label: 'Heart',    key: 'heart',    color: '#f87171' },
-          { label: 'CKD',      key: 'ckd',      color: '#c084fc' },
-          { label: 'Brain MRI', key: 'brain_mri', color: '#fbbf24' },
-          { label: 'Diet',     key: 'diet_plans', color: '#34d399' },
+          { label: isAr ? 'السكري' : 'Diabetes', key: 'diabetes', color: '#60a5fa' },
+          { label: isAr ? 'القلب' : 'Heart',    key: 'heart',    color: '#f87171' },
+          { label: isAr ? 'أمراض الكلى' : 'CKD',      key: 'ckd',      color: '#c084fc' },
+          { label: isAr ? 'رنين الدماغ' : 'Brain MRI', key: 'brain_mri', color: '#fbbf24' },
+          { label: isAr ? 'النظام الغذائي' : 'Diet',     key: 'diet_plans', color: '#34d399' },
         ];
         const maxAct = p && !isAdmin ? Math.max(...activityItems.map(a => p.activity[a.key] || 0), 1) : 1;
         const planLabel = !p ? '' : p.subscription_tier === 'pro_monthly' ? 'Pro Monthly' : p.subscription_tier === 'pro_yearly' ? 'Pro Yearly' : 'Free';
@@ -2490,15 +2497,15 @@ export default function AdminPanel({ language }) {
                     {/* Quick stats row — inside the dark card */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 18 }}>
                       {(isAdmin ? [
-                        { label: 'Account Age', value: `${accountAgeDays}d` },
-                        { label: '2FA', value: p.totp_enabled ? 'On' : 'Off', accent: p.totp_enabled },
-                        { label: 'Language', value: p.preferred_language ? p.preferred_language.charAt(0).toUpperCase() + p.preferred_language.slice(1) : '—' },
-                        { label: 'Onboarding', value: p.onboarding_completed ? 'Done' : 'Pending', accent: p.onboarding_completed },
+                        { label: isAr ? 'عمر الحساب' : 'Account Age', value: `${accountAgeDays}d` },
+                        { label: isAr ? 'المصادقة الثنائية' : '2FA', value: p.totp_enabled ? 'On' : 'Off', accent: p.totp_enabled },
+                        { label: isAr ? 'اللغة' : 'Language', value: p.preferred_language ? p.preferred_language.charAt(0).toUpperCase() + p.preferred_language.slice(1) : '—' },
+                        { label: isAr ? 'الإعداد الأول' : 'Onboarding', value: p.onboarding_completed ? 'Done' : 'Pending', accent: p.onboarding_completed },
                       ] : [
-                        { label: 'Total Tests', value: userProfileModal.loading ? '…' : (p.total_tests || 0) },
-                        { label: 'Most Used', value: userProfileModal.loading ? '…' : (p.most_used || '—') },
-                        { label: 'Language', value: p.preferred_language ? p.preferred_language.charAt(0).toUpperCase() + p.preferred_language.slice(1) : '—' },
-                        { label: 'Sub Status', value: p.subscription_status || 'none', accent: p.subscription_status === 'active' },
+                        { label: isAr ? 'إجمالي الاختبارات' : 'Total Tests', value: userProfileModal.loading ? '…' : (p.total_tests || 0) },
+                        { label: isAr ? 'الأكثر استخداماً' : 'Most Used', value: userProfileModal.loading ? '…' : (p.most_used || '—') },
+                        { label: isAr ? 'اللغة' : 'Language', value: p.preferred_language ? p.preferred_language.charAt(0).toUpperCase() + p.preferred_language.slice(1) : '—' },
+                        { label: isAr ? 'حالة الاشتراك' : 'Sub Status', value: p.subscription_status || 'none', accent: p.subscription_status === 'active' },
                       ]).map(stat => (
                         <div key={stat.label} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '10px 10px 9px', textAlign: 'center' }}>
                           <p style={{ margin: 0, fontSize: 8.5, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.9, fontWeight: 700 }}>{stat.label}</p>
@@ -2521,15 +2528,15 @@ export default function AdminPanel({ language }) {
                   {/* ── Activity bars (users only) / Admin analytics ── */}
                   {isAdmin ? (
                     <div style={{ background: '#fff', border: '1px solid #eef0f3', borderRadius: 16, padding: '16px 18px' }}>
-                      <p style={{ margin: '0 0 12px', fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Admin Analytics</p>
+                      <p style={{ margin: '0 0 12px', fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>{isAr ? 'تحليلات المسؤول' : 'Admin Analytics'}</p>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                         {[
-                          { icon: '🛡️', label: 'Privileges', value: 'Full Access' },
-                          { icon: '🔐', label: '2FA Security', value: p.totp_enabled ? 'Enabled' : 'Not Set' },
-                          { icon: '📅', label: 'Member Since', value: p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—' },
-                          { icon: '⏱️', label: 'Account Age', value: accountAgeDays >= 365 ? `${Math.floor(accountAgeDays / 365)}Y ${Math.floor((accountAgeDays % 365) / 30)}M` : `${accountAgeDays}D` },
-                          { icon: '🌐', label: 'Language', value: (p.preferred_language || '—').charAt(0).toUpperCase() + (p.preferred_language || '—').slice(1) },
-                          { icon: '✅', label: 'Onboarding', value: p.onboarding_completed ? 'Completed' : 'Pending' },
+                          { icon: '🛡️', label: isAr ? 'الامتيازات' : 'Privileges', value: 'Full Access' },
+                          { icon: '🔐', label: isAr ? 'أمان المصادقة الثنائية' : '2FA Security', value: p.totp_enabled ? 'Enabled' : 'Not Set' },
+                          { icon: '📅', label: isAr ? 'عضو منذ' : 'Member Since', value: p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—' },
+                          { icon: '⏱️', label: isAr ? 'عمر الحساب' : 'Account Age', value: accountAgeDays >= 365 ? `${Math.floor(accountAgeDays / 365)}Y ${Math.floor((accountAgeDays % 365) / 30)}M` : `${accountAgeDays}D` },
+                          { icon: '🌐', label: isAr ? 'اللغة' : 'Language', value: (p.preferred_language || '—').charAt(0).toUpperCase() + (p.preferred_language || '—').slice(1) },
+                          { icon: '✅', label: isAr ? 'الإعداد الأول' : 'Onboarding', value: p.onboarding_completed ? 'Completed' : 'Pending' },
                         ].map(item => (
                           <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 14px' }}>
                             <span style={{ fontSize: 20, lineHeight: 1 }}>{item.icon}</span>
@@ -2544,9 +2551,9 @@ export default function AdminPanel({ language }) {
                   ) : (
                     <div style={{ background: '#fff', border: '1px solid #eef0f3', borderRadius: 16, padding: '16px 18px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <p style={{ margin: 0, fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Test Activity</p>
+                        <p style={{ margin: 0, fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>{isAr ? 'نشاط الاختبار' : 'Test Activity'}</p>
                         {userProfileModal.loading
-                          ? <span style={{ fontSize: 10, color: '#d1d5db' }}>Loading…</span>
+                          ? <span style={{ fontSize: 10, color: '#d1d5db' }}>{isAr ? 'جاري التحميل...' : 'Loading…'}</span>
                           : <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{p.total_tests} total</span>}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -2586,7 +2593,7 @@ export default function AdminPanel({ language }) {
                     return (
                       <div style={{ background: '#fff', border: '1px solid #eef0f3', borderRadius: 16, padding: '16px 18px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                          <p style={{ margin: 0, fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Recent Assessments</p>
+                          <p style={{ margin: 0, fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>{isAr ? 'التقييمات الأخيرة' : 'Recent Assessments'}</p>
                           <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{userTests.length} shown</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -2603,7 +2610,7 @@ export default function AdminPanel({ language }) {
                                 {t._conf != null && (
                                   <span style={{ fontSize: 11, color: '#9ca3af' }}>{(t._conf * 100).toFixed(0)}%</span>
                                 )}
-                                {isHigh && <span style={{ fontSize: 9, fontWeight: 700, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 99, padding: '2px 7px' }}>HIGH</span>}
+                                {isHigh && <span style={{ fontSize: 9, fontWeight: 700, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 99, padding: '2px 7px' }}>{isAr ? 'عالي' : 'HIGH'}</span>}
                                 <span style={{ fontSize: 10, color: '#d1d5db', flexShrink: 0 }}>
                                   {t.created_at ? new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
                                 </span>
@@ -2617,7 +2624,7 @@ export default function AdminPanel({ language }) {
 
                   {/* ── Account details ── */}
                   <div style={{ background: '#fff', border: '1px solid #eef0f3', borderRadius: 16, padding: '16px 18px' }}>
-                    <p style={{ margin: '0 0 12px', fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Account Details</p>
+                    <p style={{ margin: '0 0 12px', fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>{isAr ? 'تفاصيل الحساب' : 'Account Details'}</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px 24px' }}>
                       {[
                         { l: 'User ID', v: `#${p.id}` },
@@ -2637,7 +2644,7 @@ export default function AdminPanel({ language }) {
 
                   {/* ── Admin notes ── */}
                   <div>
-                    <p style={{ margin: '0 0 8px', fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Admin Notes</p>
+                    <p style={{ margin: '0 0 8px', fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>{isAr ? 'ملاحظات المسؤول' : 'Admin Notes'}</p>
                     <textarea
                       defaultValue={p.admin_notes}
                       onBlur={async (e) => {
@@ -2645,7 +2652,7 @@ export default function AdminPanel({ language }) {
                         catch { showToast('Failed to save notes', 'error'); }
                       }}
                       rows={3}
-                      placeholder="Add private notes about this user…"
+                      placeholder={isAr ? 'أضف ملاحظات خاصة حول هذا المستخدم...' : 'Add private notes about this user…'}
                       style={{ width: '100%', padding: '12px 14px', borderRadius: 12, background: '#fff', border: '1px solid #eef0f3', color: '#111827', fontSize: 13, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.5, transition: 'border-color .2s' }}
                       onFocus={e => { e.target.style.borderColor = '#6366f1'; }}
                       onBlurCapture={e => { e.target.style.borderColor = '#e5e7eb'; }}
@@ -2667,12 +2674,12 @@ export default function AdminPanel({ language }) {
                       },
                       {
                         icon: <Mail size={15} />,
-                        label: 'Send Email',
+                        label: isAr ? 'إرسال بريد إلكتروني' : 'Send Email',
                         onClick: () => { close(); setEmailModal({ open: true, user: p }); },
                       },
                       {
                         icon: <ShieldOff size={15} />,
-                        label: 'Reset Password',
+                        label: isAr ? 'إعادة تعيين كلمة المرور' : 'Reset Password',
                         onClick: () => { close(); setResetPwModal({ open: true, user: p }); },
                       },
                     ].map(btn => (
@@ -2687,8 +2694,7 @@ export default function AdminPanel({ language }) {
                       style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginLeft: 'auto', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', transition: 'background .15s' }}
                       onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}>
-                      <Trash2 size={15} /> Delete User
-                    </button>
+                      <Trash2 size={15} />{isAr ? 'حذف المستخدم' : 'Delete User'}</button>
                   </div>
 
                 </div>
@@ -2699,10 +2705,10 @@ export default function AdminPanel({ language }) {
       })()}
 
       {/* Delete confirm */}
-      <Modal isOpen={confirmModal.open && confirmModal.type === 'delete'} onClose={() => setConfirmModal({ open: false, type: '', data: null })} title="Delete User">
-        <p className="text-gray-500 text-sm mb-6">Are you sure you want to delete <strong className="text-gray-900">{confirmModal.data?.email}</strong>? This cannot be undone.</p>
+      <Modal isOpen={confirmModal.open && confirmModal.type === 'delete'} onClose={() => setConfirmModal({ open: false, type: '', data: null })} title={isAr ? 'حذف المستخدم' : 'Delete User'}>
+        <p className="text-gray-500 text-sm mb-6">{isAr ? 'هل أنت متأكد أنك تريد حذف' : 'Are you sure you want to delete'}<strong className="text-gray-900">{confirmModal.data?.email}</strong>{isAr ? '؟ لا يمكن التراجع عن هذا.' : '? This cannot be undone.'}</p>
         <div className="flex gap-3 justify-end">
-          <button onClick={() => setConfirmModal({ open: false, type: '', data: null })} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+          <button onClick={() => setConfirmModal({ open: false, type: '', data: null })} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
           <button onClick={handleDeleteUser} disabled={actionLoading} className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-gray-900 flex items-center gap-2">
             {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />} Delete
           </button>
@@ -2710,10 +2716,10 @@ export default function AdminPanel({ language }) {
       </Modal>
 
       {/* Clear audit log confirm */}
-      <Modal isOpen={confirmModal.open && confirmModal.type === 'clearAudit'} onClose={() => setConfirmModal({ open: false, type: '', data: null })} title="Clear Audit Log">
-        <p className="text-gray-500 text-sm mb-6">Are you sure you want to clear <strong className="text-gray-900">all {auditLogs.length} log entries</strong>? This cannot be undone.</p>
+      <Modal isOpen={confirmModal.open && confirmModal.type === 'clearAudit'} onClose={() => setConfirmModal({ open: false, type: '', data: null })} title={isAr ? 'مسح سجل المراجعة' : 'Clear Audit Log'}>
+        <p className="text-gray-500 text-sm mb-6">{isAr ? 'هل أنت متأكد أنك تريد مسح' : 'Are you sure you want to clear'}<strong className="text-gray-900">all {auditLogs.length} log entries</strong>{isAr ? '؟ لا يمكن التراجع عن هذا.' : '? This cannot be undone.'}</p>
         <div className="flex gap-3 justify-end">
-          <button onClick={() => setConfirmModal({ open: false, type: '', data: null })} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+          <button onClick={() => setConfirmModal({ open: false, type: '', data: null })} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
           <button onClick={async () => { setActionLoading(true); try { await adminClearAuditLog(); setAuditLogs([]); showToast('Audit log cleared'); } catch(err) { showToast(err.message || 'Failed', 'error'); } finally { setActionLoading(false); setConfirmModal({ open: false, type: '', data: null }); } }}
             disabled={actionLoading} className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-gray-900 flex items-center gap-2">
             {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />} Clear All
@@ -2722,28 +2728,28 @@ export default function AdminPanel({ language }) {
       </Modal>
 
       {/* Create user */}
-      <Modal isOpen={createUserOpen} onClose={() => setCreateUserOpen(false)} title="Create User">
+      <Modal isOpen={createUserOpen} onClose={() => setCreateUserOpen(false)} title={isAr ? 'إنشاء مستخدم' : 'Create User'}>
         <form onSubmit={handleCreateUser} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Email</label>
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
             <input name="email" type="email" required className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-400" />
           </div>
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Password</label>
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'كلمة المرور' : 'Password'}</label>
             <input name="password" type="text" required minLength={6} className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-400" />
           </div>
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Full Name</label>
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'الاسم الكامل' : 'Full Name'}</label>
             <input name="full_name" type="text" className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-400" />
           </div>
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Role</label>
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'الدور' : 'Role'}</label>
             <select name="role" defaultValue="user" className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm">
-              <option value="user">User</option><option value="admin">Admin</option>
+              <option value="user">{isAr ? 'مستخدم' : 'User'}</option><option value="admin">{isAr ? 'مسؤول' : 'Admin'}</option>
             </select>
           </div>
           <div className="flex gap-3 justify-end">
-            <button type="button" onClick={() => setCreateUserOpen(false)} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+            <button type="button" onClick={() => setCreateUserOpen(false)} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
             <button type="submit" disabled={actionLoading} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-900 border border-gray-300 flex items-center gap-2">
               {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />} Create
             </button>
@@ -2752,25 +2758,25 @@ export default function AdminPanel({ language }) {
       </Modal>
 
       {/* Assessment detail */}
-      <Modal isOpen={!!selectedAssessment} onClose={() => setSelectedAssessment(null)} title="Assessment Details">
+      <Modal isOpen={!!selectedAssessment} onClose={() => setSelectedAssessment(null)} title={isAr ? 'تفاصيل التقييم' : 'Assessment Details'}>
         {selectedAssessment && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <div><p className="text-xs text-gray-500">Risk Level</p>
+              <div><p className="text-xs text-gray-500">{isAr ? 'مستوى الخطر' : 'Risk Level'}</p>
                 <span className={`inline-block px-2 py-1 rounded text-sm font-medium mt-1
                   ${selectedAssessment.risk_level === 'High' ? 'bg-red-500/20 text-red-400' : selectedAssessment.risk_level === 'Medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-600'}`}>
                   {selectedAssessment.risk_level}
                 </span>
               </div>
-              <div><p className="text-xs text-gray-500">Probability</p><p className="text-gray-900 font-medium mt-1">{selectedAssessment.probability != null ? `${(selectedAssessment.probability * 100).toFixed(1)}%` : '—'}</p></div>
+              <div><p className="text-xs text-gray-500">{isAr ? 'الاحتمال' : 'Probability'}</p><p className="text-gray-900 font-medium mt-1">{selectedAssessment.probability != null ? `${(selectedAssessment.probability * 100).toFixed(1)}%` : '—'}</p></div>
             </div>
             <div>
-              <p className="text-xs text-gray-500">User</p>
+              <p className="text-xs text-gray-500">{isAr ? 'مستخدم' : 'User'}</p>
               <p className="text-gray-900 font-medium mt-1">{selectedAssessment.user_full_name || selectedAssessment.user_email || '—'}</p>
               {selectedAssessment.user_full_name && <p className="text-gray-400 text-xs mt-0.5">{selectedAssessment.user_email}</p>}
             </div>
-            <div><p className="text-xs text-gray-500">Date</p><p className="text-gray-500 text-sm mt-1">{selectedAssessment.created_at ? new Date(selectedAssessment.created_at).toLocaleString() : '—'}</p></div>
-            <div><p className="text-xs text-gray-500">ID</p><p className="text-gray-500 text-sm font-mono mt-1">{selectedAssessment.assessment_id || '—'}</p></div>
+            <div><p className="text-xs text-gray-500">{isAr ? 'التاريخ' : 'Date'}</p><p className="text-gray-500 text-sm mt-1">{selectedAssessment.created_at ? new Date(selectedAssessment.created_at).toLocaleString() : '—'}</p></div>
+            <div><p className="text-xs text-gray-500">{isAr ? 'المعرف' : 'ID'}</p><p className="text-gray-500 text-sm font-mono mt-1">{selectedAssessment.assessment_id || '—'}</p></div>
           </div>
         )}
       </Modal>
@@ -2778,16 +2784,16 @@ export default function AdminPanel({ language }) {
       {/* Feature f12: User Notes Modal */}
       <Modal isOpen={notesModal.open} onClose={() => setNotesModal({ open: false, user: null })} title={`Notes — ${notesModal.user?.email || ''}`}>
         <div className="space-y-4">
-          <p className="text-xs text-gray-500">Add private admin notes for this user. Only admins can see these.</p>
+          <p className="text-xs text-gray-500">{isAr ? 'أضف ملاحظات مسؤول خاصة لهذا المستخدم. يمكن للمسؤولين فقط رؤيتها.' : 'Add private admin notes for this user. Only admins can see these.'}</p>
           <textarea
             value={notesText}
             onChange={(e) => setNotesText(e.target.value)}
             rows={5}
-            placeholder="Type notes here..."
+            placeholder={isAr ? 'اكتب ملاحظات هنا...' : 'Type notes here...'}
             className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400 resize-none"
           />
           <div className="flex gap-3 justify-end">
-            <button onClick={() => setNotesModal({ open: false, user: null })} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+            <button onClick={() => setNotesModal({ open: false, user: null })} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
             <button onClick={handleSaveNotes} disabled={actionLoading} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-900 border border-gray-300 flex items-center gap-2">
               {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />} Save Notes
             </button>
@@ -2799,17 +2805,17 @@ export default function AdminPanel({ language }) {
       <Modal isOpen={emailModal.open} onClose={() => { setEmailModal({ open: false, user: null }); setEmailSubject(''); setEmailBody(''); }} title={`Email — ${emailModal.user?.email || ''}`}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Subject</label>
-            <input type="text" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="Email subject..."
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'الموضوع' : 'Subject'}</label>
+            <input type="text" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder={isAr ? 'موضوع البريد الإلكتروني...' : 'Email subject...'}
               className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400" />
           </div>
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Body</label>
-            <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} placeholder="Email body..."
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'النص' : 'Body'}</label>
+            <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} placeholder={isAr ? 'نص البريد الإلكتروني...' : 'Email body...'}
               className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400 resize-none" />
           </div>
           <div className="flex gap-3 justify-end">
-            <button onClick={() => { setEmailModal({ open: false, user: null }); setEmailSubject(''); setEmailBody(''); }} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+            <button onClick={() => { setEmailModal({ open: false, user: null }); setEmailSubject(''); setEmailBody(''); }} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
             <button onClick={handleSendEmail} disabled={actionLoading || !emailSubject.trim()} className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-500 text-gray-900 flex items-center gap-2 disabled:opacity-50">
               {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Send Email
             </button>
@@ -2818,29 +2824,29 @@ export default function AdminPanel({ language }) {
       </Modal>
 
       {/* Feature f14: Bulk Email Modal */}
-      <Modal isOpen={bulkEmailModal} onClose={() => { setBulkEmailModal(false); setBulkEmailSubject(''); setBulkEmailBody(''); }} title="Bulk Email" width="max-w-lg">
+      <Modal isOpen={bulkEmailModal} onClose={() => { setBulkEmailModal(false); setBulkEmailSubject(''); setBulkEmailBody(''); }} title={isAr ? 'بريد إلكتروني جماعي' : 'Bulk Email'} width="max-w-lg">
         <div className="space-y-4">
-          <p className="text-xs text-gray-500">Send email to multiple users at once. Uses the configured SMTP email service.</p>
+          <p className="text-xs text-gray-500">{isAr ? 'أرسل بريداً إلكترونياً إلى مستخدمين متعددين في وقت واحد. يستخدم خدمة SMTP المكونة.' : 'Send email to multiple users at once. Uses the configured SMTP email service.'}</p>
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Recipients</label>
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'المستلمون' : 'Recipients'}</label>
             <Dropdown value={bulkEmailRole} onChange={setBulkEmailRole} options={[
-              { value: 'all', label: 'All active users' },
-              { value: 'user', label: 'Users only' },
-              { value: 'admin', label: 'Admins only' },
+              { value: 'all', label: isAr ? 'جميع المستخدمين النشطين' : 'All active users' },
+              { value: 'user', label: isAr ? 'المستخدمون فقط' : 'Users only' },
+              { value: 'admin', label: isAr ? 'المسؤولون فقط' : 'Admins only' },
             ]} className="w-full" />
           </div>
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Subject</label>
-            <input type="text" value={bulkEmailSubject} onChange={e => setBulkEmailSubject(e.target.value)} placeholder="Email subject..."
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'الموضوع' : 'Subject'}</label>
+            <input type="text" value={bulkEmailSubject} onChange={e => setBulkEmailSubject(e.target.value)} placeholder={isAr ? 'موضوع البريد الإلكتروني...' : 'Email subject...'}
               className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400" />
           </div>
           <div>
-            <label className="block text-sm text-gray-500 mb-1">Body</label>
-            <textarea value={bulkEmailBody} onChange={e => setBulkEmailBody(e.target.value)} rows={6} placeholder="Email body..."
+            <label className="block text-sm text-gray-500 mb-1">{isAr ? 'النص' : 'Body'}</label>
+            <textarea value={bulkEmailBody} onChange={e => setBulkEmailBody(e.target.value)} rows={6} placeholder={isAr ? 'نص البريد الإلكتروني...' : 'Email body...'}
               className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400 resize-none" />
           </div>
           <div className="flex gap-3 justify-end">
-            <button onClick={() => { setBulkEmailModal(false); setBulkEmailSubject(''); setBulkEmailBody(''); }} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">Cancel</button>
+            <button onClick={() => { setBulkEmailModal(false); setBulkEmailSubject(''); setBulkEmailBody(''); }} className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200">{isAr ? 'إلغاء' : 'Cancel'}</button>
             <button onClick={handleBulkEmailSend} disabled={actionLoading || !bulkEmailSubject.trim()} className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-500 text-gray-900 flex items-center gap-2 disabled:opacity-50">
               {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Send to {bulkEmailRole === 'all' ? 'All' : bulkEmailRole === 'user' ? 'Users' : 'Admins'}
             </button>

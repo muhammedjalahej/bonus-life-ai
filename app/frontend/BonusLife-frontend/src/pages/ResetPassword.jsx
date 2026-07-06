@@ -14,20 +14,21 @@ export default function ResetPassword({ language }) {
   const [error,           setError]           = useState('');
   const [loading,         setLoading]         = useState(false);
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
 
   useEffect(() => {
-    if (!token) setError(isTr ? 'Geçersiz veya eksik sıfırlama bağlantısı.' : 'Invalid or missing reset link.');
+    if (!token) setError(isAr ? 'رابط إعادة التعيين غير صالح أو مفقود.' : isTr ? 'Geçersiz veya eksik sıfırlama bağlantısı.' : 'Invalid or missing reset link.');
   }, [token, isTr]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (newPassword !== confirmPassword) {
-      setError(isTr ? 'Şifreler eşleşmiyor.' : 'Passwords do not match.');
+      setError(isAr ? 'كلمات المرور غير متطابقة.' : isTr ? 'Şifreler eşleşmiyor.' : 'Passwords do not match.');
       return;
     }
     if (newPassword.length < 6) {
-      setError(isTr ? 'Şifre en az 6 karakter olmalıdır.' : 'Password must be at least 6 characters.');
+      setError(isAr ? 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.' : isTr ? 'Şifre en az 6 karakter olmalıdır.' : 'Password must be at least 6 characters.');
       return;
     }
     setLoading(true);
@@ -35,7 +36,7 @@ export default function ResetPassword({ language }) {
       await apiService.resetPassword(token, newPassword);
       setSuccess(true);
     } catch (err) {
-      setError(err.message || (isTr ? 'Bağlantı geçersiz veya süresi dolmuş.' : 'Invalid or expired link.'));
+      setError(err.message || (isAr ? 'رابط غير صالح أو منتهي الصلاحية.' : isTr ? 'Bağlantı geçersiz veya süresi dolmuş.' : 'Invalid or expired link.'));
     } finally {
       setLoading(false);
     }
@@ -57,13 +58,13 @@ export default function ResetPassword({ language }) {
             <CheckCircle2 className="w-8 h-8 text-violet-400" />
           </div>
           <h1 className="text-2xl font-black text-white mb-3">
-            {isTr ? 'Şifre Güncellendi' : 'Password Updated!'}
+            {isAr ? 'تم تحديث كلمة المرور!' : isTr ? 'Şifre Güncellendi' : 'Password Updated!'}
           </h1>
           <p className="text-gray-500 text-sm leading-relaxed mb-8">
-            {isTr ? 'Yeni şifrenizle giriş yapabilirsiniz.' : 'You can now sign in with your new password.'}
+            {isAr ? 'يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة.' : isTr ? 'Yeni şifrenizle giriş yapabilirsiniz.' : 'You can now sign in with your new password.'}
           </p>
           <LiquidMetalButton onClick={() => window.location.href = ROUTES.LOGIN} width={160}>
-            {isTr ? 'Giriş Yap' : 'Sign In'}
+            {isAr ? 'تسجيل الدخول' : isTr ? 'Giriş Yap' : 'Sign In'}
           </LiquidMetalButton>
         </div>
       </div>
@@ -80,7 +81,7 @@ export default function ResetPassword({ language }) {
           </div>
           <p className="text-red-400 mb-6 text-sm">{error}</p>
           <Link to={ROUTES.FORGOT_PASSWORD} className="text-violet-400 hover:text-violet-300 font-bold transition-colors text-sm">
-            {isTr ? 'Yeni bağlantı iste' : 'Request a new link'}
+            {isAr ? 'طلب رابط جديد' : isTr ? 'Yeni bağlantı iste' : 'Request a new link'}
           </Link>
         </div>
       </div>
@@ -103,10 +104,10 @@ export default function ResetPassword({ language }) {
 
         <div className="rounded-2xl p-8" style={cardStyle}>
           <h1 className="text-2xl font-black text-white mb-2 text-center">
-            {isTr ? 'Yeni Şifre Belirle' : 'Set New Password'}
+            {isAr ? 'تعيين كلمة مرور جديدة' : isTr ? 'Yeni Şifre Belirle' : 'Set New Password'}
           </h1>
           <p className="text-gray-500 text-sm text-center mb-8">
-            {isTr ? 'En az 6 karakter girin.' : 'Enter at least 6 characters.'}
+            {isAr ? 'أدخل 6 أحرف على الأقل.' : isTr ? 'En az 6 karakter girin.' : 'Enter at least 6 characters.'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,7 +120,7 @@ export default function ResetPassword({ language }) {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                {isTr ? 'Yeni Şifre' : 'New Password'}
+                {isAr ? 'كلمة المرور الجديدة' : isTr ? 'Yeni Şifre' : 'New Password'}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" style={{ width: '15px', height: '15px' }} />
@@ -130,7 +131,7 @@ export default function ResetPassword({ language }) {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                {isTr ? 'Şifre Tekrar' : 'Confirm Password'}
+                {isAr ? 'تأكيد كلمة المرور' : isTr ? 'Şifre Tekrar' : 'Confirm Password'}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" style={{ width: '15px', height: '15px' }} />
@@ -141,7 +142,7 @@ export default function ResetPassword({ language }) {
 
             <div className="flex justify-center">
               <LiquidMetalButton type="submit" disabled={loading} width={200}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Güncelleniyor...' : 'Updating...'}</> : (isTr ? 'Şifreyi Güncelle' : 'Update Password')}
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Güncelleniyor...' : 'Updating...'}</> : (isAr ? 'تحديث كلمة المرور' : isTr ? 'Şifreyi Güncelle' : 'Update Password')}
               </LiquidMetalButton>
             </div>
           </form>

@@ -81,13 +81,24 @@ const LocalAI = ({ language = 'english' }) => {
     else setTip('');
   }, []);
 
-  const t = isTr ? {
+  const isAr = language === 'arabic';
+
+  const t = isAr ? {
+    badge: 'ذكاء اصطناعي محلي', title: 'الذكاء الاصطناعي المحلي',
+    subtitle: 'احصل على نصيحة صحية يومية واستكشف سيناريوهات "ماذا لو..." المخصصة لك.',
+    tipTitle: 'نصيحة اليوم الصحية', getTip: "احصل على نصيحة اليوم", getNewTip: 'احصل على نصيحة جديدة',
+    scenarioTitle: 'ماذا لو…؟', scenarioPlaceholder: 'مثال: ماذا لو قمت بخفض الجلوكوز بمقدار 20؟',
+    usingAssessment: 'استخدام التقييم الأخير للسياق.',
+    askScenario: 'احصل على الإجابة', previousQuestions: 'الأسئلة السابقة',
+    backToDashboard: 'العودة إلى لوحة التحكم',
+  } : isTr ? {
     badge: 'Yerel Yapay Zeka', title: 'Yerel AI',
     subtitle: 'Günlük sağlık ipucu alın ve size özel "ya… olursa" cevaplarını keşfedin.',
     tipTitle: 'Günün sağlık ipucu', getTip: "Günün ipucunu al", getNewTip: 'Yeni ipucu al',
     scenarioTitle: 'Ya… olursa?', scenarioPlaceholder: 'örn. Kan şekerimi 20 düşürürsem ne olur?',
     usingAssessment: 'Son değerlendirmeniz bağlam için kullanılıyor.',
     askScenario: 'Cevap al', previousQuestions: 'Önceki sorular',
+    backToDashboard: 'Dashboard\'a Geri Dön',
   } : {
     badge: 'Local AI', title: 'Local AI',
     subtitle: 'Get a daily health tip and explore "what if" answers tailored to you.',
@@ -95,6 +106,7 @@ const LocalAI = ({ language = 'english' }) => {
     scenarioTitle: 'What if…?', scenarioPlaceholder: 'e.g. What if I lower my glucose by 20?',
     usingAssessment: 'Using your last assessment for context.',
     askScenario: 'Get answer', previousQuestions: 'Previous questions',
+    backToDashboard: 'Back to Dashboard',
   };
 
   const onGetTip = async () => {
@@ -133,9 +145,9 @@ const LocalAI = ({ language = 'english' }) => {
 
   const showTip = section !== 'scenario';
   const showScenario = section !== 'tip';
-  const headerBadge = section === 'tip' ? (isTr ? 'İpucu' : 'Tip') : section === 'scenario' ? (isTr ? 'Senaryo' : 'Scenario') : t.badge;
+  const headerBadge = section === 'tip' ? (isAr ? 'نصيحة' : isTr ? 'İpucu' : 'Tip') : section === 'scenario' ? (isAr ? 'سيناريو' : isTr ? 'Senaryo' : 'Scenario') : t.badge;
   const headerTitle = section === 'tip' ? t.tipTitle : section === 'scenario' ? t.scenarioTitle : t.title;
-  const headerSubtitle = section === 'tip' ? (isTr ? 'Günlük sağlık ipucu alın.' : 'Get your daily health tip.') : section === 'scenario' ? (isTr ? 'Size özel "ya… olursa" cevaplarını keşfedin.' : 'Explore "what if" answers tailored to you.') : t.subtitle;
+  const headerSubtitle = section === 'tip' ? (isAr ? 'احصل على نصيحة اليوم الصحية.' : isTr ? 'Günlük sağlık ipucu alın.' : 'Get your daily health tip.') : section === 'scenario' ? (isAr ? 'استكشف سيناريوهات "ماذا لو..." المخصصة لك.' : isTr ? 'Size özel "ya… olursa" cevaplarını keşfedin.' : 'Explore "what if" answers tailored to you.') : t.subtitle;
 
   const cardStyle = {
     background: 'rgba(255,255,255,0.03)',
@@ -155,7 +167,7 @@ const LocalAI = ({ language = 'english' }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16"
-      style={{ fontFamily: "'Figtree','Inter',sans-serif" }}>
+      style={{ fontFamily: language === 'arabic' ? "'Tajawal','Figtree','Inter',sans-serif" : "'Figtree','Inter',sans-serif" }} dir={language === 'arabic' ? 'rtl' : 'ltr'}>
 
       <div className="fixed top-1/3 left-1/3 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.1), transparent 70%)', filter: 'blur(80px)' }} />
@@ -163,8 +175,8 @@ const LocalAI = ({ language = 'english' }) => {
       {/* Back to Dashboard */}
       <button onClick={() => navigate(ROUTES.DASHBOARD)}
         className="flex items-center gap-2 mb-8 text-sm text-white/70 hover:text-white transition-colors group relative z-10">
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-        Back to Dashboard
+        <ArrowLeft className={`w-4 h-4 transition-transform ${language === 'arabic' ? 'rotate-180 group-hover:translate-x-0.5' : 'group-hover:-translate-x-0.5'}`} />
+        {t.backToDashboard}
       </button>
 
       {/* Header */}

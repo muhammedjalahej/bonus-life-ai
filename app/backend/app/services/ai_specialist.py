@@ -215,6 +215,12 @@ class GPTOSSDiabetesSpecialist:
                     "Selamlama (merhaba, günaydın vb.) ise kısa karşılık ver ve bir sağlık sorusu sor. "
                     "Belirsiz veya çok kısa mesajlarda bağlamı kullan veya kısa bir netleştirme sorusu sor."
                 )
+            elif language == "arabic":
+                voice_instructions = (
+                    " وضع الصوت: اجعل الإجابات قصيرة وواضحة؛ للأسئلة البسيطة، يكفي 2-4 جمل. "
+                    "للتحيات (مرحباً، صباح الخير)، قدم رداً ودياً قصيراً واسأل سؤالاً صحياً. "
+                    "إذا كانت الرسالة غير واضحة، استخدم سياق المحادثة أو اطرح سؤالاً توضيحياً واحداً قصيراً."
+                )
             else:
                 voice_instructions = (
                     " VOICE MODE: Keep replies concise; use short sentences. For simple questions, 2-4 sentences. "
@@ -229,7 +235,12 @@ class GPTOSSDiabetesSpecialist:
             date_str = assessment_context.get("created_at") or ""
             summary_part = ""
             if summary:
-                summary_part = f" Özet: {summary[:400]}{'...' if len(summary) > 400 else ''}." if language == "turkish" else f" Summary: {summary[:400]}{'...' if len(summary) > 400 else ''}."
+                if language == "turkish":
+                    summary_part = f" Özet: {summary[:400]}{'...' if len(summary) > 400 else ''}."
+                elif language == "arabic":
+                    summary_part = f" ملخص: {summary[:400]}{'...' if len(summary) > 400 else ''}."
+                else:
+                    summary_part = f" Summary: {summary[:400]}{'...' if len(summary) > 400 else ''}."
             if language == "turkish":
                 prob_str = f", olasılık %{int(prob * 100)}" if prob is not None else ""
                 assessment_block = (
@@ -237,6 +248,14 @@ class GPTOSSDiabetesSpecialist:
                     "Değerlendirme, sonuç veya risk sorduğunda AŞAĞIDAKİ VERİYİ KULLANARAK cevap ver. "
                     "'Erişimim yok' veya 'bilgi saklamıyorum' deme.\n"
                     f"Son değerlendirme: risk düzeyi = {risk}{prob_str}.{summary_part} Tarih: {date_str}."
+                )
+            elif language == "arabic":
+                prob_str = f", الاحتمالية {int(prob * 100)}%" if prob is not None else ""
+                assessment_block = (
+                    "\n\nهام: لديك إمكانية الوصول إلى آخر تقييم لمخاطر السكري الخاص بهذا المستخدم. "
+                    "عندما يسألون عن تقييمهم أو نتائجهم أو مخاطرهم، أجب باستخدام البيانات أدناه. "
+                    "لا تقل أنه ليس لديك إمكانية الوصول أو لا تحتفظ بالمعلومات.\n"
+                    f"التقييم الأخير: مستوى الخطر = {risk}{prob_str}.{summary_part} التاريخ: {date_str}."
                 )
             else:
                 prob_str = f", probability {prob:.0%}" if prob is not None else ""
@@ -249,6 +268,8 @@ class GPTOSSDiabetesSpecialist:
         elif context.get("user_has_no_assessment"):
             if language == "turkish":
                 assessment_block = "\n\nBu kullanıcının kayıtlı değerlendirmesi yok. Değerlendirme sorarsa Assessment bölümünden bir değerlendirme yapmasını öner."
+            elif language == "arabic":
+                assessment_block = "\n\nليس لدى هذا المستخدم تقييم مسجل. إذا سأل عن تقييمه، اقترح عليه إكمال واحد في قسم التقييم."
             else:
                 assessment_block = "\n\nThe user has no stored assessment on file. If they ask about their assessment, suggest they complete one in the Assessment section."
         if language == "turkish":
@@ -257,6 +278,15 @@ class GPTOSSDiabetesSpecialist:
                 "Tüm yanıtlarını Türkçe, tıbben doğru ve anlaşılır biçimde ver. "
                 "Diyabet önleme, belirtiler, tedavi ve yaşam tarzı hakkında ayrıntılı bilgi sun. "
                 "Önemli: Yanıtlarında bir yapay zeka asistanı olduğunu belirt."
+                + voice_instructions
+                + assessment_block
+            )
+        elif language == "arabic":
+            system_content = (
+                "أنت Bonus Life AI، خبير متخصص في مرض السكري. "
+                "قدم معلومات دقيقة طبياً ومبنية على الأدلة باللغة العربية. "
+                "قدم نصائح عملية ومحددة. "
+                "اذكر دائماً أنك مساعد ذكاء اصطناعي."
                 + voice_instructions
                 + assessment_block
             )
@@ -320,6 +350,15 @@ class GPTOSSDiabetesSpecialist:
                 "- Aşırı açlık ve nedensiz kilo kaybı\n"
                 "- Yorgunluk ve bulanık görme\n\n"
                 "Kesin tanı ve tedavi için lütfen bir sağlık kuruluşuna başvurun."
+            )
+        elif language == "arabic":
+            return (
+                "**مساعد الذكاء الاصطناعي لمرض السكري**\n\n"
+                "الأعراض الشائعة لمرض السكري من النوع 2:\n"
+                "- العطش الشديد وكثرة التبول\n"
+                "- الجوع الشديد وفقدان الوزن غير المبرر\n"
+                "- التعب وتشوش الرؤية\n\n"
+                "يرجى استشارة أخصائي رعاية صحية للحصول على نصيحة طبية دقيقة."
             )
         return (
             "**AI Diabetes Specialist**\n\n"

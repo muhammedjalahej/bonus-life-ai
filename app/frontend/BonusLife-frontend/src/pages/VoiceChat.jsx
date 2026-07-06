@@ -58,11 +58,28 @@ const VoiceChat = ({ language = 'english' }) => {
     start: 'Kayıt Başlat', stop: 'Durdur', processing: 'İşleniyor',
     question: 'Sorunuz', response: 'Yapay Zeka Yanıtı', retry: 'Tekrar Dene',
     type: 'Yazıyla Sor', enter: 'Sorunuzu buraya yazın', submit: 'Gönder', cancel: 'İptal',
+    errNoSpeech: 'Konuşma algılanmadı. Tekrar deneyin veya sorunuzu yazın.',
+    errNoUnderstand: 'Anlaşılamadı. Lütfen tekrar konuşun veya sorunuzu yazın.',
+    errEmpty: 'Bir soru girin',
+    back: 'Kontrol Paneline Dön'
+  } : language === 'arabic' ? {
+    title: 'المساعد الصوتي', sub: 'تحدث براحتك عن صحتك بلهجتك الطبيعية',
+    start: 'بدء التسجيل', stop: 'إيقاف', processing: 'جاري المعالجة',
+    question: 'سؤالك', response: 'رد الذكاء الاصطناعي', retry: 'المحاولة مرة أخرى',
+    type: 'اكتب سؤالك', enter: 'اكتب سؤالك هنا', submit: 'إرسال', cancel: 'إلغاء',
+    errNoSpeech: 'لم يتم التقاط أي صوت. جرب مرة أخرى أو اكتب سؤالك.',
+    errNoUnderstand: 'لم أفهم ذلك. جرب كتابة سؤالك أو تحدث مرة أخرى.',
+    errEmpty: 'أدخل سؤالاً',
+    back: 'العودة للوحة التحكم'
   } : {
     title: 'Voice Assistant', sub: 'Speak naturally about diabetes in your preferred language',
     start: 'Start Recording', stop: 'Stop', processing: 'Generating',
     question: 'Your Question', response: 'AI Response', retry: 'Try Again',
     type: 'Type Instead', enter: 'Type your question here', submit: 'Submit', cancel: 'Cancel',
+    errNoSpeech: 'No speech detected. Try again or type your question.',
+    errNoUnderstand: 'Could not understand. Try typing your question or speak again.',
+    errEmpty: 'Enter a question',
+    back: 'Back to Dashboard'
   };
 
   const startRecording = async () => {
@@ -76,7 +93,7 @@ const VoiceChat = ({ language = 'english' }) => {
       if (SpeechRecognitionAPI) {
         const recognition = new SpeechRecognitionAPI();
         recognition.continuous = true; recognition.interimResults = true;
-        recognition.lang = language === 'turkish' ? 'tr-TR' : 'en-US';
+        recognition.lang = language === 'arabic' ? 'ar-SA' : language === 'turkish' ? 'tr-TR' : 'en-US';
         recognition.onresult = (e) => {
           const full = Array.from(e.results).map((r) => r[0].transcript).join(' ').trim();
           if (full) speechTranscriptRef.current = full;
@@ -99,18 +116,18 @@ const VoiceChat = ({ language = 'english' }) => {
 
   const processRecording = async () => {
     const transcript = (speechTranscriptRef.current || '').trim();
-    if (!transcript && !audioChunks.current.length) { setError('No speech detected. Try again or type your question.'); return; }
+    if (!transcript && !audioChunks.current.length) { setError(t.errNoSpeech); return; }
     setIsProcessing(true);
     try {
       if (transcript) {
         const data = await apiService.voiceChat(transcript, language, voiceUserId, true);
         setResult(data);
-      } else { setError('Could not understand. Try typing your question or speak again.'); }
+      } else { setError(t.errNoUnderstand); }
     } catch (err) { setError(err.message); } finally { setIsProcessing(false); }
   };
 
   const handleTextSubmit = async () => {
-    if (!textInput.trim()) { setError('Enter a question'); return; }
+    if (!textInput.trim()) { setError(t.errEmpty); return; }
     setIsProcessing(true); setShowTextDialog(false);
     try {
       const data = await apiService.voiceChat(textInput, language, textUserId, true);
@@ -140,7 +157,7 @@ const VoiceChat = ({ language = 'english' }) => {
           onMouseEnter={e => e.currentTarget.style.color = '#93c5fd'}
           onMouseLeave={e => e.currentTarget.style.color = 'rgba(147,197,253,0.6)'}>
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          Back to Dashboard
+          {t.back}
         </button>
 
         {/* Header */}

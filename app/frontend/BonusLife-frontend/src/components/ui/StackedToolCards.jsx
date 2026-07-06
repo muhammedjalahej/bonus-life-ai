@@ -19,7 +19,7 @@ const ACCENT = {
   emerald: { arrowColor: '#ffffff' },
 }
 
-export function StackedToolCards({ titleEn, titleTr, accent, items, isTr }) {
+export function StackedToolCards({ titleEn, titleTr, titleAr, accent, items, isTr, isAr }) {
   const [isActive, setIsActive] = useState(false)
   const a = ACCENT[accent] || ACCENT.violet
 
@@ -88,7 +88,7 @@ export function StackedToolCards({ titleEn, titleTr, accent, items, isTr }) {
                   }}
                   className="truncate text-sm font-medium"
                 >
-                  {isTr ? item.labelTr : item.labelEn}
+                  {isAr ? item.labelAr : isTr ? item.labelTr : item.labelEn}
                 </motion.p>
               </motion.div>
             </Link>
@@ -108,7 +108,7 @@ export function StackedToolCards({ titleEn, titleTr, accent, items, isTr }) {
         onClick={e => { e.stopPropagation(); setIsActive(false) }}
       >
         <button className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-white/40 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white/70">
-          Show less
+          {isAr ? 'عرض أقل' : isTr ? 'Daha az göster' : 'Show less'}
         </button>
       </div>
     </div>

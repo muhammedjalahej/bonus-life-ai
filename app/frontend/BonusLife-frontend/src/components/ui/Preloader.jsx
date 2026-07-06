@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const words = ['Welcome', 'Bienvenue', 'Benvenuto', 'Bienvenido', 'ようこそ', 'Välkommen', 'Willkommen', 'স্বাগতম'];
+const words = ['مرحباً', 'Welcome', 'Bienvenue', 'Benvenuto', 'Bienvenido', 'ようこそ', 'Välkommen', 'Willkommen'];
 
 const opacity = {
   initial: { opacity: 0 },

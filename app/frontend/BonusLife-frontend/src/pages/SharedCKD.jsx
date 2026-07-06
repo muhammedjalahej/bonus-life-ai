@@ -11,6 +11,7 @@ export default function SharedCKD({ language }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
 
   useEffect(() => {
     if (!token) return;
@@ -19,7 +20,7 @@ export default function SharedCKD({ language }) {
         const result = await getSharedCKDAssessment(token);
         setData(result);
       } catch (err) {
-        setError(err.message || (isTr ? 'Böbrek değerlendirmesi bulunamadı.' : 'CKD assessment not found or link expired.'));
+        setError(err.message || (isAr ? 'تقييم الكلى غير موجود أو الرابط منتهي الصلاحية.' : isTr ? 'Böbrek değerlendirmesi bulunamadı.' : 'CKD assessment not found or link expired.'));
       } finally {
         setLoading(false);
       }
@@ -64,10 +65,10 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
     return (
       <div className="max-w-lg mx-auto px-6 py-32 text-center">
         <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-white mb-2">{isTr ? 'Böbrek Değerlendirmesi Bulunamadı' : 'CKD Assessment Not Found'}</h1>
+        <h1 className="text-xl font-bold text-white mb-2">{isAr ? 'لم يتم العثور على تقييم الكلى' : isTr ? 'Böbrek Değerlendirmesi Bulunamadı' : 'CKD Assessment Not Found'}</h1>
         <p className="text-gray-400 text-sm mb-6">{error}</p>
         <Link to={ROUTES.HOME} className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300">
-          <ArrowLeft className="w-4 h-4" /> {isTr ? 'Ana sayfaya dön' : 'Back to Home'}
+          <ArrowLeft className="w-4 h-4" /> {isAr ? 'العودة للرئيسية' : isTr ? 'Ana sayfaya dön' : 'Back to Home'}
         </Link>
       </div>
     );
@@ -84,8 +85,8 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
               <Droplets className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">{isTr ? 'Paylaşılan Böbrek (CKD) Değerlendirmesi' : 'Shared Kidney (CKD) Assessment'}</h1>
-              <p className="text-xs text-gray-500">{isTr ? 'Hasta' : 'Patient'}: {data.user_name || 'N/A'}</p>
+              <h1 className="text-lg font-bold text-white">{isAr ? 'تقييم كلى مشترك' : isTr ? 'Paylaşılan Böbrek (CKD) Değerlendirmesi' : 'Shared Kidney (CKD) Assessment'}</h1>
+              <p className="text-xs text-gray-500">{isAr ? 'المريض' : isTr ? 'Hasta' : 'Patient'}: {data.user_name || 'N/A'}</p>
             </div>
           </div>
           <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-white/[0.05] text-gray-400 hover:text-white border border-white/[0.08] transition">
@@ -96,20 +97,20 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <p className="text-xs text-gray-500 mb-1">{isTr ? 'Tahmin' : 'Prediction'}</p>
+              <p className="text-xs text-gray-500 mb-1">{isAr ? 'التوقع' : isTr ? 'Tahmin' : 'Prediction'}</p>
               <span className={`inline-block px-2 py-1 rounded text-sm font-bold ${isCKD ? 'bg-red-500/20 text-red-400' : 'bg-violet-500/20 text-violet-400'}`}>
                 {data.prediction || 'Unknown'}
               </span>
             </div>
             <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <p className="text-xs text-gray-500 mb-1">{isTr ? 'Güven' : 'Confidence'}</p>
+              <p className="text-xs text-gray-500 mb-1">{isAr ? 'نسبة الثقة' : isTr ? 'Güven' : 'Confidence'}</p>
               <p className="text-lg font-bold text-white">{data.confidence != null ? `${(data.confidence * 100).toFixed(1)}%` : 'N/A'}</p>
             </div>
           </div>
 
           {data.executive_summary && (
             <div>
-              <p className="text-xs text-gray-500 mb-2">{isTr ? 'Özet' : 'Summary'}</p>
+              <p className="text-xs text-gray-500 mb-2">{isAr ? 'ملخص' : isTr ? 'Özet' : 'Summary'}</p>
               <div className="text-sm text-gray-300 leading-relaxed">
                 <ReactMarkdown
                   components={{
@@ -127,11 +128,11 @@ h2{color:#444;margin-top:24px}.badge{display:inline-block;padding:4px 12px;borde
           )}
 
           {data.created_at && (
-            <p className="text-xs text-gray-600">{isTr ? 'Tarih' : 'Date'}: {new Date(data.created_at).toLocaleString()}</p>
+            <p className="text-xs text-gray-600">{isAr ? 'التاريخ' : isTr ? 'Tarih' : 'Date'}: {new Date(data.created_at).toLocaleString()}</p>
           )}
 
           <div className="pt-3 border-t border-white/[0.06]">
-            <p className="text-[10px] text-gray-600">{isTr ? 'Bu bir tıbbi teşhis değildir. Sağlık hizmeti sağlayıcınıza danışın.' : 'This is not a medical diagnosis. Please consult your healthcare provider.'}</p>
+            <p className="text-[10px] text-gray-600">{isAr ? 'هذا ليس تشخيصاً طبياً. يرجى استشارة مقدم الرعاية الصحية الخاص بك.' : isTr ? 'Bu bir tıbbi teşhis değildir. Sağlık hizmeti sağlayıcınıza danışın.' : 'This is not a medical diagnosis. Please consult your healthcare provider.'}</p>
           </div>
         </div>
       </div>

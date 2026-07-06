@@ -17,6 +17,7 @@ export default function FindHospitals({ language }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isTr = language === 'turkish';
+  const isAr = language === 'arabic';
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
@@ -37,7 +38,7 @@ export default function FindHospitals({ language }) {
       const data = await res.json();
       setHospitals(data.hospitals || []);
     } catch {
-      setError(isTr ? 'Harita verisi alınamadı. Lütfen tekrar deneyin.' : 'Could not load hospital data. Please try again.');
+      setError(isAr ? 'تعذر تحميل بيانات المستشفيات. يرجى المحاولة مرة أخرى.' : isTr ? 'Harita verisi alınamadı. Lütfen tekrar deneyin.' : 'Could not load hospital data. Please try again.');
       setHospitals([]);
     } finally {
       setLoading(false);
@@ -47,7 +48,7 @@ export default function FindHospitals({ language }) {
   const useMyLocation = () => {
     setLocationError('');
     if (!navigator.geolocation) {
-      setLocationError(isTr ? 'Tarayıcı konum desteklemiyor.' : 'Browser does not support location.');
+      setLocationError(isAr ? 'المتصفح لا يدعم تحديد الموقع.' : isTr ? 'Tarayıcı konum desteklemiyor.' : 'Browser does not support location.');
       return;
     }
     setLoading(true);
@@ -59,7 +60,7 @@ export default function FindHospitals({ language }) {
         fetchHospitals(lat, lon);
       },
       () => {
-        setLocationError(isTr ? 'Konum izni reddedildi veya alınamadı.' : 'Location denied or unavailable.');
+        setLocationError(isAr ? 'تم رفض الموقع أو غير متوفر.' : isTr ? 'Konum izni reddedildi veya alınamadı.' : 'Location denied or unavailable.');
         setLoading(false);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
@@ -92,7 +93,7 @@ export default function FindHospitals({ language }) {
         markersRef.current = [];
       };
     } catch (e) {
-      setMapError(e?.message || (isTr ? 'Harita yüklenemedi.' : 'Map could not load.'));
+      setMapError(e?.message || (isAr ? 'تعذر تحميل الخريطة.' : isTr ? 'Harita yüklenemedi.' : 'Map could not load.'));
       mapInstanceRef.current = null;
     }
   }, []);
@@ -142,14 +143,14 @@ export default function FindHospitals({ language }) {
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-            {isTr ? 'Yakındaki Hastaneler' : 'Nearest Hospitals'}
+            {isAr ? 'أقرب المستشفيات' : isTr ? 'Yakındaki Hastaneler' : 'Nearest Hospitals'}
           </h1>
         </div>
 
         {/* Location CTA */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
           <LiquidMetalButton onClick={useMyLocation} disabled={loading} width={200}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isTr ? 'Yükleniyor...' : 'Loading...'}</> : <><Navigation className="w-4 h-4" /> {isTr ? 'Konumumu Kullan' : 'Use my location'}</>}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {isAr ? 'جارِ التحميل...' : isTr ? 'Yükleniyor...' : 'Loading...'}</> : <><Navigation className="w-4 h-4" /> {isAr ? 'استخدم موقعي' : isTr ? 'Konumumu Kullan' : 'Use my location'}</>}
           </LiquidMetalButton>
           {locationError && <p className="text-sm text-amber-400">{locationError}</p>}
           {error && <p className="text-sm text-red-400">{error}</p>}
@@ -168,21 +169,21 @@ export default function FindHospitals({ language }) {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden flex flex-col h-[280px] min-h-[240px]">
             <div className="px-3 py-2 border-b border-white/10 bg-white/[0.02]">
               <h2 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                {isTr ? 'Hastane listesi' : 'Hospital list'}
+                {isAr ? 'قائمة المستشفيات' : isTr ? 'Hastane listesi' : 'Hospital list'}
               </h2>
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
               {!userLocation && !loading && (
                 <div className="flex items-center justify-center min-h-[120px] px-3">
                   <p className="text-gray-500 text-sm text-center">
-                    {isTr ? '"Konumumu Kullan"a tıklayın.' : 'Click "Use my location".'}
+                    {isAr ? 'انقر على "استخدم موقعي".' : isTr ? '"Konumumu Kullan"a tıklayın.' : 'Click "Use my location".'}
                   </p>
                 </div>
               )}
               {userLocation && hospitals.length === 0 && !loading && !error && (
                 <div className="flex items-center justify-center min-h-[120px] px-3">
                   <p className="text-gray-500 text-sm text-center">
-                    {isTr ? 'Bu bölgede hastane bulunamadı.' : 'No hospitals found in this area.'}
+                    {isAr ? 'لم يتم العثور على مستشفيات في هذه المنطقة.' : isTr ? 'Bu bölgede hastane bulunamadı.' : 'No hospitals found in this area.'}
                   </p>
                 </div>
               )}
@@ -213,7 +214,7 @@ export default function FindHospitals({ language }) {
                       onClick={() => openInMaps(h.lat, h.lon, h.name)}
                       className="shrink-0 self-start p-2 rounded-lg text-gray-400 hover:text-gray-200 transition-all"
                       style={{ background: 'rgba(255,255,255,0.03)' }}
-                      title={isTr ? 'Yol tarifi al' : 'Get directions'}
+                      title={isAr ? 'الحصول على الاتجاهات' : isTr ? 'Yol tarifi al' : 'Get directions'}
                     >
                       <ExternalLink className="w-4 h-4" />
                     </button>

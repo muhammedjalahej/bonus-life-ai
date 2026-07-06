@@ -17,10 +17,11 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       const isTr = (this.props.language || 'english') === 'turkish';
-      const title = isTr ? 'Bir şeyler yanlış gitti' : 'Something went wrong';
-      const message = isTr ? 'Verdiğimiz rahatsızlık için özür dileriz. Lütfen sayfayı yenileyin.' : "We're sorry for the inconvenience. Please try refreshing.";
-      const reload = isTr ? 'Yenile' : 'Reload';
-      const goHome = isTr ? 'Ana Sayfa' : 'Go to Home';
+      const isAr = (this.props.language || 'english') === 'arabic';
+      const title = isAr ? 'حدث خطأ ما' : isTr ? 'Bir şeyler yanlış gitti' : 'Something went wrong';
+      const message = isAr ? 'نأسف للإزعاج. يرجى محاولة تحديث الصفحة.' : isTr ? 'Verdiğimiz rahatsızlık için özür dileriz. Lütfen sayfayı yenileyin.' : "We're sorry for the inconvenience. Please try refreshing.";
+      const reload = isAr ? 'إعادة تحميل' : isTr ? 'Yenile' : 'Reload';
+      const goHome = isAr ? 'الذهاب للرئيسية' : isTr ? 'Ana Sayfa' : 'Go to Home';
       return (
         <div className="min-h-screen flex items-center justify-center px-4">
           <div className="card p-10 max-w-md text-center space-y-6">

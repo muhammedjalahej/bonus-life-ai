@@ -96,7 +96,27 @@ const DietPlan = ({ language = 'english' }) => {
   }, []);
 
   const isTr = language === 'turkish';
-  const t = isTr ? {
+  const isAr = language === 'arabic';
+  const t = isAr ? {
+    badge: 'تغذية بالذكاء الاصطناعي', title: 'مخطط النظام الغذائي', subtitle: 'خطط وجبات مخصصة بالذكاء الاصطناعي للوقاية من السكري وإدارته.',
+    bodyMetrics: 'مقاييس الجسم', preferences: 'التفضيلات', additionalInfo: 'معلومات إضافية',
+    age: 'العمر', weight: 'الوزن (كغ)', height: 'الطول (سم)', gender: 'الجنس', select: 'اختر...',
+    male: 'ذكر', female: 'أنثى', bmi: 'مؤشر كتلة الجسم', dailyCalories: 'السعرات الحرارية اليومية', goal: 'الهدف', kcalDay: 'سعرة حرارية/يوم',
+    dietType: 'نوع النظام الغذائي', activityLevel: 'مستوى النشاط', goalLabel: 'الهدف',
+    healthConditions: 'الحالات الصحية', allergies: 'الحساسية', dailyRoutine: 'الروتين اليومي',
+    placeholders: { health: 'مثال: ارتفاع ضغط الدم', allergies: 'مثال: الغلوتين', routine: 'مثال: الاستيقاظ 7 صباحاً' },
+    generate: 'إنشاء خطة غذائية', generating: 'جاري الإنشاء...', planGenerated: 'تم إنشاء الخطة!',
+    savedToDashboard: 'تم الحفظ في لوحة التحكم.', viewInDashboard: 'عرض في لوحة التحكم',
+    yourPlan: 'خطتك الغذائية', generatedBy: 'تم إنشاؤها بالذكاء الاصطناعي بناءً على ملفك الشخصي',
+    overview: 'نظرة عامة', dailyMeals: 'الوجبات اليومية', groceries: 'قائمة التسوق', importantNotes: 'ملاحظات هامة',
+    calories: 'السعرات', protein: 'البروتين', carbs: 'الكربوهيدرات', fat: 'الدهون',
+    underweight: 'نقص وزن', normal: 'طبيعي', overweight: 'وزن زائد', obese: 'سمنة',
+    dietOptions: [{ value: 'balanced', label: 'متوازن' }, { value: 'vegetarian', label: 'نباتي' }, { value: 'non-vegetarian', label: 'غير نباتي' }, { value: 'vegan', label: 'نباتي صرف' }, { value: 'mediterranean', label: 'حمية البحر المتوسط' }, { value: 'low_carb', label: 'منخفض الكربوهيدرات' }, { value: 'diabetic_friendly', label: 'مناسب لمرضى السكري' }],
+    activityOptions: [{ value: 'sedentary', label: 'خامل' }, { value: 'light', label: 'نشاط خفيف' }, { value: 'moderate', label: 'نشاط متوسط' }, { value: 'active', label: 'نشط' }, { value: 'very_active', label: 'نشط جداً' }],
+    goalOptions: [{ value: 'diabetes_prevention', label: 'الوقاية من السكري' }, { value: 'blood_sugar_control', label: 'التحكم في سكر الدم' }, { value: 'weight_loss', label: 'خسارة الوزن' }, { value: 'weight_gain', label: 'زيادة الوزن' }, { value: 'maintenance', label: 'المحافظة على الوزن' }, { value: 'gestational_diabetes', label: 'سكري الحمل' }],
+    goalDisplay: { diabetes_prevention: 'الوقاية من السكري', blood_sugar_control: 'التحكم في سكر الدم', weight_loss: 'خسارة الوزن', weight_gain: 'زيادة الوزن', maintenance: 'المحافظة على الوزن', gestational_diabetes: 'سكري الحمل' },
+    negativeError: 'يرجى إدخال رقم موجب.',
+  } : isTr ? {
     badge: 'Yapay Zeka Beslenme', title: 'Diyet Planı', subtitle: 'Diyabet önleme ve yönetimi için kişiselleştirilmiş yapay zeka destekli öğün planları.',
     bodyMetrics: 'Vücut Ölçüleri', preferences: 'Tercihler', additionalInfo: 'Ek Bilgi',
     age: 'Yaş', weight: 'Kilo (kg)', height: 'Boy (cm)', gender: 'Cinsiyet', select: 'Seçin...',
@@ -170,12 +190,13 @@ const DietPlan = ({ language = 'english' }) => {
     && !isNegative(formData.age) && !isNegative(formData.weight) && !isNegative(formData.height);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-32 pb-16"
+      style={{ fontFamily: language === 'arabic' ? "'Tajawal','Figtree','Inter',sans-serif" : "'Figtree','Inter',sans-serif" }} dir={language === 'arabic' ? 'rtl' : 'ltr'}>
       {/* Back to Dashboard */}
       <button onClick={() => navigate(ROUTES.DASHBOARD)}
         className="flex items-center gap-2 mb-8 text-sm text-white/70 hover:text-white transition-colors group">
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-        Back to Dashboard
+        <ArrowLeft className={`w-4 h-4 transition-transform ${language === 'arabic' ? 'rotate-180 group-hover:translate-x-0.5' : 'group-hover:-translate-x-0.5'}`} />
+        {language === 'arabic' ? 'العودة إلى لوحة التحكم' : isTr ? 'Dashboard\'a Geri Dön' : 'Back to Dashboard'}
       </button>
 
       {/* Header */}
